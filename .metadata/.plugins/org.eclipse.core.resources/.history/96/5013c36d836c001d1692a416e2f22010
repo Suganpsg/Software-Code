@@ -1,0 +1,23 @@
+package Learn;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+
+public class classLoader {
+	public static void main(String args[])throws ClassNotFoundException, NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException {
+		
+//		String exe = "ClassNotFoundException";
+//		ArrayList
+//		Exception e  = new Exception(exe);
+//		Runnable
+//		Comparable
+//		Thread
+//		Math
+//		Class a = Class.forName(exe);
+//		Object e =((Exception)a.getConstructor().newInstance());
+//		System.out.println(Class.forName(exe));
+//		System.out.println(e.getClass().getName());
+//		System.out.println(Arrays.deepToString(a.getConstructor(String.class)));
+	}
+
+}

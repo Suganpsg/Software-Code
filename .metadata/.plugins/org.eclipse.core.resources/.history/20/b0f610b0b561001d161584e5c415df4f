@@ -1,0 +1,990 @@
+package essn.storage.srx.scalityringx.srxdl325g10plusnvmesolution {
+	import essn.storage.srx.scalityringx.scalityringxcommon.*;
+	import essn.server.newgenproliant.newgendlservers.newgendl300.dl325g10plus.DL325G10Plus;
+	import essn.server.proliantservers.common.proliantproductoption.*;
+	import common.productcategories.*;
+	import common.agentutility.*;
+	import essn.server.common.servercommon.*;
+	import essn.storage.network.hpnetworkingcommon.Transceivers;
+	import essn.rack.rackcommon.Rack;
+	import essn.softwarestandalone.apolloscalitysoftware.ringxSoftware;
+	import essn.softwarestandalone.apolloscalitysoftware.scalityRingXPackProSoftware;
+	import common.globalsupport.*;
+	//import essn.storage.cohesity.cohesitydp.*;
+	import essn.storage.sds.dl325g10sds.OEMDL325SDSTrackingSku;
+	import common.coremodel.*;
+	//import essn.common.software.*;
+	
+	class SRXDL325G10PlusNVMeSolution extends ScalityRINGXCommon {
+		boolean isGLSC : false; // JCN GLSC
+		description: "ProLiant DL325 Gen10 Plus NVMe for Scality ARTESCA";
+		string shortLabel: "Scality ARTESCA Solution";
+		//		configurationEntryPoint;
+		platformName: "SCALITYRINGXDL325PLUS";
+		string quickSpecMap: "SCALITYRINGXDL325PLUS";
+		boolean enableInstanceQuantity: true;
+		string[] instanceQuantityClasses: "srxConfigTypeChoiceItem", "ringxSoftware", "scalityRingXPackProSoftware", "genericRingXSoftware", "SRXDL325G10PlusNVMe";
+		boolean isProductClass: false;
+		productCategories: DoNotDisplay;
+		string softwarePlatformName: "";
+		string productIdForPLC: "R7J62A";
+		string displayPartNumber: "R7J62A";
+		boolean ocaCompatible: true;
+		boolean allowCopyPaste: false;
+		boolean lockSubconfig: true;
+		int numberOfNodes: 1;
+		int numberOfProcessorQty: 1;
+		int numberOfMemoryQty: 8;
+		int numberOfBootDriveQty: 1;
+		int numberOfNVMeDataQty: 10;
+		int numberOfNVMeBundleQty: 1;
+		int numberOfPCIQty: 0;
+		int numberOfCableQty: 2;
+		string[] productIdList: "";
+		string[] baseModelR7J61AOptionsList: "";
+		string serverProcessorConfigured: "none";
+		string serverMemoryConfigured: "none";
+		string serverBootDriveConfigured: "none";
+		string serverNVMeDataDriveConfigured: "none";
+		string serverNVMeMetadataDriveConfigured: "none";
+		string serverOCPAdapterConfigured: "none";
+		string serverPCIAdapterConfigured: "none";
+		string serverCableConfigured: "none";
+		string serverCableConfigured2: "none";
+		string serverRackConfigured: "none";
+		def defaultTrackingSKu (): string[] = {
+		//			if thisInst.selected(srxConfigTypeChoiceItem).filterByAttribute(isGreenLake, true).count > 0 then expanderString ("R7J81A", 1)  
+		//			else expanderString ("R7J62A", 1);
+			if thisInst.selected(srxConfigTypeChoiceItem).count > 0 then expanderString ("R7J62A", 1);
+		}
+		def addOptionToRingSKU (optionId: int): string[] = callout("StorageModelsUtils", "addOptionToRingSKU", thisInst, optionId);
+		def addRingSoftware (): string[] = {
+			if thisInst.selected(ringxSoftware).count > 0 then addOptionToRingSKU (thisInst.selected(srxConfigTypeChoiceItem).get(0).optionId);
+		}
+		def defaultCables (): string[] = {
+			val pciCount = SRXDL325G10PlusNVMeSolution.numberOfPCIQty;
+			if thisInst.selected(NetworkingPci).filter(x => x.id = "P24437-B21").count > 0 and pciCount > 0 then expanderString ("JL294A", (2 * pciCount)) else if thisInst.selected(ProliantInfiniband).filter(x => x.id = "P23666-B21").count > 0 and
+			pciCount > 0 then expanderString ("JL271A", (2 * pciCount)) else "";
+		}
+		def defaultCables2 (): string[] = {
+			if thisInst.selected(NetworkAdapterPci).filter(x => x.id = "P10112-B21").count > 0 then expanderString ("P16976-B21", 1) else "";
+		}
+		string[] defaultList: "";
+		def defaultParts (): string[] = defaultList;
+		subsystem NodeSubsystem {
+			part addDefaultsTrigger: triggerInternalDefaults {
+				string modelDefaultsFunc: "defaultParts";
+			}
+			part postInstallDelegateTrigger: triggerPostInstallDelgateAgent {
+				string agentClass: "com.hp.ngc.plugins.agents.update.delegate.scality.SRXDL325G10PlusAgent";
+			}
+		}
+		
+		subsystem dl385PlusScalityOptionSubSystem {
+			choice dl385ServerChoice {
+				choiceType: single_select;
+				optional: false;
+				targetClass: srxConfigTypeChoiceItem;
+			}
+			choice ProcessorChoice {
+				choiceType: single_select;
+				optional: false;
+				targetClass: ProliantProcessor;
+			}
+			choice MemoryChoice {
+				choiceType: single_select;
+				optional: false;
+				targetClass: ProliantMemoryArray;
+			}
+			//			choice BootDriveChoice {
+			//				choiceType: single_select;
+			//				optional: false;
+			//				targetClass: ProliantHardDrive;
+			//			}
+			locationArray BootDriveChoice {
+				rows: 1;
+				columns: 1;
+				fillerClasses: ProliantHardDrive, OSPciBootDevice;
+			}
+			choice NVMeDataDriveOptionsChoice {
+				choiceType: single_select;
+				optional: false;
+				targetClass: ProliantHardDrive;
+			}
+			choice NVMeMetadataDriveOptionsChoice {
+				choiceType: single_select;
+				optional: false;
+				targetClass: ProliantHardDrive;
+			}
+			choice OCPAdaptersChoice {
+				choiceType: single_select;
+				optional: true;
+				targetClass: NetworkAdapterPci;
+			}
+			choice PCIAdaptersChoice {
+				choiceType: single_select;
+				optional: true;
+				targetClass: NetworkAdapterPci;
+			}
+			choice CablesChoice {
+				choiceType: single_select;
+				optional: true;
+				targetClass: Transceivers;
+			}
+			choice CablesChoice2 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: ProliantOCPUpgCable;
+			}
+			choice RackDummyChoice {
+				choiceType: single_select;
+				optional: false;
+				targetClass: srxDLRackChoiceItemFlag;
+			}
+			ifEffective KS_PERT_26331 {
+				constraint srxInculdeBuleNote {
+				message: "This menu is to be used with OCA with a BOM created by the HPE Scality sizing tool.";
+				body: false;
+			}
+			
+			}
+			otherwise{
+			constraint srxInculdeBuleNote {
+				message: "This menu is to be used with OCA Import with a BOM created by the HPE Scality sizing tool.";
+				body: false;
+			}			
+			}
+			constraint requiredPCIAdapters {
+				message: "If P08449-B21 (1GbE OCP) is selected, Then Min 1 P24437-B21 or P23666-B21 is required.";
+				body:
+				if thisInst.selected(NetworkingPci).filter(x => x.id = "P08449-B21").count > 0 then (thisInst.selected(NetworkingPci).filter(x => x.id = "P24437-B21").count + thisInst.selected(ProliantInfiniband).filter(x => x.id =
+				"P23666-B21").count) > 0 and SRXDL325G10PlusNVMeSolution.numberOfPCIQty > 0 else true;
+			}
+			constraint unSupporetedCable {
+				message: "Not Supported Cables";
+				body: dependency (ProliantInfiniband [ P23666-B21 ] > 0, SFPTransceivers [ JL294A ] = 0);
+				dependency (NetworkingPci [ P24437-B21 ] > 0, QSFP28Transceivers [ JL271A ] = 0);
+				dependency (SRXDL325G10PlusNVMeSolution.numberOfPCIQty = 0, Transceivers [ JL294A || JL271A ] = 0);
+			}
+			constraint NVMeData_Rule2 {
+				message: "If P20135-B21 sku is selected, Then NVMe Data Drive Options is Min 10 / Max 10.";
+				body:
+				if thisInst.selected(ProliantHardDrive_HP_SFF_NVME).filter(x => x.id = "P20135-B21").count > 0 then thisInst.numberOfNVMeDataQty = 10 else true;
+			}
+
+			// GKK_23571_RingX
+			constraint BootDrive_Min1 {
+				message: "Min 1 Boot Drive is Required";
+				body:
+				if thisInst.BootDriveChoice.contents.count = 0 or thisInst.SRXDL325G10PlusNVMeSolution.numberOfBootDriveQty = 0 then false else true;
+			}
+			constraint NVMeData_Rule3 {
+				message: "If P12965-B21 (Boot Device) sku is selected, Then Boot Drive is Min 1 / Max 1.  ";
+				body:
+				if thisInst.selected(OSPciBootDevice).filter(x => x.id = "P12965-B21").count > 0 then thisInst.SRXDL325G10PlusNVMeSolution.numberOfBootDriveQty < 2 else true;
+			}
+			constraint NVMeData_Rule4 {
+				message: "If P12965-B21 (Boot Device) is selected, Then NVMe Data Drive is Min 10 / Max 17.";
+				body:
+				if thisInst.selected(OSPciBootDevice).filter(x => x.id = "P12965-B21").count > 0 then thisInst.numberOfNVMeDataQty < 18 else true;
+			}
+			part requiredCableTrigger: triggerConsequentialSelection {
+				string consequentialSelectionFunc: "defaultCables2";
+			}
+			part requiredCabeTrigger: triggerConsequentialSelection {
+				string consequentialSelectionFunc: "defaultCables";
+			}
+		}
+		subsystem groupTypeSubsystem {
+			group rackGroup {
+				groupPartType: srxRackGroup;
+				memberClasses: Rack;
+			}
+			group serverNodeGroup {
+				groupPartType: srxServerGroup;
+				memberClasses: SRXDL325G10PlusNVMe;
+			}
+		}
+		subsystem srxSoftwareSubsystem {
+			choice srxSoftwareChoice {
+				choiceType: multi_select;
+				optional: true;
+				targetClass: ringxSoftware;
+			}
+			choice srxInstallPackSoftwareChoice {
+				choiceType: multi_select;
+				optional: false;
+				targetClass: scalityRingXPackProSoftware;
+			}
+			choice trackingChoice {
+				choiceType: single_select;
+				optional: false;
+				targetClass: ScalityRINGXSolutionTracking;
+			}
+			choice srxSWSoftwareChoice {
+				choiceType: single_select;
+				optional: true;
+				targetClass: srxSWConfigTypeChoiceItem;
+			}
+			constraint softwareBuleNote {
+				message: "You must purchase new server hardware or new data disk options on this same quote.";
+				body: false;
+			}
+			constraint minOneRingSoftwareRequired {
+				message: "Min 1 software required";
+				body: restriction (ringxSoftware > 0);
+			}
+			constraint rule8Software {
+				message: "If R7H44AAE or R7H45AAE sku is selected, Then Min 1 R7H62AAE is required.";
+				body: if thisInst.selected(ringxSoftware).filter(x => x.id = "R7H44AAE" || x.id = "R7H45AAE").count > 0 then thisInst.selected(ringxSoftware).filter(x => x.id = "R7H62AAE").count > 0;
+			}
+			part requiredTrackingSkuTrigger: triggerConsequentialSelection {
+				string consequentialSelectionFunc: "defaultTrackingSKu";
+			}
+			part RequiredSoftware: triggerConsequentialSelectionVLQ {
+				string consequentialSelectionVLQFunc: "addRingSoftware";, boolean allowUserToOverride: false;
+			}
+			constraint rule7Software {
+				message: "If R7H42AAE or R7H43AAE sku is selected, Then Min 1 R7H61AAE is required.";
+				body: true;
+			}
+		}
+	}
+	product srxDL325G10PlusNVMe SRXDL325G10PlusNVMeSolution {
+		string displayPartNumber: "R7J62A";
+		string[] defaultList: "Scality_RackOnSite", "srxNew", "P19628-L21", "P07640-B21", "P12965-B21", "P26104-B21", "P26109-B21";
+	}
+	/*
+	 * Changes done
+	 * R7J61A_ARTESCA - created new product
+	 * 
+	 */
+	class DL325G10ARTESCA extends SRXDL325G10PlusNVMe {
+		boolean isGLSC : false; // JCN GLSC
+		configurationEntryPoint;
+		platformName: "SCALITYRINGXDL325PLUS";
+		string softwarePlatformName: "";
+		productCategories: ScalityRINGXDL325G10Plus;
+		string coreModelId: "";
+		string displayPartNumber: "";
+		string productIdForPLC: "R7J62A";
+		boolean isProductClass: false;
+		boolean isCustomPlatformModel: true;
+		string ADD_TO_CONFIG: "com.hp.ngc.plugins.agents.update.delegate.startingpoint.StartingPointDelegateAgent";
+		string realBasedummyId: "";
+		string uiSpecToUse: "DL325G10ARTESCA";
+		string[] defaultList: "R7J62A", "srxNew","standardDL325G10PlusRiser";
+		string[] validRackList: "P9K10A", "P9K08A", "P9K38A", "P9K40A", "P9K42A", "P9K46A", "P9K12A", "P9K16A", "P9K06A", "P9K04A";
+		def getValidRackList (): string[] = callout("GetValidRacks", thisInst, validRackList, virtualRackList);
+		boolean showCostOptimizationView: false;
+		
+	}
+	product R7J61A_ARTESCA DL325G10ARTESCA {
+		boolean isGLSC : false; // JCN GLSC
+		string displayPartNumber: "R7J62A";
+		description: "ProLiant DL325 Gen10 Plus NVMe for Scality ARTESCA  (R7J62A)";
+		string productIdForPLC: "R7J62A";
+		string realBasedummyId: "R7J61A_ARTESCA";
+		string coreModelId: "R7J61A";
+		string sVsanId: "R7J61A_ARTESCA";
+		int iNumHardDriveBays: 18;
+		
+	}
+	class SRXDL325G10PlusNVMe extends DL325G10Plus {
+		description: "ProLiant DL325 Gen10 Plus NVMe";
+		string shortLabel: "DL325 Gen10 Plus";
+		platformName: "DL325SDS";
+		boolean showCostOptimizationView: false; //Cost Optimization
+		productCategories: DoNotDisplay;
+		//LAW 8/19/20 - For BOM Import - target platform and disable InstanceChoices check
+		boolean optionInstancesAreReflected: false;
+		string[] validRackList: "P9K10A", "P9K08A", "P9K38A", "P9K40A", "P9K42A", "P9K46A", "P9K12A", "P9K16A", "P9K06A", "P9K04A";
+		string[] virtualRackList: "rackOnSite42u", "rackOnSite42u1200";
+		int iNumHardDriveBays: 18;
+		int iNumOCPupgrades: 4;
+		int iNumTransceivers: 12;
+		string softwarePlatformName: "";
+		boolean supportsTechCare: true;
+		def max_boot_Function (): int = {
+			if(thisInst.realBasedummyId = "R7J61A_ARTESCA") then 1;
+		}
+		def maxBootOptions (): int = {
+			if(thisInst.realBasedummyId = "R7J61A_ARTESCA") then 2;
+		}
+		def max_pciSlotsBandingFunction: int = {
+			if(thisInst.realBasedummyId = "R7J61A_ARTESCA") then 2;
+		}
+		def nMaxNvmeDriveOptions (): int = {
+			if(thisInst.realBasedummyId = "R7J61A_ARTESCA") then if(thisInst.selected(ProliantHardDrive_HP_SFF_NVME).filter(x => x.id >= "P20135-B21").count > 0) then 10 else 18;
+		}
+		def nMaxNvmeMetaDriveOptions (): int = {
+			if(thisInst.realBasedummyId = "R7J61A_ARTESCA") then 2;
+		}
+		def isConfigurable (): boolean = {
+			if SRXDL325G10PlusNVMe.realBasedummyId = 'R7J61A_SDS' then true else false;
+		}
+		def defaultStandardRiser (): string[] = {
+			if(ancestors (thisInst, "WekaDL325G10PlusNVMeSolution").count > 0) then expanderString ("standardDL325G10PlusRiser", 1) else "";
+		}
+		def P20423_Cable (): string[] = {
+			if(ancestors (thisInst, "WekaDL325G10PlusNVMeSolution").count > 0) then if thisInst.selected(SSDEnablmtKit).filter(q => q.id >= "878783-B21").count > 0 then expanderString ("P20423-B21", 1) else "";
+		}
+		def P15911_Cable (): string[] = {
+			if(ancestors (thisInst, "WekaDL325G10PlusNVMeSolution").count > 0 || SRXDL325G10PlusNVMe.realBasedummyId = 'R7J61A_SDS') then if thisInst.selected(SSDEnablmtKit).filter(q => q.id >= "878783-B21").count > 0 then expanderString
+			("P15911-B21", 1) else "";
+		}
+		def P16976_Cable (): string[] = {
+			if(ancestors (thisInst, "WekaDL325G10PlusNVMeSolution").count > 0) then if(thisInst.selected(ProliantInfiniband).filter(q => q.id >= "P31323-B21" || q.id >= "P31348-B21").count  > 0) or
+			thisInst.selected(NetworkingPci).filter(x => x.id = "P22767-B21").count > 0  then expanderString ("P16976-B21", 1) else "";
+		}
+		ifEffective KS_PERT_26331{
+//			def CableDefaults (): string[] = {
+//			if(thisInst.realBasedummyId = "R7J61A_ARTESCA") then if(thisInst.selected(NetworkingPci).filter(x => x.id >= "P24437-B21").count > 0) then expanderString ("JL294A", 2) else if(thisInst.realBasedummyId = "R7J61A_ARTESCA") then
+//			if(thisInst.selected(NetworkingPci).filter(x => x.id >= "P23666-B21").count > 0) then expanderString ("JL271A", 2);
+//		}
+		}
+		otherwise{
+		def CableDefaults (): string[] = {
+			if(thisInst.realBasedummyId = "R7J61A_ARTESCA") then if(thisInst.selected(NetworkingPci).filter(x => x.id >= "P24437-B21").count > 0) then expanderString ("JL294A", 2) else if(thisInst.realBasedummyId = "R7J61A_ARTESCA") then
+			if(thisInst.selected(NetworkingPci).filter(x => x.id >= "P23666-B21").count > 0) then expanderString ("JL271A", 2);
+		}
+		}
+		subsystem trackingSubsystem {
+		//TD move to new functionality where quoter moves it to the top
+		//			group trackingskuNodeGroup {
+		//				groupPartType: TrackingSKuGroup;
+		//				memberClasses: OEMDL325SDSTrackingSku;
+		//			}
+			locationArray trackingSkuChoice {
+			//choiceType: multi_select;
+				rows: 1;
+				fillerClasses: OEMDL325SDSTrackingSku, ScalityRINGXSolutionTracking;
+			}
+		}
+		subsystem processorSubsystem {
+			constraint processor_r1 {
+				message: "Minimum one processor kit required/allowed.";
+				enabled: (thisInst.realBasedummyId = "R7J61A_SDS" || thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: restriction (ProliantProcessor > 0);
+			}
+		}
+		subsystem memorySubsystem {
+			constraint memory_r3 {
+				message: "Minimum six Memory kit required.";
+				enabled: (thisInst.realBasedummyId = "R7J61A_SDS");
+				body: restriction (ProliantMemoryArray > 5);
+			}
+			constraint memory_Artesca {
+				message: "Minimum 8 Memory kit required.";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: restriction (ProliantMemoryArray > 7);
+			}
+			ifEffective KS_PERT_26331 {
+//				constraint memorynoMix_r1 {
+//				message: "Memory No Mix";
+//				body: restriction (ProliantMemoryArray.noMix);
+//			}
+			}
+			otherwise{
+			constraint memorynoMix_r1 {
+				message: "Memory No Mix";
+				body: restriction (ProliantMemoryArray.noMix);
+			}			
+			}
+			constraint memory_r1 {
+				message: "Mixing of x4 and x8 memory is not allowed";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: true;
+			}
+			constraint memory_r4 {
+				message: "Maximum 8 Memory kit allowed.";
+				body: dependency (SRXDL325G10PlusNVMe, ProliantMemoryArray <= 16);//PM 24-may-22 ALM-145434 8);
+			}
+		}
+		subsystem deviceSubsystem {
+			locationArray sddSlots {
+				rows: iNumSDDSlots;
+				columns: 1;
+				fillerClasses: Apollo4500XL450SSDDrive;
+			}
+			locationArray BootDriveChoice {
+				rows: 1;
+				columns: 1;
+				fillerClasses: OSPciBootDevice;
+			}
+			
+			constraint nvmehdd_min1 {
+				message: "Min 1 NVMe SSD required";
+				enabled: (thisInst.realBasedummyId = "R7J61A_SDS");
+				body: restriction (ProliantHardDrive > 0);
+			}
+			ifEffective KS_PERT_25086{
+				constraint m2hdd_min1 {
+				message: "Min 1 M.2 SSD required";
+				enabled: (thisInst.realBasedummyId = "R7J61A_SDS");
+				body: //(thisInst.selected(OSPciBootDevice).count + thisInst.selected(Apollo4500XL450SSDDrive).count) > 0;
+				true;
+			}
+			}
+			otherwise{
+			constraint m2hdd_min1 {
+				message: "Min 1 M.2 SSD required";
+				enabled: (thisInst.realBasedummyId = "R7J61A_SDS");
+				body: (thisInst.selected(OSPciBootDevice).count + thisInst.selected(Apollo4500XL450SSDDrive).count) > 0;
+			}
+			
+			}
+			constraint bootdrive_noMix {
+				message: "Boot Drive Mixing not allowed";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: dependency (OSPciBootDevice > 0, ProliantHardDrive_HP_SFF_NVME [ P26538-B21 ] = 0);
+				dependency (ProliantHardDrive_HP_SFF_NVME [ P26538-B21 ] > 0, OSPciBootDevice = 0);
+			}
+			ifEffective KS_PERT_26331 {
+				constraint bootdrive_min1 {
+				message: "Min 1 Boot Drive required";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: //if(thisInst.selected(OSPciBootDevice).count + thisInst.selected(ProliantHardDrive_HP_SFF_NVME).filter(x => x.id >= "P26538-B21").count) > 0 then true else false;
+				true;
+			}
+			constraint srxInculdeBuleNote {
+				message: "This menu is to be used with OCA with a BOM created by the HPE Scality sizing tool.";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: false;
+			}
+			constraint bootdrive_max {
+				message: "Max 2 Boot Drive is allowed";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: //if(thisInst.selected(OSPciBootDevice).count + thisInst.selected(ProliantHardDrive_HP_SFF_NVME).filter(x => x.id >= "P26538-B21").count) > 2 then false else true;
+				true;
+			}	
+			constraint Max_bootDrive_1 {
+				message: "If P12965-B21 sku is selected, Then Boot Drive(P26538-B21 / P12965-B21) is Min 1 / Max 1.  ";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body:// if(thisInst.selected(OSPciBootDevice).filter(x => x.id >= "P12965-B21").count > 1) then if(thisInst.selected(OSPciBootDevice).count + thisInst.selected(ProliantHardDrive_HP_SFF_NVME).filter(x => x.id >= "P26538-B21").count > 1) then false else true;
+				true;
+			}
+			constraint Max_OSBootDevice {
+				message: "Max 1 quantity of OS Boot Device can be selected";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: true;//if thisInst.selected(OSPciBootDevice).filter(x => x.id >= "P12965-B21").count > 1 then false else true;
+			}
+			constraint Max_DataDrive {
+				message: "If this sku is selected, Then NVMe Data Drive Options is Min 10 / Max 10. ";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: //if(thisInst.selected(ProliantHardDrive_HP_SFF_NVME).filter(x => x.id >= "P20135-B21").count > 10) then false else true;
+				true;
+			}
+			constraint noMix_DataDrive {
+				message: "no Mix for data Drive options";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: //thisInst.selected(ProliantHardDrive_HP_SFF_NVME).filter(x => x.id >= "P26109-B21" || x.id >= "P16501-B21" || x.id >= "P20135-B21" || x.id >= "P20133-B21" || x.id >= "P20131-B21" || x.id >= "P19819-B21").noMix;
+				true;
+			}
+			constraint datadrive_min1 {
+				message: "Minimum 1 Quantity of NVMe SSD Drive required";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: if(thisInst.selected(ProliantHardDrive_HP_SFF_NVME).filter(x => x.id >= "P26109-B21" || x.id >= "P16501-B21" || x.id >= "P20135-B21" || x.id >= "P20133-B21" || x.id >= "P20131-B21" || 
+				x.id >= "P19819-B21" || x.id >= "P26104-B21" || x.id >= "P16503-B21" || x.id >= "P26538-B21" || x.id >= "P47841-B21" || x.id >= "P47842-B21" || x.id >= "P47843-B21" || 
+				x.id >= "P16497-B21" || x.id >= "P16499-B21" || x.id >= "P20195-B21" || x.id >= "P20197-B21" || x.id >= "P20199-B21" || x.id >= "P26124-B21" || x.id >= "P47834-B21" ||
+				x.id >= "P26543-B21" || x.id >= "P44568-B21" || x.id >= "P44576-B21" || x.id >= "P50221-B21" || x.id >= "P50223-B21" || x.id >= "P47835-B21" || x.id >= "P50226-B21" || x.id >= "P44584-B21" || x.id >= "P44592-B21" || x.id >= "P47836-B21" ).count) > 0 then true else false;
+			}
+			
+			constraint Max_DataDrive_18 {
+				message: "Max 18 quantity of NVMe SSD Drive can be selected";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: if(thisInst.selected(ProliantHardDrive_HP_SFF_NVME).filter(x => x.id >= "P26109-B21" || x.id >= "P16501-B21" || x.id >= "P20135-B21" || x.id >= "P20133-B21" || x.id >= "P20131-B21" || 
+				x.id >= "P19819-B21" || x.id >= "P26104-B21" || x.id >= "P16503-B21" || x.id >= "P26538-B21" || x.id >= "P47841-B21" || x.id >= "P47842-B21" || x.id >= "P47843-B21" || 
+				x.id >= "P16497-B21" || x.id >= "P16499-B21" || x.id >= "P20195-B21" || x.id >= "P20197-B21" || x.id >= "P20199-B21" || x.id >= "P26124-B21" || x.id >= "P47834-B21" || 
+				x.id >= "P26543-B21").count > 18) then false else true;
+			}
+			constraint metaDatadrive_min1 {
+				message: "Min 1 Meta data Drive required";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: //(thisInst.selected(ProliantHardDrive_HP_SFF_NVME).filter(x => x.id >= "P26104-B21" || x.id >= "P16503-B21").count) > 0;
+				true;
+			}
+			constraint metaDatadrive_max {
+				message: "Max 2 Meta data Drive allowed";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body:// restriction (ProliantHardDrive_HP_SFF_NVME [ P26104-B21 || P16503-B21 ] <= 2);
+				true;
+			}
+			}
+			otherwise{
+			constraint bootdrive_min1 {
+				message: "Min 1 Boot Drive required";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: if(thisInst.selected(OSPciBootDevice).count + thisInst.selected(ProliantHardDrive_HP_SFF_NVME).filter(x => x.id >= "P26538-B21").count) > 0 then true else false;
+			}	
+			constraint bootdrive_max {
+				message: "Max 2 Boot Drive is allowed";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: if(thisInst.selected(OSPciBootDevice).count + thisInst.selected(ProliantHardDrive_HP_SFF_NVME).filter(x => x.id >= "P26538-B21").count) > 2 then false else true;
+			}	
+			constraint Max_bootDrive_1 {
+				message: "If P12965-B21 sku is selected, Then Boot Drive(P26538-B21 / P12965-B21) is Min 1 / Max 1.  ";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: if(thisInst.selected(OSPciBootDevice).filter(x => x.id >= "P12965-B21").count > 1) then if(thisInst.selected(OSPciBootDevice).count + thisInst.selected(ProliantHardDrive_HP_SFF_NVME).filter(x => x.id >= "P26538-B21").count > 1)
+				then false else true;
+			}	
+			constraint Max_DataDrive {
+				message: "If this sku is selected, Then NVMe Data Drive Options is Min 10 / Max 10. ";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: if(thisInst.selected(ProliantHardDrive_HP_SFF_NVME).filter(x => x.id >= "P20135-B21").count > 10) then false else true;
+			}
+			constraint noMix_DataDrive {
+				message: "no Mix for data Drive options";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: thisInst.selected(ProliantHardDrive_HP_SFF_NVME).filter(x => x.id >= "P26109-B21" || x.id >= "P16501-B21" || x.id >= "P20135-B21" || x.id >= "P20133-B21" || x.id >= "P20131-B21" || x.id >= "P19819-B21").noMix;
+			}
+			constraint datadrive_min1 {
+				message: "Min 1 data Drive required";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: if(thisInst.selected(ProliantHardDrive_HP_SFF_NVME).filter(x => x.id >= "P26109-B21" || x.id >= "P16501-B21" || x.id >= "P20135-B21" || x.id >= "P20133-B21" || x.id >= "P20131-B21" || x.id >= "P19819-B21").count) > 0 then true 
+				else false;
+			}
+			constraint Max_DataDrive_18 {
+				message: "Max 18 data Drive allowed";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: if(thisInst.selected(ProliantHardDrive_HP_SFF_NVME).filter(x => x.id >= "P26109-B21" || x.id >= "P16501-B21" || x.id >= "P20135-B21" || x.id >= "P20133-B21" || x.id >= "P20131-B21" || x.id >= "P19819-B21").count > 18) then false
+				else true;				
+				}
+				constraint metaDatadrive_min1 {
+				message: "Min 1 Meta data Drive required";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: (thisInst.selected(ProliantHardDrive_HP_SFF_NVME).filter(x => x.id >= "P26104-B21" || x.id >= "P16503-B21").count) > 0;
+			}
+			constraint metaDatadrive_max {
+				message: "Max 2 Meta data Drive allowed";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: restriction (ProliantHardDrive_HP_SFF_NVME [ P26104-B21 || P16503-B21 ] <= 2);
+			}
+			}				
+			constraint m2Adapter_Rule1 {
+				message: "This M.2 SATA option requires selection of M.2 SSD Drive.";
+				body: true;
+			}
+			constraint m2Adapter_Rule2 {
+				message: "This option requires one qty of 4LFF ODD M.2 cable OR 8SFF ODD M.2 cable.</br>
+							-One qty of 4LFF ODD M.2 cable OR 8SFF ODD M.2 cable can support both HPE Universal SATA HH M.2 Kit and Optical drive.";
+				body: true;
+			}
+			constraint drivecage_rule24 {
+				message: "If '4LFF (O) OR 8SFF(O) OR 8SFF U.3 (O) OR 8SFF U.2(O) outer drive cage is not selected then SAS Internal Controllers, 
+						  Controller cables and Hard Drives must not be allowed for selection. <br>
+ 						  Note - This config will be shipped as drive less config.";
+				enabled: (thisInst.realBasedummyId != "R7J61A_SDS");
+				body: true;
+			}
+			constraint Accessories_Rule1 {
+				message: "Only if Optical drive OR HPE Universal SATA HH M.2 Kit is selected then this cable must be selected.";
+				body: true;
+			}
+			constraint Accessories_Rule2 {
+				message: "Only if Optical drive OR HPE Universal SATA HH M.2 Kit is selected then this cable must be selected.";
+				body: true;
+			}
+			constraint ssd_Rule1 {
+				message: "Can be selected only if HPE Universal SATA HH M.2 Kit is selected.</br>
+						  HPE Universal SATA HH M.2 Kit (878783-B21) supports max of 2 M.2 SSD.";
+				body: true;
+			}
+			constraint hardDriveSFF_r9a {
+				message: "This Hard Drive option can be selected only with below combination</br>
+							a) 8SFF U.2 (O) <br>
+							b) 8SFF U.2 (O) + 2SFF U.2 <br>
+							c) 8SFF (O) + 2SFF U.2 <br>
+							d) 8SFF (O) + 8SFF (I) + 2SFF U.2";
+				body: true;
+			}
+			constraint hardDriveSFF_r10a {
+				message: "This hard drive option can be selected only with below combination .</br>
+							a) 8SFF U.3 (O) <br>
+							b) 8SFF U.3 (O) + 2SFF U.3 <br>
+							c) 8SFF (O) + 2SFF U.3<br>
+							d) 8SFF (O) + 8SFF (I) + 2SFF U.3 ";
+				body: true;
+			}
+			constraint ssd_Rule2 {
+				message: "If quantity 2 of M.2 SSDs are selected then second part number must match with first part number.";
+				body: true;
+			}
+		}
+		subsystem modelDefaults {
+			constraint noBTOinCTOModels {
+				message: "BTO products are not allowed in CTO Base Model.";
+				enabled: (thisInst.realBasedummyId = "R7J61A_SDS");
+				body: true;
+			}
+			constraint model_remark {
+				message: "Generic Model-X does not comes with Drive cages.";
+				body: true;
+			}
+		}
+		subsystem pciSubsystem {
+			locationArray OCPUpgradesLocArray {
+				rows: iNumOCPupgrades;
+				fillerClasses: ProliantOCPUpgCable, Transceivers;
+			}
+			part P16976CableSkuTrigger: triggerConsequentialSelection {
+				string consequentialSelectionFunc: "P16976_Cable";
+			}
+			part CableSkuTrigger: triggerConsequentialSelection {
+				string consequentialSelectionFunc: "CableDefaults";
+			}
+			constraint network_Upgrade {
+					message: "OCP Upg Cbl Kit (P16976-B21) requires selection of any one of the SKU from below list. <br>
+							 - P10112-B21 - MLX MCX562A 10/25GbE 2p SFP28 OCP3 Adptr <br>
+							 - P31323-B21 - HPE IB HDR/EN 200Gb 1p QSFP56 OCP3 Adptr <br>
+							 - P31348-B21 - HPE IB HDR/EN 200Gb 2p QSFP56 OCP3 Adptr";
+					body: true;
+			}
+			constraint OSBootDeviceRule1 {
+				message: "Max 1";
+				body: true;
+			}
+			constraint infiband_rule_7 {
+				message: "";
+				body: true;
+			}
+			constraint networkingCards_r3 {
+				message: "";
+				body: true;
+			}
+			constraint networkingCards_max {
+				message: "PCI MAX exceeded";
+				body: true;
+			}
+			constraint networking_infoMessage {
+				message: "Certain Network Adapters require SFPs, Direct Attach Cables or other accessories in order to function. For additional information, please refer to the Network Adapter Quick Specs. <br />
+						  If you do not have these items on-site, please make sure to select them from the Accessories area.";
+				body: true;
+			}
+			constraint networking_infoMessage1 {
+				message: "- HPE 100GbE 1p QSFP28 MCX515A-CCAT Adptr, INT E810 100GbE 2p QSFP28 Adptr and MLX MCX623105AS 200GbE 1p QSFP56 Adptr cannot be populated in Slot3.";
+				body: true;
+			}
+			constraint networking_infoMessage2 {
+				message: "- HPE 1GbE 4p BASE-T I350-T4 Adptr or HPE 10GbE 4p SFP+ QL41134 Adptr or HPE 10GbE 4P BASE-T X710-T4L Spl Adptr or HPE 10GbE 4p SFP+ X710 Adptr or INT E810 10/25GbE 4p SFP28 Adptr  can be populated only on Slot1 OR Slot3.";
+				body: true;
+			}
+			constraint ocpadapter_min1 {
+				message: "Min 1 OCP adapter required";
+				enabled: (thisInst.realBasedummyId = "R7J61A_SDS");
+				body:
+				{
+					val arocControllers = "P08449-B21 P10097-B21 P10115-B21 P26256-B21 P10118-B21 P08452-B21 P10103-B21 P10112-B21 P31323-B21 P31348-B21 P10106-B21 P22767-B21";
+					val arocControllersCount1 = thisInst.selected(NetworkingPci).filter(x => split(x.id, "#").get(0) <= arocControllers).count;
+					val arocControllersCount2 = thisInst.selected(NetworkAdapterPci).filter(x => split(x.id, "#").get(0) <= arocControllers).count;
+					val arocControllersCount3 = thisInst.selected(ProliantInfiniband).filter(x => split(x.id, "#").get(0) <= arocControllers).count;
+					(thisInst.selected(NetworkingPci).filter(x => split(x.id, "#").get(0) <= arocControllers).count + thisInst.selected(NetworkAdapterPci).filter(x => split(x.id, "#").get(0) <= arocControllers).count +
+					thisInst.selected(ProliantInfiniband).filter(x => split(x.id, "#").get(0) <= arocControllers).count) > 0;
+				}
+			}
+			constraint ocpadapter_min1_artesca {
+				message: "Min 1 OCP adapter required";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body:
+				{
+					val arocControllers = "P08449-B21 P10115-B21 P10118-B21 P10112-B21 P10097-B21 P26256-B21 P08452-B21 
+					P10103-B21 P31323-B21 P31348-B21 P10106-B21 P22767-B21 P24437-B21 P23666-B21 P23664-B21 P31324-B21 P26262-B21 
+					P08443-B21 P08458-B21 P10180-B21 P13188-B21 P21112-B21  P21927-B21  P22702-B21 P25960-B21";
+					val arocControllersCount1 = thisInst.selected(NetworkingPci).filter(x => split(x.id, "#").get(0) <= arocControllers).count;
+					val arocControllersCount2 = thisInst.selected(NetworkAdapterPci).filter(x => split(x.id, "#").get(0) <= arocControllers).count;
+					val arocControllersCount3 = thisInst.selected(ProliantInfiniband).filter(x => split(x.id, "#").get(0) <= arocControllers).count;
+					(thisInst.selected(NetworkingPci).filter(x => split(x.id, "#").get(0) <= arocControllers).count + thisInst.selected(NetworkAdapterPci).filter(x => split(x.id, "#").get(0) <= arocControllers).count +
+					thisInst.selected(ProliantInfiniband).filter(x => split(x.id, "#").get(0) <= arocControllers).count) > 0;
+				}
+			}
+			ifEffective KS_PERT_26331{
+				constraint ocpadapter_Rule2 {
+				message: "If P08449-B21 (1GbE OCP) is selected, Then a Min of 1 of any other network card is required per nod.  (Min 1 of any 10GbE or faster Network Adapter per node required.) ";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body:{
+				//dependency (NetworkingPci [ P08449-B21 ] > 0, NetworkingPci [ P24437-B21 || P23666-B21 ] = 1);
+				val PCIe_Adapters = "P24437-B21 P23666-B21 P23664-B21 P31324-B21 P26262-B21 
+					P08443-B21 P08458-B21 P10180-B21 P13188-B21 P21112-B21  P21927-B21  P22702-B21 P25960-B21";
+					val arocControllersCount1 = thisInst.selected(NetworkingPci).filter(x => split(x.id, "#").get(0) <= PCIe_Adapters).count;
+					val arocControllersCount2 = thisInst.selected(NetworkAdapterPci).filter(x => split(x.id, "#").get(0) <= PCIe_Adapters).count;
+					val arocControllersCount3 = thisInst.selected(ProliantInfiniband).filter(x => split(x.id, "#").get(0) <= PCIe_Adapters).count;
+					if thisInst.selected(NetworkingPci).filter(x=> x.id <="P08449-B21").count > 0 
+					then (thisInst.selected(NetworkingPci).filter(x => split(x.id, "#").get(0) <= PCIe_Adapters).count + thisInst.selected(NetworkAdapterPci).filter(x => split(x.id, "#").get(0) <= PCIe_Adapters).count +
+					thisInst.selected(ProliantInfiniband).filter(x => split(x.id, "#").get(0) <= PCIe_Adapters).count) > 0;				
+			}			
+			}
+			constraint pciadapter_noMix {
+				message: "PCI Adater, No mixing allowed";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: true; //thisInst.selected(NetworkingPci).filter(x => x.id >= "P24437-B21" || x.id >= "P23666-B21").noMix;
+			}
+			constraint ocpadapter_Rule7 {
+				message: "If P10112-B21 (Mellanox OCP3) is selected, Then Min = 1x P16976-B21 is required. ";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body:true; 
+				//dependency (NetworkAdapterPci [ P10112-B21 ] > 0, ProliantOCPUpgCable [ P16976-B21 ] = 1);
+			}
+			constraint networking_ocp_r23 {
+				message: "If this option is selected then HPE DL325 G10P OCP BW Upgrade Cbl Kit (P16976-B21) must be selected.";
+				body: true;				
+			}
+			constraint cable_noMix {
+				message: "Cables, No mixing allowed";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: true;
+				//thisInst.selected(Transceivers).filter(x => x.id >= "JL271A" || x.id >= "JL294A").noMix;
+			}
+			}
+			otherwise{
+			constraint ocpadapter_Rule2 {
+				message: "If P08449-B21 (1GbE OCP) is selected, Then Min 1 P24437-B21 or P23666-B21 per node is required. ";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: dependency (NetworkingPci [ P08449-B21 ] > 0, NetworkingPci [ P24437-B21 || P23666-B21 ] = 1);
+			}
+			constraint pciadapter_noMix {
+				message: "PCI Adater, No mixing allowed";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: thisInst.selected(NetworkingPci).filter(x => x.id >= "P24437-B21" || x.id >= "P23666-B21").noMix;
+			}
+			constraint ocpadapter_Rule7 {
+				message: "If P10112-B21 (Mellanox OCP3) is selected, Then Min = 1x P16976-B21 is required. ";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: dependency (NetworkAdapterPci [ P10112-B21 ] > 0, ProliantOCPUpgCable [ P16976-B21 ] = 1);
+			}
+			constraint cable_noMix {
+				message: "Cables, No mixing allowed";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: thisInst.selected(Transceivers).filter(x => x.id >= "JL271A" || x.id >= "JL294A").noMix;
+			}
+			}
+			
+			
+			part P20423CableSkuTrigger: triggerConsequentialSelection {
+				string consequentialSelectionFunc: "P15911_Cable";
+			}
+			part defaultStandardRiserTrigger: triggerConsequentialSelection {
+				string consequentialSelectionFunc: "defaultStandardRiser";
+			}
+			constraint NetworkingCableRule {
+				message: "If this sku is selected, Then 1x P16976-B21 ( Cable Kit ) is required.";
+				enabled: (thisInst.realBasedummyId = "R7J61A_SDS");
+				body:
+				{
+					val arocNetworkingPci = "P10112-B21 P31323-B21 P31348-B21 P10106-B21 P22767-B21";
+					val arocNetworkingCount1 = thisInst.selected(NetworkAdapterPci).filter(x => split(x.id, "#").get(0) <= arocNetworkingPci).count;
+					val arocNetworkingCount2 = thisInst.selected(ProliantInfiniband).filter(x => split(x.id, "#").get(0) <= arocNetworkingPci).count;
+					if(arocNetworkingCount1 + arocNetworkingCount2) > 0 then thisInst.selected(Cable).filter(x => x.id <= "P16976-B21").count > 0;
+				}
+			}
+		}
+		subsystem powerSubsystem {
+			constraint powerSuppliesMixMaxRule_a {
+				message: "";
+				body: true;
+			}
+			constraint powerCords_r6Warnning {
+				message: "If any of the power cords are configured from the dropdown menu selection, the standard power cord(s) will not ship with the server.";
+				body: true;
+			}
+			constraint powerCords_r6Warnning1 {
+				message: "AC power cords not supported with DC power supply.";
+				body: true;
+			}
+			constraint powerCordBN2 {
+				message: "If final destination is India, you must order BIS India power cord(s) equal to quantity of power supplies and 469774-409 under 'Manufacturing Services'  to remove all standard world wide power cords from shipment";
+				body: true;
+			}
+		}
+		subsystem HPCSoftwareSystemSubsystem {
+			constraint checkMaxlimit {
+				message: "Max quantity is 10 for VMware vSphere Editions ";
+				body: true;
+			}
+		}
+		subsystem SecurityOptionsSubsystem {
+			constraint warningNoteSecHardware {
+				message: "HP's Trusted Platform Module (TPM) contains a security cryptoprocessor that stores cryptographic keys. When used in conjuction with encryption software, such as 
+							Microsoft's BitLocker Drive Encryption, access to data in a platform is denied if the boot sequence is not as expected. For this reason, the customer should not only make sure 
+							to follow all procedures in HP's TPM documentation but also all procedures from the encryption software provider.";
+				body: true;
+			}
+			constraint securityHardwareBlueNote {
+				message: "The default setting for the TPM 2.0 Gen 10 Kit (864279-B21) is TPM 2.0. <br />
+							To change this setting to TPM 1.2, the TPM 1.2 FIO option (872108-B21) must be selected.";
+				body: true;
+			}
+		}
+		boolean enableInstanceQuantity: true;
+		string[] instanceQuantityClasses: "ringxSoftware", "genericRingXSoftware";
+		def addRingSoftware (): string[] = {
+			if thisInst.selected(ringxSoftware).count > 0 then addOptionToRingSKU (thisInst.selected(srxConfigTypeChoiceItem).get(0).optionId);
+		}
+		def addOptionToRingSKU (optionId: int): string[] = callout("StorageModelsUtils", "addOptionToRingSKU", thisInst, optionId);
+		subsystem softwareSubSystem {
+			constraint typeOptionRequired {
+				message: "This option is required.";
+				enabled : ancestors (thisInst, "WekaDL325G10PlusNVMeSolution").count = 0 and ancestors (thisInst, "SRXDL325G10PlusNVMe").count = 0 ;//PM 7-oct-22 ALM-146782 Added scality model
+				body: restriction (srxConfigTypeChoiceItem >= 1);
+			}
+			choice CohesityOptionTypeChoice {
+				targetClass: srxConfigTypeChoiceItem;
+				choiceType: single_select;
+			}
+			choice CohesitySerSubChoice {
+				targetClass: ringxSoftware;
+				choiceType: multi_select;
+			}
+			part RequiredSoftware: triggerConsequentialSelectionVLQ {
+				string consequentialSelectionVLQFunc: "addRingSoftware";, boolean allowUserToOverride: false;
+			}
+			ifEffective KS_PERT_26331{
+				constraint software_Required {
+				message: "One of the R7H50AAE, R7H48AAE, R7H46AAE Software is required";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: true;
+				//thisInst.selected(ringxSoftware).filter(x => x.id >= "R7H50AAE" || x.id >= "R7H48AAE" || x.id >= "R7H46AAE").count > 0;
+			}
+			}
+			otherwise{
+			constraint software_Required {
+				message: "One of the R7H50AAE, R7H48AAE, R7H46AAE Software is required";
+				enabled: (thisInst.realBasedummyId = "R7J61A_ARTESCA");
+				body: thisInst.selected(ringxSoftware).filter(x => x.id >= "R7H50AAE" || x.id >= "R7H48AAE" || x.id >= "R7H46AAE").count > 0;
+			}
+			}
+		}
+		subsystem supportSelectionsSubsystem {
+			choice personalizedSupportFixedServicesChoice {
+				targetClass: PersonalizedSupportFixedServices;
+				choiceType: multi_select;
+			}
+			choice personalSupportAdditionalDaysFixedServicesChoice {
+				targetClass: PersonalSupportAdditionalDaysFixedServices;
+				choiceType: multi_select;
+			}
+			choice criticalAdvantageChoice {
+				targetClass: CriticalAdvantageServices;
+				choiceType: multi_select;
+			}
+			choice proactiveSelectChoice {
+				targetClass: ProactiveSelectFixedServices;
+				choiceType: multi_select;
+			}
+			choice aceProactiveSelectChoice {
+				targetClass: AceProactiveSelectServices;
+				choiceType: multi_select;
+			}
+			choice educationfixedselectionChoice {
+				targetClass: EducationFixedServices;
+				choiceType: multi_select;
+			}
+			//DK Added for PPM 77046 on 11th-June-18
+			choice flexCombinationChoice {
+				targetClass: CombinationFlexibleServices;
+			}
+			choice flexHWChoice {
+				targetClass: StandaloneHWFlexibleServices;
+			}
+			choice flexSWChoice {
+				targetClass: StandaloneSWFlexibleServices;
+			}
+			choice flexInstallChoice {
+				targetClass: InstallationFlexibleServices;
+			}
+			choice fixedCombinationChoice {
+				targetClass: CombinationFixedServices;
+			}
+			choice fixedHWChoice {
+				targetClass: StandaloneHWFixedServices;
+			}
+			choice fixedSWChoice {
+				targetClass: StandaloneSWFixedServices;
+			}
+			choice fixedInstallChoice {
+				targetClass: InstallationHWFixedServices;
+			}
+			choice flexCombinationOCAChoice {
+				optional: true;
+				targetClass: CombinationFlexibleServicesOCA;
+				choiceType: single_select;
+			}
+			choice flexInstallOCAChoice {
+				optional: true;
+				targetClass: InstallationFlexibleServicesOCA;
+				choiceType: single_select;
+			}
+			choice educationflexibleselectionOCAChoice {
+				targetClass: EducationFlexibleServicesOCA;
+				choiceType: multi_select;
+			}
+			choice proactiveflexibleselectionOCAChoice {
+				targetClass: ProactiveSelectFlexibleServicesOCA;
+				choiceType: multi_select;
+			}
+			choice pereventflexibleselectionOCAChoice {
+				targetClass: PerEventFlexibleServicesOCA;
+				choiceType: multi_select;
+			}
+			choice educationflexibleselectionChoice {
+				targetClass: EducationFlexibleServices;
+				choiceType: multi_select;
+			}
+			choice proactiveflexibleselectionChoice {
+				targetClass: ProactiveSelectFlexibleServices;
+				choiceType: multi_select;
+			}
+			choice personalizedSupportFlexibleServicesChoice {
+				targetClass: PersonalizedSupportFlexibleServices;
+				choiceType: multi_select;
+			}
+			choice personalSupportAdditionalDaysFlexibleServicesChoice {
+				targetClass: PersonalSupportAdditionalDaysFlexibleServices;
+				choiceType: multi_select;
+			}
+			choice pereventflexibleselectionChoice {
+				targetClass: PerEventFlexibleServices;
+				choiceType: multi_select;
+			}
+			choice ConsultingServicesOCAChoice {
+				targetClass: ConsultingFlexibleServices;
+				choiceType: multi_select;
+			}
+			choice ConsultingFixedServicesOCAChoice {
+				targetClass: ConsultingFixedServices;
+				choiceType: multi_select;
+			}
+			choice CustomerSpecificCombinationFlexibleChoice {
+				targetClass: CustomerSpecificCombinationFlexibleServices;
+				choiceType: multi_select;
+			}
+			/*Proactive Select Services*/
+			choice proactivefixedselectionChoice {
+				targetClass: ProactiveSelectFixedServices;
+				choiceType: multi_select;
+			}
+			/* add by lawrence at 2011-11-14 */
+			/*Per-Event Services Fixed*/
+			choice pereventfixedselectionChoice {
+				targetClass: PerEventFixedServices;
+				choiceType: multi_select;
+			}
+			//CEZ 2014-10-24 [NPI 64037] Start
+			choice onsiteAnalysisFlexibleServicesChoice {
+				targetClass: OnsiteAnalysisFlexibleServices;
+				choiceType: multi_select;
+			}
+			choice onsiteAnalysisAdditionalDayFlexibleServicesChoice {
+				targetClass: OnsiteAnalysisAdditionalDayFlexibleServices;
+				choiceType: multi_select;
+			}
+			choice onsiteAnalysisFixedServicesChoice {
+				targetClass: OnsiteAnalysisFixedServices;
+				choiceType: multi_select;
+			}
+			choice onsiteAnalysisAdditionalDayFixedServicesChoice {
+				targetClass: OnsiteAnalysisAdditionalDayFixedServices;
+				choiceType: multi_select;
+			}
+		}
+	}
+}

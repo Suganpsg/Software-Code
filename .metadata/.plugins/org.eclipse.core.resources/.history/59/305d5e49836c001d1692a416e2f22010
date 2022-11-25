@@ -1,0 +1,8 @@
+public class testValue {
+
+	public static void main(String[] args) throws ClassNotFoundException {
+		Object obj = new Object("ClassNotFoundException");
+		System.out.println(Class.forName("ClassNotFoundException"));
+	}
+
+}

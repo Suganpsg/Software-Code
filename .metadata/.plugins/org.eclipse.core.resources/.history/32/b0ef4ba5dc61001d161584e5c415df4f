@@ -1,0 +1,1772 @@
+package com.hp.ngc.plugins.agents.update.delegate.baseline;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+
+import com.hp.ngc.agents.ICustomChoicesAgent;
+import com.hp.ngc.engine.api.component.IChoiceItem;
+import com.hp.ngc.engine.api.component.IChoiceItemInternal;
+import com.hp.ngc.engine.api.component.IChoiceWithItems;
+import com.hp.ngc.engine.api.request.ModificationRequest;
+import com.hp.ngc.engine.api.request.ModificationRequest.RequestStatusCode;
+import com.hp.ngc.engine.api.request.OperationRequest;
+import com.hp.ngc.engine.api_impl.IPreferencesInternal;
+import com.hp.ngc.engine.api_impl.SubConfigurationImpl;
+import com.hp.ngc.engine.api_impl.component.Choice;
+import com.hp.ngc.engine.api_impl.component.ChoiceItem;
+import com.hp.ngc.engine.exceptions.EngineException;
+import com.hp.ngc.engine.uispecs.xmlbean.SectionType;
+import com.hp.ngc.kb.modelInstance.AvailableQuantities;
+import com.hp.ngc.kb.modelInstance.ModelInstance;
+import com.hp.ngc.kb.modelInstance.NgcLocationArrayInstance;
+import com.hp.ngc.plugins.agents.update.AgentUtility;
+import com.hp.ngc.plugins.builtin.agents.update.BaseDelegateAgent;
+import com.hp.ngc.plugins.builtin.agents.views.InstanceChoices;
+import com.hp.ngc.engine.api_impl.ConfigurationImpl;
+import com.hp.ngc.kb.modelInstance.ConfigurationInstance;
+
+public class AvailableQuantitiesUpdateAgent extends BaseDelegateAgent implements ICustomChoicesAgent {
+
+	private String MSA2060DE_CLASS = "MSA2060DE";
+	private String DL360G10PlusServerCohesity_CLASS = "DL360G10PlusServerCohesity";
+	private String E920baseserver_CLASS = "E920baseserver";
+	private String E920dServer_CLASS = "E920dServer";
+	private String E920tserver_CLASS = "E920tserver";
+	private String DX170G10_CLASS = "DX170RG10";
+	private String DX190G10_CLASS = "DX190RG10";
+	private String DX4200G10_CLASS = "DX4200Gen10";
+	private String CRAY42U1300600RACK_CLASS = "Cray42u1300600Rack";
+	private String CRAY48U1300600RACK_CLASS = "Cray48u1300600Rack";
+	private String CRAYKJ19STORAGESERVER_CLASS = "CrayKJ19StorageServer";
+	private String CRAYKJ19STORAGESERVER_GEN2_CLASS = "CrayKJ19StorageServerGen2";
+	private String DX385G10P_CLASS = "DX385Gen10Plus";
+	private String APOLLO2KCHASSISP_CLASS = "Apollor2x00ChassisG10Plus";
+	private String APOLLO80CHASSISP_CLASS = "Apollo80Chassis";
+	private String SIMPLIVITYDL380_CLASS = "HC380SimplivityGen10";
+	private String SIMPLIVITYDL325_CLASS = "HC325SimplivityGen10";
+	private String SIMPLIVITYDL325UPG_CLASS = "HC325SimplivityGen10Upg";
+	private String SIMPLIVITYDL325V2_CLASS = "HC325SimplivityG10PlusV2";
+	private String SIMPLIVITYDL325V2UPG_CLASS = "HC325SimplivityG10PlusV2Upg";
+	private String HPE3Par600_CLASS = "HPE3Par600StorageArray";
+	private String IntSeries42u6001075G2Rack_CLASS = "IntSeries42u6001075G2Rack";
+	private String AdvSeries42u6001075Rack_CLASS = "AdvSeries42u6001075Rack";
+	private String IntSeries42u6001200G2Rack_CLASS = "IntSeries42u6001200G2Rack";
+	private String AdvSeries42u6001200Rack_CLASS = "AdvSeries42u6001200Rack";
+	private String Apollo4200GEN10_CLASS = "Apollo4200Gen10";
+	private String CTERAEdgeFilerNodes_CLASS = "CTERAEdgeFilerNodes";
+	private String DateraCLXNodes_CLASS = "DateraCLXNodes";
+	private String XL675dG10Plus_CLASS = "XL675dG10Plus";
+	private String NIMBLEFLASHARRAYGEN6 = "NimbleAllFlashArrayGen6";
+	private String NIMBLEGEN6SHELF = "NimbleGen6Shelf";
+	private String NIMBLE_REFRESH_CONTROLLER = "NimbleTechRefreshCtrl";
+	private String NIMBLEGEN6TECHREF = "NimbleAllFlashGen6TechRef";
+	private String DX360G10_CLASS = "DX360Gen10";
+	private String XL645dG10Plus_CLASS = "XL645dG10Plus";
+	private String ParallelServerModel_CLASS = "ParallelServerModel";
+	private String ParallelBladeModel_CLASS = "ParallelServer60DiskBlade";
+	private String XL220nG10Plus_CLASS = "XL220nG10Plus";
+	private String XL290nG10Plus_CLASS = "XL290nG10Plus";
+	private String DL360G10Plus_CLASS = "DL360G10Plus";
+	private String DL360Gen11_CLASS = "DL360Gen11";
+	private String DL110G10Plus_CLASS = "DL110G10Plus";
+	private String DL345G10Plus_CLASS = "DL345G10Plus";
+	private String DL160_CLASS = "DL160Gen10";
+	private String DL560_CLASS = "DL560Gen10";
+	private String ML30G10Plus_CLASS = "ML30Gen10Plus";
+	private String DL365G10Plus_CLASS = "DL365G10Plus";
+	private String DL385G10Plus_CLASS = "DL385G10Plus";
+	private String DL325G10Plus_CLASS = "DL325G10Plus";
+	private String DL385G10PlusV2_CLASS = "DL385G10PlusV2";
+	private String ARUBA518AP_CLASS = "Aruba518SeriesAccessPoint";
+	private String HTCDL360G10Plus_CLASS = "HTCDL360G10Plus";
+	private String EX235A_BLADE_CLASS = "BardPeakBlade";
+	private String EX254A_BLADE_CLASS = "BlancaPeakBlade";
+	private String DX380G10Plus_CLASS = "DX380Gen10Plus";
+	private String DX360G10Plus_CLASS = "DX360Gen10Plus";
+	private String DL20G10Plus_CLASS = "DL20G10Plus";
+    private String RL300Gen11_CLASS = "RL300Gen11";
+    private String DL385Gen11_CLASS = "DL385Gen11";
+    private String DL365Gen11_CLASS = "DL365Gen11";
+    private String DL345Gen11_CLASS = "DL345Gen11";
+    private String DL325Gen11_CLASS = "DL325Gen11";
+    private String SDFLEXAH_CLASS = "SDFlexAH";
+
+	
+	// Region, Country
+	protected String regionCode = "";
+	protected String countryCode = "";
+	protected static final String productIdAtt = "productId";
+	@Override
+	public void setConfiguration(SubConfigurationImpl subConfig) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void initializeCustomControlsOnSection(SectionType sectionType, InstanceChoices instanceChoices,
+			ModelInstance modelInstance) throws EngineException {
+		//No custom logic
+	}
+
+	@Override
+	public boolean agentControlsChoiceUpdate(Choice choice, InstanceChoices instanceChoices, boolean firstTime) {
+		//No custom logic
+		return true;
+	}
+
+	@Override
+	public boolean agentControlsChoiceUpdatePass2(Choice choice, InstanceChoices instanceChoices, boolean firstTime) {
+		//No custom logic
+		if(choice.getId().endsWith("FibreChannelHBAChoice")){
+			return true;
+		}else{
+			return false;
+		}
+	}
+
+	@Override
+	public void updateChoice(Choice choice, ModelInstance modelInstance, InstanceChoices instanceChoices,
+			boolean firstTime) throws EngineException {
+		instanceChoices.resumeUpdateFromDelegate(choice, modelInstance);
+	}
+
+	@Override
+	public void updateChoicePass2(Choice choice, ModelInstance modelInstance, InstanceChoices instanceChoices,
+			boolean firstTime) throws EngineException {
+		//No custom logic
+		if (modelInstance.isDescendantOf(Apollo4200GEN10_CLASS)) {
+			if (modelInstance.attributeDefined("realBasedummyId")) {
+				String realBasedummyId = modelInstance.getAttributeStringValue("realBasedummyId");
+				if (realBasedummyId.equals("Apo4200G10_P07244")	&& choice.getId().endsWith("FibreChannelHBAChoice")) {
+					int currentQtyAll = modelInstance.getSubConfiguration().getInstancesOfClassNested("PciCard").size();
+					resrictGroupMax(choice, modelInstance, instanceChoices,firstTime, currentQtyAll, 3);
+				} else {
+					instanceChoices.resumeUpdateFromDelegatePass2(choice,modelInstance);
+				}
+			} else {
+				instanceChoices.resumeUpdateFromDelegatePass2(choice,modelInstance);
+			}
+		} else {
+			instanceChoices.resumeUpdateFromDelegatePass2(choice, modelInstance);
+		}
+	}
+
+	@Override
+	public boolean agentControlsAvailableQuantitiesForItem(Choice choice, InstanceChoices instanceChoices,
+			boolean firstTime) {
+		// Always TRUE
+		return true;
+	}
+	public void resrictGroupMax(Choice choice, ModelInstance modelInstance,
+			InstanceChoices instanceChoices, boolean firstTime , int currentQtyAll , int valGroupMax) throws EngineException{
+		for (IChoiceItem item : ((IChoiceWithItems)choice).getItems()) {
+			IChoiceItemInternal iItemInternal = (IChoiceItemInternal) item;
+			ChoiceItem cItem = (ChoiceItem) item;
+			int currentQty = modelInstance.getSubConfiguration().getInstancesOfClassNested(cItem.getId()).size();
+			cItem.setSelectedValue(currentQty, instanceChoices.getChoicePoint(), firstTime);
+			List<Integer> newQuantities = null;
+			int currentMax = currentQtyAll > valGroupMax ? currentQty :  valGroupMax - (currentQtyAll-currentQty);
+			AvailableQuantities availableQuantities = new AvailableQuantities(0, currentMax, null);
+			newQuantities = availableQuantities.getQuantities();
+			instanceChoices.setItemValues(iItemInternal, newQuantities, firstTime);
+		}
+	}
+	@Override
+	public void updateAvailableQuantitiesForItem(AvailableQuantities availableQuantities, IChoiceItem iItem,
+			Choice choice, InstanceChoices instanceChoices) throws EngineException {
+		//Create Branching logic here.
+		ModelInstance targetModel = instanceChoices.getPrimaryInstance();
+		
+		if(targetModel != null) {
+			if(targetModel.isDescendantOf(MSA2060DE_CLASS)) {
+				if(choice.getId().endsWith("EncTAASSDsHDDBdlTable")) updateAvailableQuantitiesMSATAA(availableQuantities, iItem, targetModel );		
+				}
+			
+			if(targetModel.isDescendantOf(DL360G10PlusServerCohesity_CLASS)|| targetModel.isDescendantOf(DL360G10PlusServerCohesity_CLASS)) {
+				if(choice.getId().endsWith("processorChoice")) updateAvailableQuantitiesDL360G10PlusServerCohesityProcessor(availableQuantities, targetModel, iItem, choice, instanceChoices);
+				if(choice.getId().endsWith("memorySlots")) updateAvailableQuantitiesDL360G10PlusServerCohesityMemory(availableQuantities, targetModel, iItem, choice, instanceChoices);
+				if(choice.getId().endsWith("sparessdandHddoptions")) updateAvailableQuantitiesDL360G10PlusServerCohesitySSDHDD(availableQuantities, targetModel, iItem, choice, instanceChoices);
+				if(choice.getId().endsWith("powersupplyChoice")) updateAvailableQuantitiesDL360G10PlusServerCohesityPowerSupply(availableQuantities, targetModel, iItem, choice, instanceChoices);
+			}
+			
+			if(targetModel.isDescendantOf(E920baseserver_CLASS)|| targetModel.isDescendantOf(E920baseserver_CLASS)) {
+				if(choice.getId().endsWith("persistentMemoryChoice")) updateAvailableQuantitiesE920baseserverPersistentMem(availableQuantities, targetModel, iItem, choice, instanceChoices);
+             }
+			if(targetModel.isDescendantOf(E920dServer_CLASS)|| targetModel.isDescendantOf(E920dServer_CLASS)) {
+				if(choice.getId().endsWith("persistentMemoryChoice")) updateAvailableQuantitiesE920dServerPersistentMem(availableQuantities, targetModel, iItem, choice, instanceChoices);
+             }
+			if(targetModel.isDescendantOf(E920tserver_CLASS)|| targetModel.isDescendantOf(E920tserver_CLASS)) {
+				if(choice.getId().endsWith("persistentMemoryChoice")) updateAvailableQuantitiesE920tserverPersistentMem(availableQuantities, targetModel, iItem, choice, instanceChoices);
+             }
+			
+			if(targetModel.isDescendantOf(DX170G10_CLASS) || targetModel.isDescendantOf(DX190G10_CLASS)) {
+				updateAvailableQuantitiesDXMemory(availableQuantities, iItem, choice, instanceChoices);
+			}
+			
+			if(targetModel.isDescendantOf("CrayCSDataNode")) {				
+				if(choice.getId().endsWith("infiniBandChoice")) updateAvailableQuantitiesClusterStor(availableQuantities, targetModel);			
+				if(choice.getId().endsWith("networkingChoice")) updateAvailableQuantitiesClusterStor(availableQuantities, targetModel);				
+			}
+			
+			if(targetModel.isDescendantOf(DX4200G10_CLASS)) {
+				if(choice.getId().endsWith("memorySlots")) updateAvailableQuantitiesDX4200Memory(availableQuantities, iItem, choice, instanceChoices, targetModel);
+				if(choice.getId().endsWith("lffHddChoice")) updateAvailableQuantitiesDX4200Storage(availableQuantities, iItem, choice, instanceChoices);
+				if(choice.getId().endsWith("PowerSuppliesChoice")) updateAvailableQuantitiesDX4200Power(availableQuantities, iItem, choice, instanceChoices);
+			}
+ 			if(targetModel.isDescendantOf(CRAY42U1300600RACK_CLASS)) {
+				if(choice.getId().endsWith("crayPDUid")) updateAvailableQuantitiesCrayRack_1(availableQuantities, iItem, choice, instanceChoices);
+				//if(choice.getId().endsWith("craySwitchid")) updateAvailableQuantitiesCrayRack_1(availableQuantities, iItem, choice, instanceChoices);
+				if(choice.getId().endsWith("crayLMNSwitchid")) updateAvailableQuantitiesCrayRack_1(availableQuantities, iItem, choice, instanceChoices);
+				if(choice.getId().endsWith("crayArrayid")) updateAvailableQuantitiesCrayRack_2(availableQuantities, iItem, choice, instanceChoices);
+				if(choice.getId().endsWith("crayRackOptionsid"))updateAvailableQuantitiesCrayClsR8L62A(availableQuantities,iItem, targetModel);
+
+			}
+ 			if(targetModel.isDescendantOf(CRAY48U1300600RACK_CLASS)) {
+				if(choice.getId().endsWith("crayPDUid")) updateAvailableQuantitiesCrayRack_1(availableQuantities, iItem, choice, instanceChoices);
+				if(choice.getId().endsWith("crayLMNSwitchid")) updateAvailableQuantitiesCrayRack_1(availableQuantities, iItem, choice, instanceChoices);
+				if(choice.getId().endsWith("crayArrayid")) updateAvailableQuantitiesCrayRack_3(availableQuantities, iItem, choice, instanceChoices);
+
+			}
+			if(targetModel.isDescendantOf(CRAYKJ19STORAGESERVER_CLASS)) {
+				if(choice.getId().endsWith("adapterOCPChoice")) updateAvailableQuantitiesCrayRack_1(availableQuantities, iItem, choice, instanceChoices);
+				if(choice.getId().endsWith("harddriveChoice_opt1")) updateAvailableQuantitiesCrayStorageserver_2(availableQuantities, iItem, choice, instanceChoices);
+				if(choice.getId().endsWith("harddriveChoice_opt2")) updateAvailableQuantitiesCrayStorageserver_1(availableQuantities, iItem, choice, instanceChoices);
+				if(choice.getId().endsWith("harddriveChoice_opt3")) updateAvailableQuantitiesCrayStorageserver_1(availableQuantities, iItem, choice, instanceChoices);
+				if(choice.getId().endsWith("harddriveChoice_opt4")) updateAvailableQuantitiesCrayRack_1(availableQuantities, iItem, choice, instanceChoices);
+				if(choice.getId().endsWith("infiniBandChoice")) updateAvailableQuantitiesClusterStor(availableQuantities, targetModel);
+				if(choice.getId().endsWith("infiniBandChoice_2")) updateAvailableQuantitiesCrayStorageserver_3(availableQuantities, iItem, choice, instanceChoices);
+				if(choice.getId().endsWith("memoryChoice")) updateAvailableQuantitiesCrayStorageserver_4(availableQuantities, iItem, choice, instanceChoices);
+			}
+			if (targetModel.isDescendantOf(CRAYKJ19STORAGESERVER_GEN2_CLASS)){
+				if(choice.getId().endsWith("networkingChoice")) updateAvailableQuantitiesClusterStorGen2(availableQuantities, targetModel);
+			}
+			if(targetModel.isDescendantOf(DX385G10P_CLASS) && targetModel.getAttributeBooleanValue("avQtyAgentTriger")) {
+				updateAvailableQuantitiesDX385PMemory(availableQuantities, iItem, choice, instanceChoices);
+			}
+			if(targetModel.isDescendantOf(SIMPLIVITYDL325_CLASS) || targetModel.isDescendantOf(SIMPLIVITYDL325V2_CLASS) || targetModel.isDescendantOf(SIMPLIVITYDL325V2UPG_CLASS) || targetModel.isDescendantOf(SIMPLIVITYDL325UPG_CLASS)) {
+				if(choice.getId().endsWith("memoryLChoiceId")) updateAvailableQuantitiesSimplivity325Memory(availableQuantities, iItem, choice, instanceChoices);
+			}
+			if(targetModel.isDescendantOf(SIMPLIVITYDL325V2_CLASS)){ //&& targetModel.attributeDefined("JSB24786") && targetModel.getAttributeBooleanValue("JSB24786")){
+				if(choice.getId().endsWith("storageKitsChoiceId")) updateAvailableQuantitiesSimplivity325StorageKits(availableQuantities, iItem, choice, instanceChoices);
+			}
+			if(targetModel.isDescendantOf(SIMPLIVITYDL325V2_CLASS) || targetModel.isDescendantOf(SIMPLIVITYDL380_CLASS)){
+				if(choice.getId().endsWith("bootdeviceChoiceId")) updateAvailableQuantitiesSimplivity325BootDevice(availableQuantities, iItem, choice, instanceChoices);
+			}
+			if(targetModel.isDescendantOf(SIMPLIVITYDL325V2UPG_CLASS)) {
+				if(choice.getId().endsWith("CoresCurrentCPUChoiceId")) updateAvailableQuantitiesSimplivity325CoresCPU(availableQuantities, iItem, choice, instanceChoices);
+			}
+			if(targetModel.isDescendantOf(APOLLO2KCHASSISP_CLASS) && targetModel.getAttributeBooleanValue("avQtyAgentTriger")) {
+				if(choice.getId().endsWith("DriveCageChoice")) updateAvailableQuantitiesApollo2KChassisP(availableQuantities, iItem, choice, instanceChoices);
+			}
+			
+			if(targetModel.isDescendantOf(APOLLO80CHASSISP_CLASS) && targetModel.getAttributeBooleanValue("avQtyAgentTriger")) {
+				if(choice.getId().endsWith("ComputeNodesChoice")) {
+					regionCode  = targetModel.getSubConfiguration().getConfiguration().getPreferences().getPreference(IPreferencesInternal.REGION);
+					String minNodes = "iMinNodesWW"; // minimum number of nodes world wide
+					if(regionCode.equals("EU")) {
+						minNodes = "iMinNodesEMEA"; // minimum number of nodes for EMEA region
+					}
+					int minNodesForRegion = targetModel.getAttributeIntegerValue(minNodes,2);
+					int maxNodesForRegion = targetModel.getAttributeIntegerValue("iNumComputeNodes", 4);
+					updateAvailableQuantitiesApollo80Chassis(availableQuantities, minNodesForRegion ,maxNodesForRegion);
+				}	
+			}
+			
+			if(targetModel.isDescendantOf(IntSeries42u6001075G2Rack_CLASS) || targetModel.isDescendantOf(AdvSeries42u6001075Rack_CLASS) || targetModel.isDescendantOf(IntSeries42u6001200G2Rack_CLASS) ||targetModel.isDescendantOf(AdvSeries42u6001200Rack_CLASS)) {
+				if(targetModel.getChildInstancesOfClass(HPE3Par600_CLASS) != null) {
+					List<ModelInstance> controllerArrayList = targetModel.getChildInstancesOfClass(HPE3Par600_CLASS);
+					if(!controllerArrayList.isEmpty()){
+						ModelInstance modInstanceArray = controllerArrayList.get(0);
+						regionCode  = targetModel.getSubConfiguration().getConfiguration().getPreferences().getPreference(IPreferencesInternal.REGION);
+						countryCode = targetModel.getSubConfiguration().getConfiguration().getPreferences().getPreference(IPreferencesInternal.COUNTRY);
+						if(choice.getId().endsWith("rackPdu_1")) updateAvailableQuantities3Par600PDU(availableQuantities, iItem, choice, instanceChoices , modInstanceArray);
+					}
+				}
+			}
+			if(targetModel.isDescendantOf(CTERAEdgeFilerNodes_CLASS)) {
+				if(choice.getId().endsWith("dataStorageDrivesChoice")) updateAvailableQuantitiesCTERA(availableQuantities, iItem, choice, instanceChoices,targetModel);
+			}
+			if(targetModel.isDescendantOf(DateraCLXNodes_CLASS)) {
+				if(choice.getId().endsWith("dataStorageDrivesChoice")) updateAvailableQuantitiesDatera(availableQuantities, iItem, choice, instanceChoices,targetModel);
+				if(choice.getId().endsWith("bootDrivesChoice")) updateAvailableQuantitiesDateraBD(availableQuantities, iItem, choice, instanceChoices,targetModel);
+			}
+
+			if(targetModel.isDescendantOf(Apollo4200GEN10_CLASS)) {
+			if(targetModel.attributeDefined("realBasedummyId")){
+				String realBasedummyId = targetModel.getAttributeStringValue("realBasedummyId");
+				if(realBasedummyId.equals("Apo4200G10_P07244")){
+					if(choice.getId().endsWith("HDDMidline72KChoice")) updateAvailableQuantitiesApollo4200Commvault(availableQuantities, iItem, choice, instanceChoices,targetModel);
+				}	
+			}
+			}
+			if(targetModel.isDescendantOf(XL675dG10Plus_CLASS)) {
+				if(choice.getId().endsWith("GraphicsAccessoriesChoice")) updateAQXL675_GraphicAcc(availableQuantities, iItem, choice, instanceChoices,targetModel);
+				if(choice.getId().endsWith("PrimaryProcessorChoice")) updateAQXL675_Proccessors_B21(availableQuantities, iItem, choice, instanceChoices,targetModel);
+			}
+			if(targetModel.isDescendantOf(NIMBLEFLASHARRAYGEN6) || targetModel.isDescendantOf(NIMBLEGEN6SHELF) 
+					|| targetModel.isDescendantOf(NIMBLEGEN6TECHREF) || targetModel.isDescendantOf(NIMBLE_REFRESH_CONTROLLER)) {
+				if(choice.getId().endsWith("PowerCordsChoice") || choice.getId().endsWith("PowerCordsChoiceShelf")) updateAvailableQuantitiesPowerCord(availableQuantities,4);
+			}
+			if(targetModel.isDescendantOf("Alletra5kAdaptiveTechRef") || targetModel.isDescendantOf("Alletra5KTechRefreshCtrl")) {
+				if(choice.getId().endsWith("PowerCordsChoice") || choice.getId().endsWith("PowerCordsChoiceShelf")) updateAvailableQuantitiesPowerCord(availableQuantities,2);
+			}
+			if(targetModel.isDescendantOf(DX360G10_CLASS)) {
+				if(choice.getId().endsWith("memorySlots")) updateAvailableQuantitiesDX360Memory(availableQuantities, targetModel);
+			}
+			if(targetModel.isDescendantOf(XL220nG10Plus_CLASS)|| targetModel.isDescendantOf(XL290nG10Plus_CLASS)) {
+				if(choice.getId().endsWith("PrimaryProcessorChoice")) updateAvailableQuantitiesXL220nProcessor(availableQuantities, iItem, choice, instanceChoices,targetModel);
+			}
+			if(targetModel.isDescendantOf(DL360G10Plus_CLASS)|| targetModel.isDescendantOf(DL360G10Plus_CLASS)) {
+				if(choice.getId().endsWith("memorySlotsChoice")) updateAvailableQuantitiesDL360G10PlusMemory(availableQuantities, targetModel);
+			}
+			if(targetModel.isDescendantOf(DL360Gen11_CLASS)|| targetModel.isDescendantOf(DL360Gen11_CLASS)) {
+				if(choice.getId().endsWith("memorySlotsChoice")) updateAvailableQuantitiesDL360G11Memory(availableQuantities, targetModel);
+			}
+			if(targetModel.isDescendantOf(DL360G10Plus_CLASS)|| targetModel.isDescendantOf(DL360G10Plus_CLASS)) {
+				if(choice.getId().endsWith("PMEMMemorySlotsChoice")) updateAvailableQuantitiesDL360G10PlusPMEMMemory(availableQuantities, targetModel);
+			}
+			if(targetModel.isDescendantOf(DL110G10Plus_CLASS)|| targetModel.isDescendantOf(DL110G10Plus_CLASS)) {
+				if(choice.getId().endsWith("memorySlotsChoice")) updateAvailableQuantitiesDL110G10PlusMemory(availableQuantities, targetModel);
+			}
+            if(targetModel.isDescendantOf(RL300Gen11_CLASS)|| targetModel.isDescendantOf(RL300Gen11_CLASS)) {
+                if(choice.getId().endsWith("memorySlotsChoice")) updateAvailableQuantitiesRL300Gen11Memory(availableQuantities, targetModel);
+            }
+			if(targetModel.isDescendantOf(DL345G10Plus_CLASS)|| targetModel.isDescendantOf(DL385G10Plus_CLASS) || targetModel.isDescendantOf(DL385G10PlusV2_CLASS) || targetModel.isDescendantOf(DL560_CLASS)
+					|| targetModel.isDescendantOf(DL160_CLASS) || targetModel.isDescendantOf(ML30G10Plus_CLASS) || targetModel.isDescendantOf(DL20G10Plus_CLASS) || targetModel.isDescendantOf(DL325G10Plus_CLASS) || targetModel.isDescendantOf(DL365G10Plus_CLASS) 
+					|| targetModel.isDescendantOf(DL360G10Plus_CLASS)  && choice.getId().endsWith("SmartArrayControllerChoice")) {
+				updateAvailableQuantitiesForPCICardsMATInfo(availableQuantities,  iItem, choice, instanceChoices, targetModel);
+			}
+			if(targetModel.isDescendantOf(DL365G10Plus_CLASS)|| targetModel.isDescendantOf(DL365G10Plus_CLASS)) {
+				if(choice.getId().endsWith("memorySlotsChoice")) updateAvailableQuantitiesDL365G10PlusMemory(availableQuantities, targetModel, iItem, choice, instanceChoices);
+			}
+			if(targetModel.isDescendantOf(DL385Gen11_CLASS)|| targetModel.isDescendantOf(DL385Gen11_CLASS)) {
+				if(choice.getId().endsWith("memorySlotsChoice")) updateAvailableQuantitiesDL385Gen11Memory(availableQuantities, targetModel, iItem, choice, instanceChoices);
+			}
+			if(targetModel.isDescendantOf(DL385Gen11_CLASS)) {
+				if(choice.getId().endsWith("coolingOp")) updateAvailableQuantitiesDL385Gen11Cooling(availableQuantities, iItem, choice, instanceChoices);
+			}
+			if(targetModel.isDescendantOf(DL365Gen11_CLASS)|| targetModel.isDescendantOf(DL365Gen11_CLASS)) {
+				if(choice.getId().endsWith("memorySlotsChoice")) updateAvailableQuantitiesDL365Gen11Memory(availableQuantities, targetModel, iItem, choice, instanceChoices);
+			}
+			if(targetModel.isDescendantOf(DL345Gen11_CLASS)|| targetModel.isDescendantOf(DL345Gen11_CLASS)) {
+				if(choice.getId().endsWith("memorySlotsChoice")) updateAvailableQuantitiesDL345Gen11Memory(availableQuantities, targetModel, iItem, choice, instanceChoices);
+			}
+			if(targetModel.isDescendantOf(DL345Gen11_CLASS)) {
+				if(choice.getId().endsWith("coolingOp")) updateAvailableQuantitiesDL345Gen11Cooling(availableQuantities, iItem, choice, instanceChoices);
+			}			
+			if(targetModel.isDescendantOf(DL325Gen11_CLASS)) {
+				if(choice.getId().endsWith("coolingOp")) updateAvailableQuantitiesDL325Gen11Cooling(availableQuantities, iItem, choice, instanceChoices);
+			}
+			if( targetModel.isDescendantOf(DL325Gen11_CLASS) ) {
+				if(choice.getId().endsWith("memorySlotsChoice")) updateAQDL325Gen11Memory(availableQuantities, targetModel, iItem, choice, instanceChoices);
+			}
+			if(targetModel.isDescendantOf(XL645dG10Plus_CLASS)) {
+				if(choice.getId().endsWith("GPUModuleChoice")) updateAvailableQuantitiesXL645GPUTray(availableQuantities);
+			}
+			if(targetModel.isDescendantOf(ARUBA518AP_CLASS)) {
+				if(choice.getId().endsWith("AntennasChoice1")) updateAvailableQuantitiesAntennasCho1(availableQuantities, iItem, choice, instanceChoices,targetModel);
+				if(choice.getId().endsWith("AntennasChoice2")) updateAvailableQuantitiesAntennasCho2(availableQuantities, iItem, choice, instanceChoices,targetModel);
+			}
+			if(targetModel.isDescendantOf(ParallelServerModel_CLASS)) {
+				if(choice.getId().endsWith("hotPlugLFFChoice8DiskBay")) updateAvailableQuantitiesParallel_LFF(availableQuantities, iItem, choice, instanceChoices);
+				if(choice.getId().endsWith("hotPlugSFFChoice16FlashBay")) updateAvailableQuantitiesParallel_SFF(availableQuantities, iItem, choice, instanceChoices);
+ 			}
+			if (targetModel.isDescendantOf(ParallelBladeModel_CLASS)){
+				if(choice.getId().endsWith("hardDrivesLFFChoice")) updateAvailableQuantitiesParallel60DiskBlade_LFF(availableQuantities, iItem, choice, instanceChoices);
+			}
+			if(targetModel.isDescendantOf(HTCDL360G10Plus_CLASS)|| targetModel.isDescendantOf(HTCDL360G10Plus_CLASS)) {
+				if(choice.getId().endsWith("memorySlotsChoice")) updateAvailableQuantitiesHTCDL360G10PlusMemory(availableQuantities, targetModel);
+			}
+			if(targetModel.isDescendantOf(HTCDL360G10Plus_CLASS)|| targetModel.isDescendantOf(HTCDL360G10Plus_CLASS)) {
+				if(choice.getId().endsWith("PMEMMemorySlotsChoice")) updateAvailableQuantitiesHTCDL360G10PlusPMEMMemory(availableQuantities, targetModel);
+			}
+			if(targetModel.isDescendantOf(EX235A_BLADE_CLASS) || targetModel.isDescendantOf(EX254A_BLADE_CLASS)) {
+				if(choice.getId().endsWith("gpuChoice")) updateAvailableQuantitiesEX235ABladeGPU(availableQuantities, iItem, choice, instanceChoices);
+			}
+			if(targetModel.isDescendantOf(DX380G10Plus_CLASS)) {
+				updateAvailableQuantitiesDX380G10PlusMemory(availableQuantities, targetModel);
+			}
+			if(targetModel.isDescendantOf(DX360G10Plus_CLASS)) {
+				updateAvailableQuantitiesDX360G10PlusMemory(availableQuantities, targetModel);
+			}
+			if(targetModel.isDescendantOf(SDFLEXAH_CLASS)) {
+				updateAvailableQuantitiesSDFLEXAHPowerSupplies(availableQuantities, targetModel, iItem, choice, instanceChoices);
+			}
+		}
+	}
+	private void updateAvailableQuantities3Par600PDU(AvailableQuantities availableQuantities, IChoiceItem iItem,
+			Choice choice, InstanceChoices instanceChoices,ModelInstance modInstanceArray ) throws EngineException {
+			if (modInstanceArray != null) {
+				List<ModelInstance> powerFlag = modInstanceArray.getChildInstancesOfClass("HP3ParPowerFlag");
+				if (!powerFlag.isEmpty()) {
+					if ((regionCode.equalsIgnoreCase("NA") || countryCode.equalsIgnoreCase("JP"))&& powerFlag.get(0).getId().equalsIgnoreCase("singlePhaseFlag")) {
+						if(iItem.getId().equalsIgnoreCase("P9Q41A"))setAvailableQuantities(availableQuantities, 0 , 4);
+					} else if ((regionCode.equalsIgnoreCase("NA") || countryCode.equalsIgnoreCase("JP"))&& powerFlag.get(0).getId().equalsIgnoreCase("threePhaseFlag")) {
+						if(iItem.getId().equalsIgnoreCase("P9Q54A"))setAvailableQuantities(availableQuantities, 0 , 4);
+					} else if ((!regionCode.equalsIgnoreCase("NA") || !countryCode.equalsIgnoreCase("JP")) && powerFlag.get(0).getId().equalsIgnoreCase("singlePhaseFlag")) {
+						if(iItem.getId().equalsIgnoreCase("P9Q45A"))setAvailableQuantities(availableQuantities, 0 , 4);
+					} else if ((!regionCode.equalsIgnoreCase("NA") || !countryCode.equalsIgnoreCase("JP")) && powerFlag.get(0).getId().equalsIgnoreCase("threePhaseFlag")) {
+						if(iItem.getId().equalsIgnoreCase("P9Q58A"))setAvailableQuantities(availableQuantities, 0 , 2);
+					}
+					
+				}
+			}
+	}
+	
+	private void updateAvailableQuantitiesApollo4200Commvault(AvailableQuantities availableQuantities, IChoiceItem iItem,Choice choice, InstanceChoices instanceChoices,ModelInstance targetModel) throws EngineException {
+		
+		int countofDrives = 0;
+		String driveSku = "";
+		List<ModelInstance> drivesList = targetModel.getChildInstancesOfClass("ProliantHardDrive");
+		if(!drivesList.isEmpty()){
+			for (ModelInstance dri : drivesList){
+				if(!dri.getName().equalsIgnoreCase("P19974-K21")){
+					countofDrives = drivesList.size();
+					driveSku = dri.getName();
+				}
+			}
+		}
+		
+		if (countofDrives == 0 || (countofDrives != 0 && iItem.getId().equalsIgnoreCase(driveSku))){
+			List<Integer> quantities = new ArrayList<Integer>();
+			quantities.add(0);
+			quantities.add(6);
+			quantities.add(12);
+			quantities.add(18);
+			quantities.add(24);
+			availableQuantities.setQuantities(quantities);		
+			
+		}else if (countofDrives != 0 && !iItem.getId().equalsIgnoreCase(driveSku)){
+			List<Integer> qty = new ArrayList<Integer>();
+			qty.add(0);
+			availableQuantities.setQuantities(qty);
+		}	
+	}
+	
+	private void setAvailableQuantities(AvailableQuantities availableQuantities , int minVale , int maxValue) {
+		List<Integer> quantities = new ArrayList<Integer>();
+		quantities.add(minVale);
+		quantities.add(maxValue);
+		availableQuantities.setQuantities(quantities);	
+	}
+	
+	private void updateAvailableQuantitiesApollo2KChassisP(AvailableQuantities availableQuantities, IChoiceItem iItem,
+			Choice choice, InstanceChoices instanceChoices) {
+		List<Integer> quantities = new ArrayList<Integer>();
+		quantities.add(0);
+		if(iItem.getId().equalsIgnoreCase("P20288-B21"))quantities.add(2);
+		if(iItem.getId().equalsIgnoreCase("P43713-B21"))quantities.add(2);
+		if(iItem.getId().equalsIgnoreCase("P20285-B21"))quantities.add(4);
+		if(iItem.getId().equalsIgnoreCase("P20287-B21"))quantities.add(4);
+		if(iItem.getId().equalsIgnoreCase("P56314-B21"))quantities.add(2);
+		if(iItem.getId().equalsIgnoreCase("P56318-B21"))quantities.add(4);
+		if(iItem.getId().equalsIgnoreCase("P56322-B21"))quantities.add(2);
+		availableQuantities.setQuantities(quantities);		
+	}
+	
+	private void updateAvailableQuantitiesApollo80Chassis(AvailableQuantities availableQuantities, int minNodesForRegion, int maxNodesForRegion) {
+		List<Integer> quantities = new ArrayList<Integer>();
+		quantities.add(0);
+		for(int init= minNodesForRegion; init <= maxNodesForRegion; init++) {
+			quantities.add(init);
+		}
+		availableQuantities.setQuantities(quantities);		
+	}
+
+	private void updateAvailableQuantitiesDXMemory(AvailableQuantities availableQuantities, IChoiceItem iItem,
+			Choice choice, InstanceChoices instanceChoices) {
+		List<Integer> quantities = new ArrayList<Integer>();
+		quantities.add(0);
+		quantities.add(8);
+		quantities.add(12);
+		quantities.add(16);
+		availableQuantities.setQuantities(quantities);		
+	}
+	
+	private void updateAvailableQuantitiesDX385PMemory(AvailableQuantities availableQuantities, IChoiceItem iItem,
+			Choice choice, InstanceChoices instanceChoices) {
+		List<Integer> quantities = new ArrayList<Integer>();		
+			quantities.add(0);
+			quantities.add(2);
+		availableQuantities.setQuantities(quantities);
+	}
+	
+		
+	private void updateAvailableQuantitiesDX4200Memory(AvailableQuantities availableQuantities, IChoiceItem iItem,
+			Choice choice, InstanceChoices instanceChoices, ModelInstance targetInstance) throws EngineException {
+		List<Integer> quantities = new ArrayList<Integer>();
+		boolean BF_PERT_25100 = targetInstance.getAttributeBooleanValue("BFPERT25100", false);
+		if (BF_PERT_25100) {
+			quantities.add(0);
+			quantities.add(8);
+			quantities.add(12);
+			quantities.add(16);
+		} else {
+			quantities.add(0);
+			if(iItem.getId().equalsIgnoreCase("P18449-B21"))quantities.add(12);
+			quantities.add(16);
+		}
+		availableQuantities.setQuantities(quantities);
+		
+	}
+	
+	private void updateAvailableQuantitiesDX4200Storage(AvailableQuantities availableQuantities, IChoiceItem iItem,
+			Choice choice, InstanceChoices instanceChoices) {
+		List<Integer> quantities = new ArrayList<Integer>();
+		if(iItem.getId().equalsIgnoreCase("P22553-B21") || iItem.getId().equalsIgnoreCase("P17966-B21") || iItem.getId().equalsIgnoreCase("P35152-B21")) {
+			quantities.add(0);
+			quantities.add(20);
+			quantities.add(12);
+			quantities.add(16);
+		} else if(iItem.getId().equalsIgnoreCase("P50700-B21")){
+			return;
+		}else{
+			quantities.add(0);
+			quantities.add(4);
+		}
+		availableQuantities.setQuantities(quantities);
+		
+	}
+	
+	private void updateAvailableQuantitiesDX4200Power(AvailableQuantities availableQuantities, IChoiceItem iItem,
+			Choice choice, InstanceChoices instanceChoices) {
+		List<Integer> quantities = new ArrayList<Integer>();
+			quantities.add(0);
+			quantities.add(2);
+		availableQuantities.setQuantities(quantities);
+	}
+	
+	private void updateAvailableQuantitiesCrayRack_1(AvailableQuantities availableQuantities, IChoiceItem iItem,
+			Choice choice, InstanceChoices instanceChoices) {
+		List<Integer> quantities = new ArrayList<Integer>();
+			//quantities.add(0); GRE Remove by Pert 25003
+			quantities.add(2);
+		availableQuantities.setQuantities(quantities);
+	}
+	
+	private void updateAvailableQuantitiesCrayStorageserver_1(AvailableQuantities availableQuantities, IChoiceItem iItem,
+			Choice choice, InstanceChoices instanceChoices) {
+		List<Integer> quantities = new ArrayList<Integer>();
+			quantities.add(0);
+			quantities.add(24);
+		availableQuantities.setQuantities(quantities);
+	}
+	
+	private void updateAvailableQuantitiesCrayStorageserver_2(AvailableQuantities availableQuantities, IChoiceItem iItem,
+			Choice choice, InstanceChoices instanceChoices) {
+		List<Integer> quantities = new ArrayList<Integer>();
+			quantities.add(0);
+			quantities.add(5);
+		availableQuantities.setQuantities(quantities);
+	}
+	
+	private void updateAvailableQuantitiesCrayStorageserver_3(AvailableQuantities availableQuantities, IChoiceItem iItem,
+			Choice choice, InstanceChoices instanceChoices) {
+		List<Integer> quantities = new ArrayList<Integer>();
+		//quantities.add(0); GRE remove by Pert 25003
+		quantities.add(4);
+		availableQuantities.setQuantities(quantities);
+	}
+	
+	private void updateAvailableQuantitiesCrayStorageserver_4(AvailableQuantities availableQuantities, IChoiceItem iItem,
+			Choice choice, InstanceChoices instanceChoices) {
+		List<Integer> quantities = new ArrayList<Integer>();
+		quantities.add(0);
+		quantities.add(16);
+		availableQuantities.setQuantities(quantities);
+	}
+	
+	private void updateAvailableQuantitiesCrayRack_2(AvailableQuantities availableQuantities, IChoiceItem iItem,
+			Choice choice, InstanceChoices instanceChoices) {
+		List<Integer> quantities = new ArrayList<Integer>();
+			quantities.add(1);
+			quantities.add(2);
+			quantities.add(4);
+		availableQuantities.setQuantities(quantities);
+	}
+	
+	private void updateAvailableQuantitiesCrayRack_3(AvailableQuantities availableQuantities, IChoiceItem iItem,
+			Choice choice, InstanceChoices instanceChoices) {
+		List<Integer> quantities = new ArrayList<Integer>();
+			quantities.add(0);
+			quantities.add(1);
+			quantities.add(2);
+			quantities.add(4);
+		availableQuantities.setQuantities(quantities);
+	}
+	
+	private void updateAvailableQuantitiesSimplivity325Memory(AvailableQuantities availableQuantities, IChoiceItem iItem,
+			Choice choice, InstanceChoices instanceChoices) {
+		List<Integer> quantities = new ArrayList<Integer>();
+		if(iItem.getId().equalsIgnoreCase("P19041-B21") ||iItem.getId().equalsIgnoreCase("P19043-B21") || iItem.getId().equalsIgnoreCase("P19044-B21") || iItem.getId().equalsIgnoreCase("P19045-B21")
+			|| iItem.getId().equalsIgnoreCase("P19047-B21") || iItem.getId().equalsIgnoreCase("P07640-B21") || iItem.getId().equalsIgnoreCase("P07646-B21") || iItem.getId().equalsIgnoreCase("P07650-B21") || iItem.getId().equalsIgnoreCase("P07652-B21")){	
+			quantities.add(0);
+			quantities.add(4);
+			quantities.add(8);
+			quantities.add(12);
+			quantities.add(16);
+		}else{
+			quantities.add(0);
+			quantities.add(1);	
+		}
+		availableQuantities.setQuantities(quantities);
+	}
+	private void updateAvailableQuantitiesSimplivity325StorageKits(AvailableQuantities availableQuantities, IChoiceItem iItem,
+			Choice choice, InstanceChoices instanceChoices) {
+		List<Integer> quantities = new ArrayList<Integer>();
+		quantities.add(0);
+		quantities.add(4);
+		quantities.add(6);
+		quantities.add(8);
+		availableQuantities.setQuantities(quantities);
+	}
+	private void updateAvailableQuantitiesSimplivity325BootDevice(AvailableQuantities availableQuantities, IChoiceItem iItem,
+			Choice choice, InstanceChoices instanceChoices) {
+		List<Integer> quantities = new ArrayList<Integer>();
+		quantities.add(0);
+		quantities.add(2);
+		availableQuantities.setQuantities(quantities);
+	}
+	private void updateAvailableQuantitiesSimplivity325CoresCPU(AvailableQuantities availableQuantities, IChoiceItem iItem,
+			Choice choice, InstanceChoices instanceChoices) {
+		List<Integer> quantities = new ArrayList<Integer>();
+		quantities.add(16);
+		quantities.add(24);
+		quantities.add(32);
+		quantities.add(48);
+		quantities.add(56);
+		quantities.add(64);
+		availableQuantities.setQuantities(quantities);
+	}
+	private void updateAvailableQuantitiesDX360Memory(AvailableQuantities availableQuantities, ModelInstance targetModel) throws EngineException {
+		List<Integer> quantities = new ArrayList<Integer>();
+		
+		quantities.add(0);
+		
+		int processorCount = targetModel.getChildInstancesOfClass("ProliantProcessor").size();
+					
+		if(processorCount > 1){
+			quantities.add(8);
+			quantities.add(12);
+			quantities.add(16);
+			quantities.add(24);
+		}else {
+			quantities.add(4);
+			quantities.add(6);
+			quantities.add(8);
+			quantities.add(12);
+		}
+		availableQuantities.setQuantities(quantities);
+		
+	}
+	//JEG
+	private void updateAvailableQuantitiesClusterStor(AvailableQuantities availableQuantities, ModelInstance targetModel) throws EngineException {
+		List<Integer> quantities = new ArrayList<Integer>();
+		
+		if(!(targetModel.getName().equalsIgnoreCase("R4M28A") || targetModel.getName().equalsIgnoreCase("R4M29A"))){
+			quantities.add(0);
+			
+	//		ConfigurationImpl config = targetModel.getSubConfiguration().getConfiguration();
+	//		Set<ConfigurationInstance> cfgInstances = config.getInstancesOfConfig(targetModel.getSubConfiguration().getId());
+	//		
+	//		int count = 0;
+	//		for(ConfigurationInstance cfgInst: cfgInstances){
+	//			if(cfgInst.getSubConfiguration().getPrimaryInstance() == null) continue;
+	//			if(cfgInst.getLocation() != null){
+	//				ModelInstance containerInstance = cfgInst.getLocation().getParentInstance();
+	//				List<ModelInstance> cdsInstances = containerInstance.getChildInstancesOfClass("CrayCSDataNode");
+	//				
+	//				for (ModelInstance indCDS: cdsInstances){
+	//					if(indCDS.getId().equalsIgnoreCase("R7F89A")){
+	//						count+=1;
+	//						continue;
+	//					}									
+	//				}				
+	//			}
+	//		}
+			
+			//if(count > 0){
+			if(targetModel.getName().equalsIgnoreCase("R7F88A")){
+				quantities.add(1);			
+				availableQuantities.setQuantities(quantities);
+			}else {
+				quantities.add(2);		
+				availableQuantities.setQuantities(quantities);
+			}
+		}else if(targetModel.getName().equalsIgnoreCase("R4M28A")){
+			quantities.add(4);
+			availableQuantities.setQuantities(quantities);
+		}
+		else if (targetModel.getName().equalsIgnoreCase("R4M29A")){
+			quantities.add(2);
+			availableQuantities.setQuantities(quantities);
+		}
+	}
+
+	private void updateAvailableQuantitiesClusterStorGen2(AvailableQuantities availableQuantities, ModelInstance targetModel) throws EngineException {
+		List<Integer> quantities = new ArrayList<Integer>();
+
+		if(targetModel.getName().equalsIgnoreCase("R7K90A") || targetModel.getName().equalsIgnoreCase("R7K92A")){
+			quantities.add(4);
+			availableQuantities.setQuantities(quantities);
+		}
+	}
+	
+	private void updateAvailableQuantitiesXL220nProcessor(AvailableQuantities availableQuantities, IChoiceItem iItem,Choice choice, InstanceChoices instanceChoices,ModelInstance targetModel) throws EngineException {
+		if(iItem.getId().endsWith("-L21")){
+			List<Integer> quantities = new ArrayList<Integer>();
+			quantities.add(0);
+			quantities.add(1);	
+			availableQuantities.setQuantities(quantities);
+		}
+	}	
+	
+	private void updateAvailableQuantitiesDL360G11Memory(AvailableQuantities availableQuantities, ModelInstance targetModel) throws EngineException {
+List<Integer> quantities = new ArrayList<Integer>();
+		
+		
+		int processorCount = targetModel.getChildInstancesOfClass("ProliantProcessor").size();
+		
+		String targetEnv = targetModel.getSubConfiguration().getConfiguration().getTargetEnvironment();
+
+		List<String> ifShipmentIsCTO = Arrays.asList("P52498-B21", "P52499-B21", "P52498-B21#GTA", "P52499-B21#GTA");
+		
+		int varModelCount = 1;
+		String listOfModels =  targetModel.getId();
+
+		if (ifShipmentIsCTO.contains(listOfModels) || targetEnv.equals("ezc") || targetEnv.equalsIgnoreCase("ipcs"))
+		{
+			varModelCount = 0 ;
+		}	
+		if(processorCount == 2 ){
+			quantities.add(0);
+			quantities.add(2 - varModelCount);
+			quantities.add(4 - varModelCount);
+			quantities.add(8 - varModelCount);
+			quantities.add(12 - varModelCount);
+			quantities.add(16 - varModelCount);
+			quantities.add(24 - varModelCount);
+			quantities.add(32 - varModelCount);
+			
+		}
+		else if(processorCount == 1){
+			if (varModelCount == 0){
+				quantities.add(0);
+				}
+		
+			quantities.add(1 - varModelCount);
+			quantities.add(2 - varModelCount);
+			quantities.add(4 - varModelCount);
+			quantities.add(6 - varModelCount);
+			quantities.add(8 - varModelCount);
+			quantities.add(12 - varModelCount);
+			quantities.add(16 - varModelCount);
+		}
+		else {
+			quantities.add(0);
+			quantities.add(1);
+			quantities.add(2);
+			quantities.add(3);
+			quantities.add(4);
+			quantities.add(5);
+			quantities.add(6);
+			quantities.add(7);
+			quantities.add(8);
+			quantities.add(9);
+			quantities.add(10);
+			quantities.add(11);
+			quantities.add(12);
+			quantities.add(13);
+			quantities.add(14);
+			quantities.add(15);
+			quantities.add(16);
+			quantities.add(17);
+			quantities.add(18);
+			quantities.add(19);
+			quantities.add(20);
+			quantities.add(21);
+			quantities.add(22);
+			quantities.add(23);
+			quantities.add(24);
+			quantities.add(25);
+			quantities.add(26);
+			quantities.add(27);
+			quantities.add(28);
+			quantities.add(29);
+			quantities.add(30);
+			quantities.add(31);
+			quantities.add(32);
+		}	
+		availableQuantities.setQuantities(quantities);
+		
+	}
+	
+	private void updateAvailableQuantitiesDL360G10PlusMemory(AvailableQuantities availableQuantities, ModelInstance targetModel) throws EngineException {
+List<Integer> quantities = new ArrayList<Integer>();
+		
+		//quantities.add(0);
+		
+		int processorCount = targetModel.getChildInstancesOfClass("ProliantProcessor").size();
+		
+		//ModelInstance targetInstance = (ModelInstance) parameters.get(0);
+		String targetEnv = targetModel.getSubConfiguration().getConfiguration().getTargetEnvironment();
+
+		List<String> ifShipmentIsCTO = Arrays.asList("R8D86A","P28947-B21", "P28947-B21#GTA", "P28948-B21", "P28948-B21#GTA", "P28775-B21");//, "P28947-B21#ABA", "P28947-B21#ABJ", "P28947-B21#UUF", "P28947-B21#B19", "P28948-B21#ABA", "P28948-B21#ABJ", "P28948-B21#UUF", "P28948-B21#B19");
+		
+		int varModelCount = 1;
+		String listOfModels =  targetModel.getId();//getChildInstancesOfClass("DL360G10Plus").get(0).getId();
+
+		if (ifShipmentIsCTO.contains(listOfModels) || targetEnv.equals("ezc") || targetEnv.equalsIgnoreCase("ipcs"))
+		{
+			varModelCount = 0 ;
+		}	
+		//if(processorCount > 1){
+		if(processorCount == 2 ){
+			quantities.add(0);
+			quantities.add(2 - varModelCount);
+			quantities.add(4 - varModelCount);
+			quantities.add(8 - varModelCount);
+			quantities.add(12 - varModelCount);
+			quantities.add(16 - varModelCount);
+			quantities.add(24 - varModelCount);
+			quantities.add(32 - varModelCount);
+			
+		}
+		else if(processorCount == 1){
+			if (varModelCount == 0){
+				quantities.add(0);
+				}
+		
+			quantities.add(1 - varModelCount);
+			quantities.add(2 - varModelCount);
+			quantities.add(4 - varModelCount);
+			quantities.add(6 - varModelCount);
+			quantities.add(8 - varModelCount);
+			quantities.add(12 - varModelCount);
+			quantities.add(16 - varModelCount);
+		}
+		else {
+			quantities.add(0);
+			quantities.add(1);
+			quantities.add(2);
+			quantities.add(3);
+			quantities.add(4);
+			quantities.add(5);
+			quantities.add(6);
+			quantities.add(7);
+			quantities.add(8);
+			quantities.add(9);
+			quantities.add(10);
+			quantities.add(11);
+			quantities.add(12);
+			quantities.add(13);
+			quantities.add(14);
+			quantities.add(15);
+			quantities.add(16);
+			quantities.add(17);
+			quantities.add(18);
+			quantities.add(19);
+			quantities.add(20);
+			quantities.add(21);
+			quantities.add(22);
+			quantities.add(23);
+			quantities.add(24);
+			quantities.add(25);
+			quantities.add(26);
+			quantities.add(27);
+			quantities.add(28);
+			quantities.add(29);
+			quantities.add(30);
+			quantities.add(31);
+			quantities.add(32);
+		}	
+		availableQuantities.setQuantities(quantities);
+		
+	}
+	private void updateAvailableQuantitiesDL360G10PlusPMEMMemory(AvailableQuantities availableQuantities, ModelInstance targetModel) throws EngineException {
+		List<Integer> quantities = new ArrayList<Integer>();
+				
+		int processorCount = targetModel.getChildInstancesOfClass("ProliantProcessor").size();
+
+		String targetEnv = targetModel.getSubConfiguration().getConfiguration().getTargetEnvironment();
+		List<String> ifShipmentIsCTO = Arrays.asList("R8D86A","P28947-B21", "P28947-B21#GTA", "P28948-B21", "P28948-B21#GTA",  "P28775-B21");
+		
+		int varModelCount = 1;
+		String listOfModels =  targetModel.getId();//getChildInstancesOfClass("DL360G10Plus").get(0).getId();
+
+		//if (ifShipmentIsCTO.contains(listOfModels)) {
+		if (ifShipmentIsCTO.contains(listOfModels) || targetEnv.equals("ezc") || targetEnv.equalsIgnoreCase("ipcs")){
+			varModelCount = 0 ;
+		}
+		
+		//if(processorCount > 1){
+				if(processorCount == 2 ){
+					quantities.add(0);
+					quantities.add(2 - varModelCount);
+					quantities.add(4 - varModelCount);
+					quantities.add(8 - varModelCount);
+					quantities.add(12 - varModelCount);
+					quantities.add(16 - varModelCount);
+					quantities.add(24 - varModelCount);
+					quantities.add(32 - varModelCount);
+					
+				}
+				else if(processorCount == 1){
+					if (varModelCount == 0){
+						quantities.add(0);
+						}
+				
+					quantities.add(1 - varModelCount);
+					quantities.add(2 - varModelCount);
+					quantities.add(4 - varModelCount);
+					quantities.add(6 - varModelCount);
+					quantities.add(8 - varModelCount);
+					quantities.add(12 - varModelCount);
+					quantities.add(16 - varModelCount);
+				}
+				else {
+					quantities.add(0);
+					quantities.add(1);
+					quantities.add(2);
+					quantities.add(3);
+					quantities.add(4);
+					quantities.add(5);
+					quantities.add(6);
+					quantities.add(7);
+					quantities.add(8);
+					quantities.add(9);
+					quantities.add(10);
+					quantities.add(11);
+					quantities.add(12);
+					quantities.add(13);
+					quantities.add(14);
+					quantities.add(15);
+					quantities.add(16);
+					quantities.add(17);
+					quantities.add(18);
+					quantities.add(19);
+					quantities.add(20);
+					quantities.add(21);
+					quantities.add(22);
+					quantities.add(23);
+					quantities.add(24);
+					quantities.add(25);
+					quantities.add(26);
+					quantities.add(27);
+					quantities.add(28);
+					quantities.add(29);
+					quantities.add(30);
+					quantities.add(31);
+					quantities.add(32);
+				}	
+			availableQuantities.setQuantities(quantities);
+	}
+
+	//	private void updateAvailableQuantitiesDL110G10PlusMemory(AvailableQuantities availableQuantities, IChoiceItem iItem, Choice choice, InstanceChoices instanceChoices) {
+//		List<Integer> quantities = new ArrayList<Integer>();
+//			
+//			quantities.add(1);
+//			quantities.add(2);
+//			quantities.add(4);
+//			quantities.add(6);
+//			quantities.add(8);
+//		availableQuantities.setQuantities(quantities);
+//	}
+	
+	private void updateAvailableQuantitiesDL110G10PlusMemory(AvailableQuantities availableQuantities, ModelInstance targetModel) throws EngineException {
+		List<Integer> quantities = new ArrayList<Integer>();
+		
+			quantities.add(0);
+		
+		int DL110G10PlusCount = targetModel.getChildInstancesOfClass("DL110G10Plus").size();
+		
+		if(DL110G10PlusCount > 0){
+
+		}else{
+			quantities.add(1);
+			quantities.add(2);
+			quantities.add(4);
+			quantities.add(6);
+			quantities.add(8);			
+		}
+		availableQuantities.setQuantities(quantities);
+		
+	}
+    private void updateAvailableQuantitiesRL300Gen11Memory(AvailableQuantities availableQuantities, ModelInstance targetModel) throws EngineException {
+        List<Integer> quantities = new ArrayList<Integer>();
+        
+            quantities.add(0);
+        
+        int RL300Gen11Count = targetModel.getChildInstancesOfClass("RL300Gen11").size();
+        
+        if(RL300Gen11Count > 0){
+
+        }else{
+            quantities.add(1);
+            quantities.add(2);
+            quantities.add(4);
+            quantities.add(8);
+            quantities.add(16);            
+        }
+        availableQuantities.setQuantities(quantities);
+        
+    }
+
+    
+	private void updateAvailableQuantitiesDL365G10PlusMemory(AvailableQuantities availableQuantities, ModelInstance targetModel, IChoiceItem iItem, 
+													Choice choice, InstanceChoices instanceChoices) throws EngineException {
+		List<Integer> quantities = new ArrayList<Integer>();
+		
+			quantities.add(0);
+			
+			int processorCount = targetModel.getChildInstancesOfClass("ProliantProcessor").size();
+			if (iItem.getId().equalsIgnoreCase("P07654-B21")){
+				if(processorCount > 1){
+					quantities.add(2);
+					quantities.add(4);
+					quantities.add(8);
+					quantities.add(12);
+					quantities.add(16);
+					quantities.add(24);
+					quantities.add(32);
+					}
+				else {
+					quantities.add(1);
+					quantities.add(2);
+					quantities.add(4);
+					quantities.add(6);
+					quantities.add(8);
+					quantities.add(12);
+					quantities.add(16);
+					}
+				}
+				else {
+					quantities.add(1);
+					quantities.add(2);
+					quantities.add(3);
+					quantities.add(4);
+					quantities.add(5);
+					quantities.add(6);
+					quantities.add(7);
+					quantities.add(8);
+					quantities.add(9);
+					quantities.add(10);
+					quantities.add(11);
+					quantities.add(12);
+					quantities.add(13);
+					quantities.add(14);
+					quantities.add(15);
+					quantities.add(16);
+					quantities.add(17);
+					quantities.add(18);
+					quantities.add(19);
+					quantities.add(20);
+					quantities.add(21);
+					quantities.add(22);
+					quantities.add(23);
+					quantities.add(24);
+					quantities.add(25);
+					quantities.add(26);
+					quantities.add(27);
+					quantities.add(28);
+					quantities.add(29);
+					quantities.add(30);
+					quantities.add(31);
+					quantities.add(32);
+				}
+					
+			availableQuantities.setQuantities(quantities);
+		
+	}
+		
+	 private void updateAvailableQuantitiesDL385Gen11Memory(AvailableQuantities availableQuantities, ModelInstance targetModel, IChoiceItem iItem, 
+			Choice choice, InstanceChoices instanceChoices) throws EngineException {
+				List<Integer> quantities = new ArrayList<Integer>();
+				
+				quantities.add(0);
+				
+				int processorCount = targetModel.getChildInstancesOfClass("ProliantProcessor").size();
+				if(processorCount > 1){
+				quantities.add(2);
+				quantities.add(4);
+				quantities.add(8);
+				quantities.add(12);
+				quantities.add(16);
+				quantities.add(20);
+				quantities.add(24);
+				}
+				else {
+				quantities.add(1);
+				quantities.add(2);
+				quantities.add(4);
+				quantities.add(6);
+				quantities.add(8);
+				quantities.add(10);
+				quantities.add(12);
+				}				
+				availableQuantities.setQuantities(quantities);				
+	}
+	 
+	private void updateAvailableQuantitiesDL385Gen11Cooling(AvailableQuantities availableQuantities
+			, IChoiceItem iItem, Choice choice, InstanceChoices instanceChoices) throws EngineException {
+	List<Integer> quantities = new ArrayList<Integer>();
+	quantities.add(0);
+	if(iItem.getId().equalsIgnoreCase("P58464-B21"))quantities.add(6);
+	if(iItem.getId().equalsIgnoreCase("P58465-B21"))quantities.add(6);
+	if(iItem.getId().equalsIgnoreCase("P57886-B21"))quantities.add(1);
+	if(iItem.getId().equalsIgnoreCase("P57887-B21"))quantities.add(1);
+	if(iItem.getId().equalsIgnoreCase("P58464-B21#0D1"))quantities.add(6);
+    if(iItem.getId().equalsIgnoreCase("P58465-B21#0D1"))quantities.add(6);
+	availableQuantities.setQuantities(quantities);
+
+	}
+	private void updateAvailableQuantitiesDL345Gen11Cooling(AvailableQuantities availableQuantities
+			, IChoiceItem iItem, Choice choice, InstanceChoices instanceChoices) throws EngineException {
+		List<Integer> quantities = new ArrayList<Integer>();
+		quantities.add(0);
+		if(iItem.getId().equalsIgnoreCase("P58464-B21"))quantities.add(6);
+		if(iItem.getId().equalsIgnoreCase("P58465-B21"))quantities.add(6);
+		if(iItem.getId().equalsIgnoreCase("P58464-B21#0D1"))quantities.add(6);
+		if(iItem.getId().equalsIgnoreCase("P58465-B21#0D1"))quantities.add(6);
+		availableQuantities.setQuantities(quantities);
+	} 
+	 
+	private void updateAvailableQuantitiesDL325Gen11Cooling(AvailableQuantities availableQuantities
+			, IChoiceItem iItem, Choice choice, InstanceChoices instanceChoices) throws EngineException {
+		List<Integer> quantities = new ArrayList<Integer>();
+		quantities.add(0);
+		if(iItem.getId().equalsIgnoreCase("P58461-B21"))quantities.add(7);
+		if(iItem.getId().equalsIgnoreCase("P58462-B21"))quantities.add(7);
+		if(iItem.getId().equalsIgnoreCase("P59668-B21"))quantities.add(7);
+		availableQuantities.setQuantities(quantities);
+	}
+	
+	
+	
+	private void updateAvailableQuantitiesDL365Gen11Memory(AvailableQuantities availableQuantities, ModelInstance targetModel, IChoiceItem iItem, 
+				Choice choice, InstanceChoices instanceChoices) throws EngineException {
+					List<Integer> quantities = new ArrayList<Integer>();
+					
+					quantities.add(0);
+					
+					int processorCount = targetModel.getChildInstancesOfClass("ProliantProcessor").size();
+					if(processorCount > 1){
+					quantities.add(2);
+					quantities.add(4);
+					quantities.add(8);
+					quantities.add(12);
+					quantities.add(16);
+					quantities.add(20);
+					quantities.add(24);
+					}
+					else {
+					quantities.add(1);
+					quantities.add(2);
+					quantities.add(4);
+					quantities.add(6);
+					quantities.add(8);
+					quantities.add(10);
+					quantities.add(12);
+					}				
+					availableQuantities.setQuantities(quantities);				
+		}
+	 
+	 private void updateAvailableQuantitiesDL345Gen11Memory(AvailableQuantities availableQuantities, ModelInstance targetModel, IChoiceItem iItem, 
+				Choice choice, InstanceChoices instanceChoices) throws EngineException {
+				 List<Integer> quantities = new ArrayList<Integer>();
+				 	quantities.add(0);
+				 	quantities.add(1);
+					quantities.add(2);
+					quantities.add(4);
+					quantities.add(6);
+					quantities.add(8);
+					quantities.add(10);
+					quantities.add(12);
+				availableQuantities.setQuantities(quantities);
+	}
+	 private void updateAQDL325Gen11Memory(AvailableQuantities availableQuantities, ModelInstance targetModel, IChoiceItem iItem, 
+				Choice choice, InstanceChoices instanceChoices) throws EngineException {
+				 List<Integer> quantities = new ArrayList<Integer>();
+				 	quantities.add(0);
+				 	quantities.add(1);
+				for ( int i = 2 ; i < 13 ; i++ )	{
+					if ( i % 2 == 0) quantities.add(i);
+				}
+				
+				availableQuantities.setQuantities(quantities);
+	}
+	private void updateAvailableQuantitiesHTCDL360G10PlusMemory(AvailableQuantities availableQuantities, ModelInstance targetModel) throws EngineException {
+		List<Integer> quantities = new ArrayList<Integer>();
+		
+		int processorCount = targetModel.getChildInstancesOfClass("ProliantProcessor").size();
+
+		List<String> ifShipmentIsCTO = Arrays.asList("P28669-B21", "P28670-B21");
+		
+		int varModelCount = 1;
+		String listOfModels =  targetModel.getId();//getChildInstancesOfClass("DL360G10Plus").get(0).getId();
+
+		if (ifShipmentIsCTO.contains(listOfModels)) {
+			varModelCount = 0 ;
+		}	
+		if(processorCount > 1){
+			quantities.add(0);
+			quantities.add(2 - varModelCount);
+			quantities.add(4 - varModelCount);
+			quantities.add(8 - varModelCount);
+			quantities.add(12 - varModelCount);
+			quantities.add(16 - varModelCount);
+			quantities.add(24 - varModelCount);
+			quantities.add(32 - varModelCount);
+			
+		}else {
+			if (varModelCount == 0){
+				quantities.add(0);
+				}
+			quantities.add(1 - varModelCount);
+			quantities.add(2 - varModelCount);
+			quantities.add(4 - varModelCount);
+			quantities.add(6 - varModelCount);
+			quantities.add(8 - varModelCount);
+			quantities.add(12 - varModelCount);
+			quantities.add(16 - varModelCount);
+		}
+		availableQuantities.setQuantities(quantities);
+	}
+	private void updateAvailableQuantitiesHTCDL360G10PlusPMEMMemory(AvailableQuantities availableQuantities, ModelInstance targetModel) throws EngineException {
+		List<Integer> quantities = new ArrayList<Integer>();
+		
+		int processorCount = targetModel.getChildInstancesOfClass("ProliantProcessor").size();
+
+		List<String> ifShipmentIsCTO = Arrays.asList("P28669-B21", "P28670-B21");
+		
+		int varModelCount = 1;
+		String listOfModels =  targetModel.getId();//getChildInstancesOfClass("DL360G10Plus").get(0).getId();
+
+		if (ifShipmentIsCTO.contains(listOfModels)) {
+			varModelCount = 0 ;
+		}
+		
+			if(processorCount > 1){
+				quantities.add(0);
+				quantities.add(2 - varModelCount);
+				quantities.add(4 - varModelCount);
+				quantities.add(8 - varModelCount);
+				quantities.add(12 - varModelCount);
+				quantities.add(16 - varModelCount);
+				
+			}else {
+				if (varModelCount == 0){
+					quantities.add(0);
+					}
+				quantities.add(1 - varModelCount);
+				quantities.add(2 - varModelCount);
+				quantities.add(4 - varModelCount);
+				quantities.add(8 - varModelCount);
+			}
+			availableQuantities.setQuantities(quantities);
+	
+	}
+	
+	private void updateAvailableQuantitiesCTERA(AvailableQuantities availableQuantities, IChoiceItem iItem,Choice choice, InstanceChoices instanceChoices,ModelInstance targetModel) throws EngineException {
+		
+		if(targetModel.getId().equalsIgnoreCase("R0R63B")){
+			List<Integer> quantities = new ArrayList<Integer>();
+			quantities.add(0);
+			quantities.add(8);
+			quantities.add(12);
+			availableQuantities.setQuantities(quantities);
+			
+		}else if (targetModel.getId().equalsIgnoreCase("R0R64B")){
+			List<Integer> quantities = new ArrayList<Integer>();
+			quantities.add(0);
+			quantities.add(4);
+			availableQuantities.setQuantities(quantities);
+		}
+	}
+	private void updateAvailableQuantitiesDX360G10PlusMemory(AvailableQuantities availableQuantities, ModelInstance targetModel) throws EngineException {
+		List<Integer> quantities = new ArrayList<Integer>();
+		
+		quantities.add(0);
+		
+		int processorCount = targetModel.getChildInstancesOfClass("ProliantProcessor").size();
+		
+		if(processorCount > 1){
+			quantities.add(8);
+			quantities.add(12);
+			quantities.add(16);
+			quantities.add(24);
+			quantities.add(32);
+		}else {
+			quantities.add(4);
+			quantities.add(6);
+			quantities.add(8);
+			quantities.add(12);
+			quantities.add(16);
+		}
+		availableQuantities.setQuantities(quantities);
+		
+	}
+	private void updateAvailableQuantitiesCrayClsR8L62A(AvailableQuantities availableQuantities,IChoiceItem iItem, ModelInstance targetModel) throws EngineException {
+		List<Integer> quantities = new ArrayList<Integer>();
+		if(targetModel.attributeDefined("JSBPERT24704") && targetModel.getAttributeBooleanValue("JSBPERT24704")){
+			if(iItem.getId().equalsIgnoreCase("R8L62A")){
+				quantities.add(0);
+				quantities.add(2);
+				quantities.add(4);
+				quantities.add(6);
+				quantities.add(8);
+				quantities.add(10);
+				quantities.add(12);
+				quantities.add(14);
+				quantities.add(16);
+				quantities.add(18);
+				quantities.add(20);
+			} else {
+				quantities.add(0);
+				quantities.add(1);
+			}
+		}else{
+			quantities.add(0);
+			quantities.add(1);
+		}
+		availableQuantities.setQuantities(quantities);
+		
+	}
+	private void updateAvailableQuantitiesDX380G10PlusMemory(AvailableQuantities availableQuantities, ModelInstance targetModel) throws EngineException {
+		List<Integer> quantities = new ArrayList<Integer>();
+		
+		quantities.add(0);
+		
+		int processorCount = targetModel.getChildInstancesOfClass("ProliantProcessor").size();
+		
+		if(processorCount > 1){
+			quantities.add(8);
+			quantities.add(12);
+			quantities.add(16);
+			quantities.add(24);
+			quantities.add(32);
+		}else {
+			quantities.add(4);
+			quantities.add(6);
+			quantities.add(8);
+			quantities.add(12);
+			quantities.add(16);
+		}
+		availableQuantities.setQuantities(quantities);
+		
+	}
+
+	  private ArrayList<String> getInstanceSelectedInLocationArray(ModelInstance targetInstance , String subsystemName , String locArrayName) throws EngineException{
+		  ArrayList<String> productToBeAdd = new ArrayList<String>();
+		   if(targetInstance != null){
+			   ModelInstance trueCtrlInstance = AgentUtility.getTrueModelInstance(targetInstance);  
+				   NgcLocationArrayInstance staticLocArray = (NgcLocationArrayInstance) trueCtrlInstance.getLocationArray(subsystemName, locArrayName);
+				   if(staticLocArray != null) {
+					   if(!staticLocArray.getChildInstances().isEmpty()){
+						   for (ModelInstance containment : staticLocArray.getChildInstances()) {
+					   			productToBeAdd.add(containment.getId());		
+						   }
+					   }
+				   }
+		   }
+		   return productToBeAdd;
+	  }
+
+	private void updateAvailableQuantitiesDatera(AvailableQuantities availableQuantities, IChoiceItem iItem,Choice choice, InstanceChoices instanceChoices,ModelInstance targetModel) throws EngineException {
+		
+			ArrayList<String> dList = new ArrayList<String>();
+			dList =	getInstanceSelectedInLocationArray(targetModel, "dataStorageDrivesSubsystem" , "dataStorageDrivesLocArray");	
+			
+			int countofDrives = 0;
+			String driveSku = null;
+			
+			List<ModelInstance> drivesList = targetModel.getChildInstancesOfClass("ProliantHardDrive");
+			if(!drivesList.isEmpty()){
+				for (ModelInstance dri : drivesList){
+					if(dList.contains(dri.getName()))
+					{
+						countofDrives = drivesList.size();
+						driveSku = dri.getName();
+					}
+				}
+			}
+		if ((countofDrives == 0 || (countofDrives != 0 && iItem.getId().equalsIgnoreCase(driveSku))) && targetModel.getId().equalsIgnoreCase("R0R57B")){
+			List<Integer> quantities = new ArrayList<Integer>();
+			quantities.add(0);
+			quantities.add(12);
+			availableQuantities.setQuantities(quantities);
+			
+		}else if ((countofDrives == 0 || (countofDrives != 0 && iItem.getId().equalsIgnoreCase(driveSku))) && targetModel.getId().equalsIgnoreCase("R0R59B")){
+			List<Integer> quantities = new ArrayList<Integer>();
+			quantities.add(0);
+			for (int k = 6; k < 25; k++) {
+				if (k % (2) == 0) {
+					quantities.add(k);					
+				}
+			}			
+			availableQuantities.setQuantities(quantities);
+		}else if ((countofDrives == 0 || (countofDrives != 0 && iItem.getId().equalsIgnoreCase(driveSku))) && targetModel.getId().equalsIgnoreCase("R0R60B")){
+			List<Integer> quantities = new ArrayList<Integer>();
+			quantities.add(0);
+			for (int k = 6; k < 11; k++) {
+				if (k % (2) == 0) {
+					quantities.add(k);					
+				}
+			}			
+			availableQuantities.setQuantities(quantities);
+		}else if ((countofDrives == 0 || (countofDrives != 0 && iItem.getId().equalsIgnoreCase(driveSku))) && targetModel.getId().equalsIgnoreCase("R0R61B")){
+			List<Integer> quantities = new ArrayList<Integer>();
+			quantities.add(0);
+			for (int k = 6; k < 11; k++) {
+				if (k % (2) == 0) {
+					quantities.add(k);					
+				}
+			}			
+			availableQuantities.setQuantities(quantities);
+		}else if (countofDrives != 0 && !iItem.getId().equalsIgnoreCase(driveSku)){ 
+			List<Integer> qty = new ArrayList<Integer>();
+			qty.add(0);
+			availableQuantities.setQuantities(qty);
+		}	
+	}
+
+	private void updateAvailableQuantitiesDateraBD(AvailableQuantities availableQuantities, IChoiceItem iItem,Choice choice, InstanceChoices instanceChoices,ModelInstance targetModel) throws EngineException {
+			List<Integer> quantities = new ArrayList<Integer>();
+			quantities.add(0);
+			quantities.add(2);
+			availableQuantities.setQuantities(quantities);
+	}
+	
+	private void updateAQXL675_GraphicAcc(AvailableQuantities availableQuantities, IChoiceItem iItem,Choice choice, InstanceChoices instanceChoices,ModelInstance targetModel) throws EngineException {
+		List<ModelInstance> graphicsList = targetModel.getSubConfiguration().getInstancesOfClass("GraphicsPciCard"); //R6B53A
+		
+		if(!graphicsList.isEmpty()){
+			for (ModelInstance gra : graphicsList){
+				if(iItem.getId().equalsIgnoreCase("R6V66A") && gra.getName().equalsIgnoreCase("R6B53A")){
+					List<Integer> quantities = new ArrayList<Integer>();
+					quantities.add(0);
+					for (int x = 3; x < 13; x++) {
+						if (x % (3) == 0) {
+							quantities.add(x);					
+						}
+					}			
+					availableQuantities.setQuantities(quantities);
+				}
+			}
+			
+		}
+		
+		
+	}
+	private void updateAQXL675_Proccessors_B21(AvailableQuantities availableQuantities, IChoiceItem iItem,Choice choice, InstanceChoices instanceChoices,ModelInstance targetModel) throws EngineException {
+		if(iItem.getId().endsWith("-B21")){
+			List<Integer> quantities = new ArrayList<Integer>();
+			quantities.add(0);
+			quantities.add(2);	
+			availableQuantities.setQuantities(quantities);
+		}
+	}
+	
+	private void updateAvailableQuantitiesPowerCord(AvailableQuantities availableQuantities, int qty) throws EngineException {
+		List<Integer> quantities = new ArrayList<Integer>();
+		quantities.add(0);
+		quantities.add(qty);	
+		availableQuantities.setQuantities(quantities);
+	}
+	
+	private void updateAvailableQuantitiesXL645GPUTray(AvailableQuantities availableQuantities) throws EngineException {
+
+			List<Integer> quantities = new ArrayList<Integer>();
+			quantities.add(0);
+			quantities.add(1);
+				
+			availableQuantities.setQuantities(quantities);
+
+	}
+
+	private void updateAvailableQuantitiesAntennasCho1(AvailableQuantities availableQuantities, IChoiceItem iItem,Choice choice, InstanceChoices instanceChoices,ModelInstance targetModel) throws EngineException {
+
+		if (iItem.getId().equalsIgnoreCase("JW009A") || iItem.getId().equalsIgnoreCase("JW001A") || iItem.getId().equalsIgnoreCase("JW004A") || iItem.getId().equalsIgnoreCase("JW011A")) {
+			availableQuantities.setMax(4, null);
+			List<Integer> customQuantities = new ArrayList<Integer>();
+			customQuantities.add(0);
+			customQuantities.add(4);
+			availableQuantities.setQuantities(customQuantities);
+		}else if (iItem.getId().equalsIgnoreCase("Q8N49A")){
+			availableQuantities.setMax(2, null);
+			List<Integer> customQuantities = new ArrayList<Integer>();
+			customQuantities.add(0);
+			customQuantities.add(2);
+			availableQuantities.setQuantities(customQuantities);				
+		}else if (iItem.getId().equalsIgnoreCase("JW017A") || iItem.getId().equalsIgnoreCase("JW018A") || iItem.getId().equalsIgnoreCase("JW019A") || 
+				  iItem.getId().equalsIgnoreCase("JW033A") || iItem.getId().equalsIgnoreCase("JX988A")){
+			availableQuantities.setMax(1, null);
+			List<Integer> customQuantities = new ArrayList<Integer>();
+			customQuantities.add(0);
+			customQuantities.add(1);
+			availableQuantities.setQuantities(customQuantities);				
+		}
+	}
+	
+	private void updateAvailableQuantitiesAntennasCho2(AvailableQuantities availableQuantities, IChoiceItem iItem,Choice choice, InstanceChoices instanceChoices,ModelInstance targetModel) throws EngineException {
+
+		if (iItem.getId().equalsIgnoreCase("JW009A") || iItem.getId().equalsIgnoreCase("JW001A") || iItem.getId().equalsIgnoreCase("JW004A") || iItem.getId().equalsIgnoreCase("JW011A")) {
+			availableQuantities.setMax(2, null);
+			List<Integer> customQuantities = new ArrayList<Integer>();
+			customQuantities.add(0);
+			customQuantities.add(2);
+			availableQuantities.setQuantities(customQuantities);
+		}else if (iItem.getId().equalsIgnoreCase("JW003A") || iItem.getId().equalsIgnoreCase("Q8N49A") || iItem.getId().equalsIgnoreCase("JW012A") || 
+				  iItem.getId().equalsIgnoreCase("JW013A") || iItem.getId().equalsIgnoreCase("JW024A")){
+			availableQuantities.setMax(1, null);
+			List<Integer> customQuantities = new ArrayList<Integer>();
+			customQuantities.add(0);
+			customQuantities.add(1);
+			availableQuantities.setQuantities(customQuantities);				
+		}
+	}
+	
+	private void updateAvailableQuantitiesParallel_LFF(AvailableQuantities availableQuantities, IChoiceItem iItem,
+			Choice choice, InstanceChoices instanceChoices) {
+		List<Integer> quantities = new ArrayList<Integer>();
+		quantities.add(0);
+		quantities.add(3);
+		quantities.add(4);
+		quantities.add(6);
+		quantities.add(8);
+		quantities.add(10);
+		quantities.add(12);
+		availableQuantities.setQuantities(quantities);
+	}
+
+	private void updateAvailableQuantitiesParallel_SFF(AvailableQuantities availableQuantities, IChoiceItem iItem,
+			Choice choice, InstanceChoices instanceChoices) {
+		List<Integer> quantities = new ArrayList<Integer>();
+		quantities.add(0);
+		quantities.add(3);
+		quantities.add(4);
+		quantities.add(6);
+		quantities.add(8);
+		quantities.add(10);
+		quantities.add(12);
+		quantities.add(14);
+		quantities.add(16);
+		availableQuantities.setQuantities(quantities);
+	}
+
+	private void updateAvailableQuantitiesParallel60DiskBlade_LFF(AvailableQuantities availableQuantities, IChoiceItem iItem,
+			Choice choice, InstanceChoices instanceChoices) {
+		List<Integer> quantities = new ArrayList<Integer>();
+		quantities.add(0);
+		quantities.add(10);
+		quantities.add(20);
+		quantities.add(30);
+		quantities.add(40);
+		quantities.add(50);
+		quantities.add(60);
+		availableQuantities.setQuantities(quantities);
+	}
+	
+	
+	private void updateAvailableQuantitiesMSATAA(AvailableQuantities availableQuantities,IChoiceItem iItem, ModelInstance targetModel) throws EngineException {
+		
+		List<String> SUPPORT_MODEL = Arrays.asList("R9G38A","R9G38B","R9G39A","R9G39B","R9G40A","R9G40B","R9G41A","R9G41B");
+		boolean isMSATAA = false;
+		if(targetModel.attributeDefined("intergrateToBaseID")){
+			if(SUPPORT_MODEL.contains(targetModel.getAttributeStringValue("intergrateToBaseID"))) {
+				isMSATAA = true;
+			}
+		}
+		List<Integer> quantities = new ArrayList<Integer>();
+		if((targetModel.getId().equals("R0Q39A") || targetModel.getId().equals("R0Q39B")) && isMSATAA){
+			if(iItem.getId().equalsIgnoreCase("R0R50A")){
+				quantities.add(1);
+				quantities.add(2);	
+				availableQuantities.setQuantities(quantities);
+			}
+		}else if((targetModel.getId().equals("R0Q40A") || targetModel.getId().equals("R0Q40B")) && isMSATAA){
+			if(iItem.getId().equalsIgnoreCase("R0R47A")){
+				quantities.add(1);
+				quantities.add(2);	
+				quantities.add(3);	
+				quantities.add(4);	
+				availableQuantities.setQuantities(quantities);
+			}
+		}
+		
+		
+	}
+	
+	private void updateAvailableQuantitiesE920baseserverPersistentMem(AvailableQuantities availableQuantities, ModelInstance targetModel, IChoiceItem iItem, 
+			Choice choice, InstanceChoices instanceChoices) throws EngineException {
+			 List<Integer> quantities = new ArrayList<Integer>();
+			 	quantities.add(0);
+			 	quantities.add(4);
+			availableQuantities.setQuantities(quantities);
+	}
+	private void updateAvailableQuantitiesE920dServerPersistentMem(AvailableQuantities availableQuantities, ModelInstance targetModel, IChoiceItem iItem, 
+			Choice choice, InstanceChoices instanceChoices) throws EngineException {
+			 List<Integer> quantities = new ArrayList<Integer>();
+			 	quantities.add(0);
+			 	quantities.add(4);
+			availableQuantities.setQuantities(quantities);
+	}
+	private void updateAvailableQuantitiesE920tserverPersistentMem(AvailableQuantities availableQuantities, ModelInstance targetModel, IChoiceItem iItem, 
+			Choice choice, InstanceChoices instanceChoices) throws EngineException {
+			 List<Integer> quantities = new ArrayList<Integer>();
+			 	quantities.add(0);
+			 	quantities.add(4);
+			availableQuantities.setQuantities(quantities);
+	}
+	
+	private void updateAvailableQuantitiesDL360G10PlusServerCohesityProcessor(AvailableQuantities availableQuantities, ModelInstance targetModel, IChoiceItem iItem, 
+			Choice choice, InstanceChoices instanceChoices) throws EngineException {
+			 List<Integer> quantities = new ArrayList<Integer>();
+			 	quantities.add(0);
+			 	quantities.add(2);
+			availableQuantities.setQuantities(quantities);
+	}
+	private void updateAvailableQuantitiesDL360G10PlusServerCohesityMemory(AvailableQuantities availableQuantities, ModelInstance targetModel, IChoiceItem iItem, 
+			Choice choice, InstanceChoices instanceChoices) throws EngineException {
+			 List<Integer> quantities = new ArrayList<Integer>();
+			 	quantities.add(0);
+			 	quantities.add(8);
+			availableQuantities.setQuantities(quantities);
+	}
+	private void updateAvailableQuantitiesDL360G10PlusServerCohesitySSDHDD(AvailableQuantities availableQuantities, ModelInstance targetModel, IChoiceItem iItem, 
+			Choice choice, InstanceChoices instanceChoices) throws EngineException {
+			 List<Integer> quantities = new ArrayList<Integer>();
+			 	quantities.add(0);
+			 	quantities.add(10);
+			availableQuantities.setQuantities(quantities);
+	}
+	private void updateAvailableQuantitiesDL360G10PlusServerCohesityPowerSupply(AvailableQuantities availableQuantities, ModelInstance targetModel, IChoiceItem iItem, 
+			Choice choice, InstanceChoices instanceChoices) throws EngineException {
+			 List<Integer> quantities = new ArrayList<Integer>();
+			 	quantities.add(0);
+			 	quantities.add(2);
+			availableQuantities.setQuantities(quantities);
+	}
+	private void updateAvailableQuantitiesEX235ABladeGPU(AvailableQuantities availableQuantities, IChoiceItem iItem,
+			Choice choice, InstanceChoices instanceChoices) {
+		List<Integer> quantities = new ArrayList<Integer>();
+			quantities.add(2);
+			quantities.add(8);
+		availableQuantities.setQuantities(quantities);
+	}
+	private void updateAvailableQuantitiesForPCICardsMATInfo(AvailableQuantities availableQuantities, IChoiceItem iItem,
+			Choice choice, InstanceChoices instanceChoices,ModelInstance targetModel) throws EngineException {
+		if(targetModel.getChildInstancesOfClass("ProliantPciRiser") != null){
+			List<ModelInstance> risers = targetModel.getChildInstancesOfClass("ProliantPciRiser");
+			int riserExclusiveMaxValue = 0; 
+			List<String> pcieCtrlls = Arrays.asList(new String[] { "P04220-B21","P06367-B21","P26324-B21","P39270-B21","P23388-B21","830824-B21","804394-B21","804398-B21","804405-B21","873444-B21"});
+			
+			try {
+			if(pcieCtrlls.contains(iItem.getId().split("#")[0]) ){
+					for (ModelInstance riser : risers) {
+						int rowsConsumed = riser.getLocationArray("riserKitSubsystem", "pciSlots").getRowsConsumed() == null ? 0 : riser.getLocationArray("riserKitSubsystem", "pciSlots").getRowsConsumed();
+						riserExclusiveMaxValue += riser.getLocationArray("riserKitSubsystem", "pciSlots").getRows() - rowsConsumed;
+					}
+	
+				}else{//Set max to 0 in case no riser is selected
+					availableQuantities.setMax(riserExclusiveMaxValue, null);
+				}		
+			}//only applies to i-p internal controllers either Microchip or Broadcom		
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}	
+	}
+	
+	private void updateAvailableQuantitiesForPCICardsMATInfo(AvailableQuantities availableQuantities, IChoiceItem iItem,
+			Choice choice, InstanceChoices instanceChoices,ModelInstance targetModel) throws EngineException {
+		if(targetModel.getChildInstancesOfClass("ProliantPciRiser") != null){
+			List<ModelInstance> risers = targetModel.getChildInstancesOfClass("ProliantPciRiser");
+			int riserExclusiveMaxValue = 0; 
+			List<String> pcieCtrlls = Arrays.asList(new String[] { "P04220-B21","P06367-B21","P26324-B21","P39270-B21","P23388-B21","830824-B21","804394-B21","804398-B21","804405-B21","873444-B21"});
+			
+			try {//only applies to i-p internal controllers either Microchip or Broadcom
+			if(pcieCtrlls.contains(iItem.getId().split("#")[0]) ){
+				if( ! risers.isEmpty()){ //Set max qty based on the risers accumulative size, excluding ocp and aroc server slots
+//					System.out.println("loc array from getchild " + risers.get(0).getLocationArray("riserKitSubsystem", "pciSlots"));
+					for (ModelInstance riser : risers) {
+//						int rowsConsumed = riser.getLocationArray("riserKitSubsystem", "pciSlots").getRowsConsumed() == null ? 0 : riser.getLocationArray("riserKitSubsystem", "pciSlots").getRowsConsumed();
+						int rowsConsumed = riser.getChildInstances().isEmpty()  ? 0 : riser.getChildInstances().size();
+						riserExclusiveMaxValue += riser.getLocationArray("riserKitSubsystem", "pciSlots").getRows() - rowsConsumed;
+					}
+	
+//					KnowledgeBaseImpl kb = null;
+					
+	//
+	//					kb = targetModel.getSubConfiguration().getKb();
+	//					NgcClass product = kb.getNgcClass(iItem.getId());
+	//					
+	//					if(product != null && product.attributeDefined("tPciType")  ){
+	//					if(pcieCtrlls.contains(iItem.getId().split("#")[0]) ){
+	//							if( riserExclusiveMaxValue != 0 && product.getAttributeStringValue("tPciType").startsWith("PCI_E")) 
+								availableQuantities.setMax(riserExclusiveMaxValue, null);
+						
+//					} catch (Exception e) {
+//						// TODO Auto-generated catch block
+//						e.printStackTrace();
+//						NgcProduct product = null;
+	//					for (NgcProduct p : kb.getProductsSupportedOnPlatform(targetModel, kb.getNgcClass("ProliantStorageContSASSA"))) {
+	//						if (p.getName().startsWith(iItem.getId())) product = p;
+	//					}
+
+	//					if(product != null && product.attributeDefined("tPciType") &&  choice.getId().endsWith("SmartArrayControllerChoice") ){
+	//						System.out.println("PCIecard from targetmodel childInst tPciType att value:  " +  product.getAttributeStringValue("tPciType"));
+	//
+	//						if( riserExclusiveMaxValue != 0 && product.getAttributeStringValue("tPciType").startsWith("PCI_E")) availableQuantities.setMax(riserExclusiveMaxValue, null);
+	//					}
+
+//					}
+				}else{//Set max to 0 in case no riser is selected
+					availableQuantities.setMax(riserExclusiveMaxValue, null);
+				}		
+			}//only applies to i-p internal controllers either Microchip or Broadcom		
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}	
+	}
+	
+	private void updateAvailableQuantitiesSDFLEXAHPowerSupplies(AvailableQuantities availableQuantities, ModelInstance targetModel, IChoiceItem iItem, 
+			Choice choice, InstanceChoices instanceChoices) throws EngineException {
+			List<Integer> quantities = new ArrayList<Integer>();
+			
+			quantities.add(0);
+			
+			if (iItem.getId().equalsIgnoreCase("R4S14A") || iItem.getId().equalsIgnoreCase("R4S16A")){
+				quantities.add(2);
+			}
+			else if (iItem.getId().equalsIgnoreCase("S0A85A") || iItem.getId().equalsIgnoreCase("S0A86A")){
+				quantities.add(1);
+			}
+			availableQuantities.setQuantities(quantities);
+
+	}
+	
+	@Override
+	public String getUpdateDelegateAgentName() {
+		return "com.hp.ngc.plugins.agents.update.delegate.baseline.AvailableQuantitiesUpdateAgent";
+	}
+
+	@Override
+	public void init() throws EngineException {
+		
+	}
+
+	@Override
+	public RequestStatusCode executeRequest(OperationRequest opRequest, ModificationRequest request)
+			throws EngineException {
+		defaultAgent.executeOperation(opRequest, request, true);
+		return request.getStatusCode();
+	}
+	
+}

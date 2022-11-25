@@ -1,0 +1,78 @@
+<div id="tab_array_selection" class="wizardTab array_selection_nimblegen6_tab">
+	<div class="wizardTab">
+		<div id="left_array_selection" class="left_inTab_div">
+		<div>
+				<span></span> Cloud connectivity is required for Registration and Activation of this HPE Alletra 6000 Array. 
+				If cloud connectivity will not be available for Registration and Activation, do not proceed with configuring the array.  
+				The Nimble Storage arrays are recommended if the cloud connectivity requirement cannot be met.
+				<!-- NOTE: All Alletra orders must be reviewed and approved by the Storage Concierge team. When configuration and pricing is final,
+				please submit a completed <a href='http://www.hpe.com/storage/concierge' target='_blank'>HPE ALLETRA CONCIERGE WORKSHEET</a> to <a href='mailto:storage_concierge@hpe.com' target='_blank'>STORAGE_CONCIERGE@HPE.COM</a>
+				for review and approval. -->
+				<div class="wizard_checkbox w-100">
+					<input type="checkbox" id="nimble_acknowledge_checkbox"> <label
+						class="label-checkbox-radio" for="nimble_acknowledge_checkbox"><span></span>
+						I have confirmed cloud connectivity is possible for Registration and Activation of this array</label>
+				</div>
+			</div>
+			<div id="left_array_selection_section" class="wizard_section">
+				<div class="wizardSubSection">
+					<div class="sub-row w-100">
+						<span class="sectionTitle">Base Array</span> <br>
+					</div>
+					<div class="sub-row w-100">
+						<div class="constraintError w-90" id="ArraySelectionconstraint">
+							<div class="message-list"></div>
+						</div>
+					</div>
+					<div class="sub-row w-100">
+						<div class="wizard_dropdown w-90">
+							<div class="form-container-border sub-col">
+								<span>Select Base Array Model</span> <select
+									id="select_base_array_model" class="requiredChoice"></select>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="right_array_selection" class="right_inTab_div">
+			<div id="right_array_selection_section" class="wizard_section">
+				<div class="wizardSubSection">
+					<div class="sub-row w-100">
+						<span class="sectionTitle">Switches (Optional)</span> <br>
+					</div>
+					<div class="sub-row w-100">
+						<div class="wizard_dropdown w-30">
+							<div class="form-container-border sub-col">
+								<span>Select Switch Type 1</span> <select
+									id="select_type_switch_1"></select>
+							</div>
+						</div>
+						<div class="wizard_dropdown w-70">
+							<div class="form-container-border sub-col">
+								<span>Select Switch (1)</span> <select id="select_switch_1"></select>
+							</div>
+						</div>
+					</div>
+					<div class="sub-row w-100">
+						<div class="wizard_dropdown w-30">
+							<div class="form-container-border sub-col">
+								<span>Select Switch Type 2</span> <select
+									id="select_type_switch_2"></select>
+							</div>
+						</div>
+						<div class="wizard_dropdown w-70">
+							<div class="form-container-border sub-col">
+								<span>Select Switch (2)</span> <select id="select_switch_2"></select>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+<!-- 		<div id="bottom-next-nav"> -->
+<!-- 			<div class="button next-button wizard_button--primary-shasta" -->
+<!-- 				data-tab="1" id="tab_array_selection">Next section</div> -->
+<!-- 		</div> -->
+	</div>
+</div>

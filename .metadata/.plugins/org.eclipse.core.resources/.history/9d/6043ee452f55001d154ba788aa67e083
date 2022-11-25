@@ -1,0 +1,414 @@
+package essn.storage.network.nimblestorage.alletra5000.alletra5000 {
+	import essn.storage.network.nimblestorage.gen6.common.nimblegen6common.*;
+	import essn.storage.network.nimblestorage.nimblestoragecommoncto.*;
+	import common.productcategories.*;
+	import common.agentutility.*;
+	import common.globalsupport.*;
+	import common.coremodel.*;
+	import essn.cas.prostackcommon.*;
+	class Alletra5000 extends NimbleGen6Common {
+		description: "HPE Alletra 5000";
+		string shortLabel: "HPE Alletra 5000";
+		configurationEntryPoint;
+		platformName: "NIMBLEALLETRA5000";
+		ifEffective GKK_SeaEagle {
+			productCategories: NimbleAlletra5000;
+		}
+		otherwise {
+			productCategories: DoNotDisplay;
+		}
+		string softwarePlatformName: "";
+		string basemodeType: "";	
+		string orginalBasemodeType: "";		
+		string catalogSequence: "";
+		double minDCapacity: 0.0;// Using for cache calculate (dynamic)
+		double maxDCapacity: 0.0;
+		double shelfDCapacity: 0.0;
+		double minOrginalDCapacity: 0.0; // Using for cache calculate (static)
+		double maxOrginalDCapacity: 0.0;
+		double minHDDCapacity: 0.0;// Using for cache calculate (dynamic)
+		double maxHDDCapacity: 0.0;
+		double minOrginalHDDCapacity: 0.0; // Using for cache calculate (static)
+		double maxOrginalHDDCapacity: 0.0;
+		int iNumHDDCapacity : 1;
+		int iNumBankACapacity : 1;
+		int iNumBankBCapacity : 1;
+		int iCacheUpgrade: 2;
+		int iNumAdapter: 3;
+		int iNumAdapterUpgrade: 3;
+		int iNumNSSoftware: 1;
+		int iNumOEMTracking: 1;
+		int iNumShelf: 6;
+		int iNumPowerCord: 4;
+		int iNumSparePowerSupply: 99;
+		int iNumSpareCtrl: 99;
+		int iNumSpareSSD: 99;
+		int iNumSpareHDD: 99;
+		int iNumSpareNetworking: 99;
+		int iNumSwitches : 2;
+		int iControllerUpgrade : 1;
+//		boolean hideAdHoc: true; --> Ticket KES- 380
+		
+		ifEffective JCN_GLSC_5K {
+			string billingTier: "HPE Alletra 5000";
+			string technology: "Alletra 5000";
+			def technologySet (): boolean = callout("CSUtils", "cascadeAttribute", thisInst, "technology", "Allocate");
+		}
+		
+		def setOEMTrackingDefault (): string[] = {
+			if(isNimbleUpgradeCallOut () and isUpgrade ()) then if(thisConfig.getProperty("country") = "CN") then expanderString ("R9X16A", 1) else expanderString ("R9X15A", 1) else "";
+		}
+		def reqTrackingSkuSCE (): string[] = {
+			if(thisConfig.getProperty("country") = "CN") then expanderString ("R9X16A", 1) else expanderString ("R9X15A", 1);
+		}
+		def setNOC_SoftwareDefault (): string[] = {
+			expanderString ("Q8G27B", 1);
+		}
+		def sCacheSupporedBaseOnHDD (): string = {
+			if isUpgrade () and thisInst.selected(HDDCapacity).filter(x => x.id = 'R4U42A').count > 0 then " R8F35A R4U47A R4U48A R4U49A R4U50A "
+			else if isUpgrade () and  thisInst.selected(HDDCapacity).filter(x => x.id = 'R4U43A').count > 0 then " R4U47A R4U48A R4U49A R4U50A "
+			else if isUpgrade () and thisInst.selected(HDDCapacity).filter(x => x.id = 'R4U44A').count > 0 then " R4U48A R4U49A R4U50A "
+			else if isUpgrade () and thisInst.selected(HDDCapacity).filter(x => x.id = 'R4U45A').count > 0 then " R4U48A R4U49A R4U50A "
+			else if isUpgrade () and thisInst.selected(HDDCapacity).filter(x => x.id = 'R4U46A').count > 0 then " R4U49A R4U50A "
+			else if !isUpgrade () and thisInst.selected(HDDCapacity).filter(x => x.id = 'R4U42A').count > 0 then " R8F36A R6F40A R6F41A R6F42A R6F43A "
+			else if !isUpgrade () and thisInst.selected(HDDCapacity).filter(x => x.id = 'R4U43A').count > 0 then " R6F40A R6F41A R6F42A R6F43A "
+			else if !isUpgrade () and thisInst.selected(HDDCapacity).filter(x => x.id = 'R4U44A').count > 0 then " R6F41A R6F42A R6F43A "
+			else if !isUpgrade () and thisInst.selected(HDDCapacity).filter(x => x.id = 'R4U45A').count > 0 then " R6F41A R6F42A R6F43A "
+			else if !isUpgrade () and thisInst.selected(HDDCapacity).filter(x => x.id = 'R4U46A').count > 0 then " R6F42A R6F43A "
+			else "";
+		}
+		def getConfigHDDCapacity (): double = {
+			thisInst.selected(HDDCapacity).sum(hddCapacity) + thisInst.selected(Alletra5KShelf).sum(hddCapacity);
+		}
+		def minBaseModelHDDCapacity (): double = {
+			Alletra5000.minHDDCapacity;
+		}
+		def maxBaseModelHDDCapacity (): double = {
+			Alletra5000.maxHDDCapacity;
+		}
+		def getConfigDCapacity (): double = {
+			thisInst.selected(CacheBundle).filterByAttribute(cacheType, "Array").sum(dCapacity) + thisInst.selected(UpgradeCacheBundle)
+			.filterByAttribute(cacheType, "Array").sum(dCapacity) + thisInst.shelfDCapacity;
+		}
+		def minBaseModelDCapacity (): double = {
+			if thisInst.selected(HDDCapacity).count > 0 then thisInst.selected(HDDCapacity).sum(minDCapacityRequired) else Alletra5000.minDCapacity;
+		}
+		def maxBaseModelDCapacity (): double = {
+			Alletra5000.maxDCapacity;
+		}
+		def isGlscConfiguration (): boolean = callout("ConfigUtil", "isGreenlakeSimpleCustom", thisInst);
+		
+		def ZertoDefaultQty (): string[] = {
+			if (thisConfig.getProperty("country") = "US" or thisConfig.getProperty("country") = "CA") && !isGlscConfiguration() then expanderString ("R6J72AAE", 5) else "";
+		}
+		subsystem modelDefaults {
+			part setNOCSoftwareDefault: sceDefaultsTrigger {
+				string modelDefaultsFunc: "setNOC_SoftwareDefault";
+			}
+			part oemTrackingDefaultTrigger: triggerConsequentialSelection {
+				string consequentialSelectionFunc: "setOEMTrackingDefault";
+			}
+			part addDefaultsTriggerSCE: sceTriggerConsequentialSelection {
+				string consequentialSelectionFunc: "reqTrackingSkuSCE";
+			}
+			ifEffective GKK_25139_Zero {
+				part setZertoDefaultQtyDefault: sceTriggerConsequentialSelection {
+					string consequentialSelectionFunc: "ZertoDefaultQty";
+				}
+			}
+	    }
+	    subsystem HDDCapacitySubsystem {
+			constraint rule2_SupportHDD {
+				message: "Supported on 5030 (R4U34A/R7L32A), 5050 (R4U35A/R7L33A)";
+				body: dependency (Alletra5000 [ basemodeType = '5010' ], HDDCapacity [R4U46A] = 0);
+			}
+			constraint minHDDCapacityRequired {
+				message: "Minimum $a{minBaseModelHDDCapacity} TB HDD Capacity Required";
+				body: getConfigHDDCapacity () >= minBaseModelHDDCapacity ();
+			}
+			constraint maxHDDCapacityRequired {
+				message: "Configuration has exceeded the maximum supported  $a{maxBaseModelHDDCapacity} TB Capacity, please change the Capacity selections";
+				body: getConfigHDDCapacity () <= maxBaseModelHDDCapacity ();
+			}
+			constraint setAttributeValues {
+				message: "setAttributeBase";
+				body: thisInst.setAttributeForAlletra5000 ("Base");
+			}
+		}
+		subsystem CacheBundlesSubsystem {
+			
+			constraint rule2_SupportCache {
+				message: "Supported on 5030 (R4U34A/R7L32A), 5050 (R4U35A/R7L33A)";
+				body: dependency (Alletra5000 [ basemodeType = '5010' ], CacheBundle [R4U50A] = 0);
+			}
+			
+			constraint minDCapacityRequired {
+				message: "Minimum $a{minBaseModelDCapacity} TB Bank A Cache Required";
+				body: 
+				if thisInst.selected(HDDCapacity).count > 0 then getConfigDCapacity () >= minBaseModelDCapacity ()
+				else true;
+			}
+			constraint maxDCapacityRequired {
+				message: "You have exceeded the System Max $a{maxBaseModelDCapacity} TB Cache value. Please review your cache selections on the Array and 2120 shelves";
+				body: getConfigDCapacity () <= maxBaseModelDCapacity ();
+			}
+			
+			constraint cacheSupport_HDD_R4U42A {
+				message: "The $a{sCacheSupporedBaseOnHDD} Cache  Supported on R4U42A HDD Capacity Selection";
+				body: 
+				dependency (HDDCapacity [ R4U42A], CacheBundle [ ~ (R8F35A || R4U47A || R4U48A || R4U49A || R4U50A )] = 0);
+				dependency (HDDCapacity [ R4U42A ], UpgradeCacheBundle [ ~ (R8F36A || R6F40A || R6F41A || R6F42A || R6F43A )] = 0);
+			}
+			
+			constraint cacheSupport_HDD_R4U43A {
+				message: "The $a{sCacheSupporedBaseOnHDD} Cache  Supported on R4U43A HDD Capacity Selection";
+				body: 
+				dependency (HDDCapacity [ R4U43A ],  CacheBundle [ ~ (R4U47A || R4U48A || R4U49A || R4U50A )] = 0);
+				dependency (HDDCapacity [ R4U43A ], UpgradeCacheBundle [ ~ (R6F40A || R6F41A || R6F42A || R6F43A )] = 0);
+			}
+			constraint cacheSupport_HDD_R4U44A {
+				message: "The $a{sCacheSupporedBaseOnHDD} Cache  Supported on R4U44A HDD Capacity Selection";
+				body: 
+				dependency (HDDCapacity [ R4U44A ], CacheBundle [ ~ (R4U48A || R4U49A || R4U50A )] = 0);
+				dependency (HDDCapacity [ R4U44A ], UpgradeCacheBundle [ ~ (R6F41A || R6F42A || R6F43A )] = 0);
+			}
+			constraint cacheSupport_HDD_R4U45A {
+				message: "The $a{sCacheSupporedBaseOnHDD} Cache  Supported on R4U45A HDD Capacity Selection";
+				body: 
+				dependency (HDDCapacity [ R4U45A ], CacheBundle [ ~ (R4U48A || R4U49A || R4U50A )] = 0);
+				dependency (HDDCapacity [ R4U45A ], UpgradeCacheBundle [ ~ (R6F41A || R6F42A || R6F43A )] = 0);
+			}
+			constraint cacheSupport_HDD_R4U46A {
+				message: "The $a{sCacheSupporedBaseOnHDD} Cache  Supported on R4U46A HDD Capacity Selection";
+				body: 
+				dependency (HDDCapacity [ R4U46A ], CacheBundle [ ~ (R4U49A || R4U50A )] = 0);
+				dependency (HDDCapacity [ R4U46A ], UpgradeCacheBundle [ ~ (R6F42A || R6F43A )] = 0);
+			}
+			
+			constraint BankAandB_rule1 {
+				message: "If R8F35A is chosen in Bank A, Then selectable Bank B options are R8F35A or  R4U47A ";
+				body: if  BankASSDCacheLocArray.contents.filter(x => x.id >= "R8F35A").count > 0 then
+				BankBSSDCacheLocArray.contents.filter(x => x.id >= "R8F35A" || x.id >= "R4U47A").count > 0 else true;
+			}
+			constraint BankAandB_rule2 {
+				message: "If R4U47A is chosen in Bank A, Then selectable Bank B options are R8F35A, R4U47A or R4U48A";
+				body: if  BankASSDCacheLocArray.contents.filter(x => x.id >= "R4U47A").count > 0 then
+				BankBSSDCacheLocArray.contents.filter(x => x.id >= "R8F35A" || x.id >= "R4U47A" || x.id >= "R4U48A").count > 0 else true;
+			}
+			constraint BankAandB_rule3 {
+				message: "If R4U48A is chosen in Bank A, Then selectable Bank B options are R4U47A, R4U48A or R4U49A";
+				body: if  BankASSDCacheLocArray.contents.filter(x => x.id >= "R4U48A").count > 0 then
+				BankBSSDCacheLocArray.contents.filter(x => x.id >= "R4U47A" || x.id >= "R4U48A" || x.id >= "R4U49A").count > 0 else true;
+			}
+			constraint BankAandB_rule4 {
+				message: "If R4U49A is chosen in Bank A, Then selectable Bank B options are R4U48A, R4U49A or R4U50A";
+				body: if  BankASSDCacheLocArray.contents.filter(x => x.id >= "R4U49A").count > 0 then
+				BankBSSDCacheLocArray.contents.filter(x => x.id >= "R4U48A" || x.id >= "R4U49A" || x.id >= "R4U50A").count > 0 else true;
+			}
+			constraint BankAandB_rule5 {
+				message: "If R4U50A is chosen in Bank A, Then selectable Bank B option is R4U49A or R4U50A";
+				body: if  BankASSDCacheLocArray.contents.filter(x => x.id >= "R4U50A").count > 0 then
+				BankBSSDCacheLocArray.contents.filter(x => x.id >= "R4U49A" || x.id >= "R4U50A").count > 0 else true;
+			}
+		}
+		subsystem CacheUpgradeSubsystem {
+			constraint rule2_SupportCache {
+				message: "Supported on 5030 (R4U34A/R7L32A), 5050 (R4U35A/R7L33A)";
+				body: dependency (Alletra5000 [ basemodeType = '5010' ], UpgradeCacheBundle [R6F43A] = 0);
+			}
+			constraint CacheUpgrade_BuleNote1 {
+				message: "When choosing cache upgrades, we recommend either the same capacity, next lowest capacity, or next highest capacity, from Bank A cache on the existing Base Array";
+				body: isNotUpgrade();
+			}
+		}
+		subsystem NetworkingSubsystem {
+			// Location Array from NimbleGen6Common
+			constraint networking_BuleNote1 {
+				message: "All Alletra 5000 arrays include two (2) onboard 10GBase-T ports per controller";
+				body: isUpgrade();
+			}
+		}
+		subsystem NetworkingUpgradeSubsystem {
+			// Location Array from NimbleGen6Common
+		}
+	    subsystem SoftwareSubsystem {
+	    	// Location Array from NimbleGen6Common {SoftwareLocArray, OEMTrackingLocArray}
+			constraint NOS_SW_MinMax1 {
+				message: "Required Min 1 HPE Alletra 5000 Storage NOS Software";
+				body: if(! isNotUpgrade) and (thisInst.selected(NimbleSoftware).count < 1) then false;
+			}
+		}
+		subsystem ExpansionShelfUpgradeSubsystem {
+			// Group from NimbleGen6Common expansionShelfGroup
+			group expansionShelfGroup {
+				groupPartType: multiModelGroupType;
+				memberClasses: Alletra5KShelf;
+				groupMax: iNumShelf;
+			}	
+			constraint expShelf_Rule2 {
+				message: "Supported on 5030 (R4U34A), 5050 (R4U35A)";
+				body: 
+				dependency (Alletra5000 [ basemodeType = '5010' ], NimbleGen6Shelf [ R6F58A || R6F59A ] = 0);
+				dependency (Alletra5000 [ basemodeType = '5010' ], NimbleGen6Shelf [ R7L38A || R7L39A ] = 0);
+			}
+			
+			constraint shelf_BuleNote1 {
+				message: "For adding “Shelf Cache and Power Cords” to the Alletra 2120 Expansion Shelf, click on the arrow displayed next to the shelf sku followed by the hyperlink to complete the configuration";
+				body: false;
+			}
+		}
+		subsystem SwitchesSubsystem {
+			// group from NimbleGen6Common hpSwitchGroup
+		}
+		subsystem MiscHardwareSubsystem {
+			
+			constraint powerCord_rule2 {
+				message: "Supported on 5050 (R4U35A/R7L33A)";
+				body: dependency (Alletra5000 [ ~ (basemodeType = '5050') ] > 0, NimbleCords [ R0P83A || R0P84A || Q8J02A || Q8J03A || Q8J04A || Q8J06A || Q8J07A || Q8J08A || Q8J09A || Q8J10A || Q8J11A || Q8J12A || Q8J13A || Q8J14A ] = 0);
+			}
+			constraint powerCord_rule3 {
+				message: "Supported on 5010 (R4U33A/R7L31A), 5030 (R4U34A/R7L32A)";
+				body: dependency (Alletra5000 [ basemodeType = '5050' ] > 0, NimbleCords [ Q8J15A || Q8J16A || Q8J17A || Q8J18A || Q8J19A || Q8J20A || Q8J21A || Q8J22A || Q8J23A || Q8J24A || Q8J25A || Q8J26A || Q8J27A ] = 0);
+			}
+			
+			constraint PowerCordsMinimum {
+				message: "Requires a minumum of 2 of the same country power cords per Base Array";
+				body: if(! isNotUpgrade) then PowerCordsLocArray.contents.count > 1 else true;
+			}
+			constraint PowerCordsPairs {
+				message: "Requires power cords in pairs";
+				body: restriction(NimbleCords.pairs);
+			}
+			constraint PowerCordsRule2 {
+				message: "Can mix PDU and Country. Can't mix different countries";
+				body: if PowerCordsLocArray.contents.count > 3 then PowerCordsLocArray.contents.filterByAttribute(powerType, "LOC").noMix;
+			}
+			constraint PowerCord_NoMix {
+				message: "Base array and shelf can not be mixed with different country and pdu power cords";
+				body: 
+				 {
+					val typeCheck = if (Alletra5000.basemodeType = '5050') then true else false;
+					if thisInst.validateArrayAndShelfPowerNoMix(typeCheck) then thisInst.isPowerMixed  else true;
+				}
+			}
+			locationArray PowerSupplySpareLocArray {
+				rows: iNumSparePowerSupply; 
+				fillerClasses:  NimblePowerSupply,SpareMisc;
+			}
+			locationArray ControllerSpareKitsLocArray {
+				rows: iNumSpareCtrl;
+				fillerClasses: SpareMisc;
+			}
+		}
+		
+		subsystem ControllerUpgradeSubsystem {
+			locationArray ControllerUpgradeLocArray {
+				rows: iControllerUpgrade;
+				fillerClasses: NimbleGen5ToAlletra5KSUpgrade;
+			}
+		}
+	}	
+	product R4U33A Alletra5000 {
+		string catalogSequence: "A";
+		string basemodeType: "5010";
+		string orginalBasemodeType: "5010";
+		double minDCapacity: 2.88;
+		double maxDCapacity: 28.0;
+		double minOrginalCapacity: 20.88;
+		double maxOrginalCapacity: 28.0;
+		double minHDDCapacity: 42.0;
+		double maxHDDCapacity: 210.0;
+		double minOrginalHDDCapacity: 42.0;
+		double maxOrginalHDDCapacity: 210.0;
+		int iNumAdapter: 2;
+		int iNumAdapterUpgrade: 2;
+	}
+	product R4U34A Alletra5000 {
+		string catalogSequence: "B";
+		string basemodeType: "5030";
+		string orginalBasemodeType: "5030";
+		double minDCapacity: 2.88;
+		double maxDCapacity: 48.0;
+		double minOrginalDCapacity: 20.88;
+		double maxOrginalDCapacity: 48.0;
+		double minHDDCapacity: 42.0;
+		double maxHDDCapacity: 504.0;
+		double minOrginalHDDCapacity: 42.0;
+		double maxOrginalHDDCapacity: 504.0;
+
+	}
+	product R4U35A Alletra5000 {
+		string catalogSequence: "C";
+		string basemodeType: "5050";
+		string orginalBasemodeType: "5050";
+		double minDCapacity: 2.88;
+		double maxDCapacity: 156.0;
+		double minOrginalCapacity: 20.88;
+		double maxOrginalCapacity: 156.0;
+		double minHDDCapacity: 42.0;
+		double maxHDDCapacity: 1260.0;
+		double minOrginalHDDCapacity: 42.0;
+		double maxOrginalHDDCapacity: 1260.0;
+	}
+	product R7L31A Alletra5000 {
+		string catalogSequence: "D";
+		string basemodeType: "5010";
+		string orginalBasemodeType: "5010";
+		double minDCapacity: 2.88;
+		double maxDCapacity: 28.0;
+		double minOrginalCapacity: 20.88;
+		double maxOrginalCapacity: 28.0;
+		double minHDDCapacity: 42.0;
+		double maxHDDCapacity: 210.0;
+		double minOrginalHDDCapacity: 42.0;
+		double maxOrginalHDDCapacity: 210.0;
+		boolean isDhciModel: true;
+		int iNumAdapter: 2;
+		int iNumAdapterUpgrade: 2;
+	}
+	product R7L32A Alletra5000 {
+		string catalogSequence: "E";
+		string basemodeType: "5030";
+		string orginalBasemodeType: "5030";
+		double minDCapacity: 2.88;
+		double maxDCapacity: 48.0;
+		double minOrginalCapacity: 20.88;
+		double maxOrginalCapacity: 48.0;
+		double minHDDCapacity: 42.0;
+		double maxHDDCapacity: 504.0;
+		double minOrginalHDDCapacity: 42.0;
+		double maxOrginalHDDCapacity: 504.0;
+		boolean isDhciModel: true;
+	}
+	product R7L33A Alletra5000 {
+		string catalogSequence: "F";
+		string basemodeType: "5050";
+		string orginalBasemodeType: "5050";
+		double minDCapacity: 2.88;
+		double maxDCapacity: 156.0;
+		double minOrginalCapacity: 20.88;
+		double maxOrginalCapacity: 156.0;
+		double minHDDCapacity: 42.0;
+		double maxHDDCapacity: 1260.0;
+		double minOrginalHDDCapacity: 42.0;
+		double maxOrginalHDDCapacity: 1260.0;
+		boolean isDhciModel: true;
+
+	}
+	
+	product R6H95A NimbleGen5ToAlletra5KSUpgrade {
+		string basemodeType: "5030";
+		double minDCapacity: 2.88;
+		double maxDCapacity: 48.0;
+		double minHDDCapacity: 42.0;
+		double maxHDDCapacity: 504.0;
+	}
+	
+	product R6H96A NimbleGen5ToAlletra5KSUpgrade {
+		string basemodeType: "5050";
+		double minDCapacity: 2.88;
+		double maxDCapacity: 156.0;
+		double minHDDCapacity: 42.0;
+		double maxHDDCapacity: 1260.0;
+	}
+}

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workingSetManager>
+<workingSet editPageId="org.eclipse.ui.resourceWorkingSetPage" factoryID="org.eclipse.ui.internal.WorkingSetFactory" id="1629738726654_2" label="NGC" name="NGC">
+<item factoryID="org.eclipse.ui.internal.model.ResourceFactory" path="/NevadaReleaseKB/Model" type="2"/>
+</workingSet>
+<workingSet editPageId="org.eclipse.ui.resourceWorkingSetPage" factoryID="org.eclipse.ui.internal.WorkingSetFactory" id="1629829083022_3" label="Data files" name="Data files">
+<item factoryID="org.eclipse.ui.internal.model.ResourceFactory" path="/NevadaReleaseKB/DataFiles" type="2"/>
+</workingSet>
+<workingSet editPageId="org.eclipse.ui.resourceWorkingSetPage" factoryID="org.eclipse.ui.internal.WorkingSetFactory" id="1631012294899_4" label="UISPEC" name="UISPEC">
+<item factoryID="org.eclipse.ui.internal.model.ResourceFactory" path="/NevadaReleaseKB/UISpecs" type="2"/>
+</workingSet>
+<workingSet aggregate="true" factoryID="org.eclipse.ui.internal.WorkingSetFactory" id="1629307562872_0" label="Window Working Set" name="Aggregate for window 1629307562872"/>
+</workingSetManager>

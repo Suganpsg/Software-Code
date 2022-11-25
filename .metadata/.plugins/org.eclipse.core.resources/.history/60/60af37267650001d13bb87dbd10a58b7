@@ -1,0 +1,307 @@
+package essn.storage.cohesity.dl380g10plushybridcohesity {
+	import common.coremodel.*;
+	import common.productcategories.*;
+	import essn.storage.cohesity.cohesitydp.*;
+	import essn.server.common.servercommon.*;
+	import essn.storage.network.hpnetworkingcommon.*;
+	import common.agentutility.*;
+	import essn.server.proliantservers.common.proliantproductoption.*;
+	import essn.server.common.servercommon.*;
+	class DL380G10PlusHybridCohesity extends StorageModel {
+		configurationEntryPoint;
+		platformName: "CohesityHybridDL380G10Plus";
+		description: "DL380 Gen10 Plus Hybrid Server for Cohesity";
+		productCategories: CohesityHybridForDL380G10Plus;
+		boolean enableInstanceQuantity: true;
+		string[] instanceQuantityClasses: "Software", "CohesityAddSub", "CohesitySub", "CohesitySerSub", "CohesityServicesSub", "CohesityServices", "CohesityLicenses", "CohesitySoftware";
+		string[] inheritSupportedOnDataFrom: "";
+		int ServicesOption: 1;
+		string shortLabel: "DL380 Gen10 Plus Hybrid Server for Cohesity";
+		int iNumProcessors: 2;
+		int iNumMemory: 8;
+		int iNumOfHardDrives: 12;
+		int iNumStorageController: 1;
+		string[] validRackList: "P9K04A", "P9K06A", "P9K38A", "P9K08A", "P9K40A", "P9K10A","P9K50A", "P9K52A", "P9K03A", "P9K05A", "P9K37A","P9K07A",
+		"P9K39A","P9K09A", "P9K19A","P9K51A";
+		string[] virtualRackList: "ZU715A";
+		def productinformationMsg: string = {
+		"At this time, the sale of HPE Cohesity hardware and software is limited to select countries.</br>
+		 Case by case exceptions for opportunities where the HPE/Cohesity storage solution is not currently available is subject to HPE Storage/Big Data GBU and Cohesity mutually agreeing that the opportunity is viable and valuable to both companies. </br>
+	     Please contact your Big Data Storage Geo Category Manager for help with the exception review and approval process.</br> 
+		 If you don't know who your category manager is please send an email to cohesityproductteam@hpe.com.";
+		}
+		def getServicesOption (): int = {
+			if thisInst.selected(CohesityTypeOption).filter(x => x.id <= "CLUSTER_EXPANSION").count > 0 then 2 else if thisInst.selected(CohesityTypeOption).filter(x => x.id <= "NEW_CLUSTER").count > 0 then 1 else if
+			thisInst.selected(CohesityTypeOption).filter(x => x.id <= "CLUSTER_RENEWAL").count > 0 then 3;
+		}
+		def addCohesitySerOpt (): string[] = {
+			if thisInst.selected(CohesitySerSub).filter(x => x.id <= "R8F42AAE R8F43AAE R8F44AAE R8F45AAE R8F46AAE 
+			R8F47AAE R8F57AAE R8F58AAE R8F59AAE R8H09AAE R8H10AAE R8F51AAE R8H48AAE R8F52AAE R8H49AAE R8F53AAE R8H22AAE
+			R8H23AAE R8H74AAE R8H75AAE R9E96AAE R9E97AAE R9E98AAE R9E99AAE R9F00AAE").count > 0 then addOptionToCohesitySer (ServicesOption);
+		}
+		def addOptionToCohesitySer (optionId: int): string[] = callout("StorageModelsUtils", "addOptionToCohesitySer", thisInst, optionId);
+		subsystem ProcessorSubsystem {
+			constraint BaseModelBlueNote {
+				message: "Processors, Memory, SSDs, HDDs, Power Supplies, and Networking Options not selectable for BTO SKUs S0N34A, S0N35A";
+				body: if(thisInst.id = "S0N34A" || thisInst.id = "S0N35A") then false;
+			}
+			locationArray storageprocessorLocArray {
+				rows: iNumProcessors;
+				fillerClasses: ProliantProcessor, HeatSinkKit;
+			}
+			constraint minmaxReqProcessor {
+				message: "Minimum 2 and Maximum 2 quantities of Processors must be selected per Base Model (S0N33A)";
+				body:
+				if thisInst.id = "S0N33A" or thisInst.id = "S0N33A#GTA" then (thisInst.selected(ProliantProcessor).filter(x => x.id <= "P36934-B21").count + thisInst.selected(HeatSinkKit).filter(x => x.id <= "P27095-B21").count) = 2;
+			}
+		}
+		subsystem MemorySubsystem {
+			locationArray storagememoryLocArray {
+				rows: iNumMemory;
+				fillerClasses: ProliantMemoryArray;
+			}
+			constraint minmaxReqMemory {
+				message: "Minimum 8 and Maximum 8 quantities of Memory options must be selected per Base Model (S0N33A)";
+				body: if thisInst.id = "S0N33A" or thisInst.id = "S0N33A#GTA" then thisInst.selected(ProliantMemoryArray).filter(x => x.id <= "P06031-B21").count = 8;
+			}
+			constraint MemoryNotsupported {
+				message: "If Base Model = S0N34A or S0N35A then Memory Options not selectable";
+				body: dependency (DL380G10PlusHybridCohesity [ S0N34A || S0N35A ] > 0, ProliantMemoryArray [ P06031-B21 ] = 0);
+			}
+		}
+		subsystem StorageSubsystem {
+			locationArray StorageControllerOptionsLocArray {
+				rows: iNumStorageController;
+				fillerClasses: ProliantStorageContSASSA;
+			}
+			constraint minmaxReqController {
+				message: "Minimum 1 and Maximum 1 quantity of Storage Controller option must be selected per Base Model (S0N33A)";
+				body: if thisInst.id = "S0N33A" or thisInst.id = "S0N33A#GTA" then thisInst.selected(ProliantStorageContSASSA).filter(x => x.id <= "P26325-B21").count = 1;
+			}
+		}
+		subsystem SpareSSDandHDD {
+			locationArray SpareLocationArray {
+				rows: 2;
+				fillerClasses: ProliantHardDrive_HP_SFF_NVME;
+			}
+			constraint minmaxReqSSD {
+				message: "Minimum 2 and Maximum 2 quantities of SSDs option must be selected per Base Model (S0N33A)";
+				body: if thisInst.id = "S0N33A" or thisInst.id = "S0N33A#GTA" then thisInst.selected(ProliantHardDrive_HP_SFF).filter(x => x.id <= "P47838-B21 P47839-B21").count = 2;
+			}
+			constraint SSDsNoMix {
+				message: "SSDs must be the same type/capacity. No mixing allowed.";
+				body: restriction (ProliantHardDrive_HP_SFF_NVME.noMix);
+			}
+			constraint SSDRequiresHDD {
+				message: "If SKU P47838-B21 is selected, <br/>
+				Then only SKU 833928-K21 can be selected";
+				body:
+				if(thisInst.id = "S0N33A" or thisInst.id = "S0N33A#GTA") and thisInst.selected(ProliantHardDrive_HP_SFF_NVME).filter(x => x.id <= "P47838-B21").count > 0 then thisInst.selected(ProliantHardDrive_HP_LFF_SAS).filter(x => x.id <=
+				"833928-K21").count > 0;
+			}
+			constraint SSDRequiresHDD1 {
+				message: "If SKU P47839-B21 is selected, <br/>
+				Then only SKU 834031-K21, 881781-K21 or P09155-K21 can be selected";
+				body:
+				if(thisInst.id = "S0N33A" or thisInst.id = "S0N33A#GTA") and thisInst.selected(ProliantHardDrive_HP_SFF_NVME).filter(x => x.id <= "P47839-B21").count > 0 then thisInst.selected(ProliantHardDrive_HP_LFF_SAS).filter(x => x.id <=
+				"834031-K21 881781-K21 P09155-K21").count > 0;
+			}
+		}
+		subsystem SpareSDDHDD {
+			locationArray storagehddLocArray {
+				rows: iNumOfHardDrives;
+				fillerClasses: ProliantHardDrive_HP_LFF_SAS;
+			}
+			constraint minmaxReqHDD {
+				message: "Minimum 12 and Maximum 12 quantities of HDDs option must be selected per Base Model";
+				body: if thisInst.id = "S0N33A" or thisInst.id = "S0N33A#GTA" then thisInst.selected(ProliantHardDrive_HP_LFF_SAS).filter(x => x.id <= "833928-K21 834031-K21 881781-K21 P09155-K21").count = 12;
+			}
+			constraint HDDsNoMix {
+				message: "HDDs must be the same type/capacity. No mixing allowed.";
+				body: restriction (ProliantHardDrive_HP_LFF_SAS.noMix);
+			}
+		}
+		subsystem PowersupplySubsystem {
+			locationArray PowersupplyLocArr {
+				rows: 2;
+				fillerClasses: ProliantPowerOption;
+			}
+			constraint minmaxReqPowerSupply {
+				message: "Minimum 2 and Maximum 2 quantities of Power Supply option must be selected per Base Model (S0N33A)";
+				body:
+				if thisInst.id = "S0N33A" or thisInst.id = "S0N33A#GTA" then thisInst.selected(ProliantPowerOption).filter(x => x.id <= "P38997-B21").count = 2;
+			}
+		}
+		subsystem NetworkingSubsystem {
+			locationArray NetworkingOCPLocArray {
+				columns: 1;
+				fillerClasses: NetworkAdapterPci, NetworkingPci;
+			}
+			locationArray NetworkingPCIeLocArray {
+				columns: 2;
+				fillerClasses: NetworkAdapterPci, NetworkingPci;
+			}
+			constraint maxReqFlexLOM1 {
+				message: "At least 1 OCP or PCIe based Networking Adatpter must be selected per Base Model(S0N33A).";
+				body:
+				{
+					val AllNetworking = "P10103-B21 P10097-B21 P10115-B21 P26269-B21 P10106-B21 P26253-B21 P08437-B21 P26262-B21 P08443-B21 P08458-B21 P26264-B21";
+					val OCP_NetworkingPci = thisInst.selected(NetworkingPci).filter(x => x.id <= AllNetworking).count;
+					val OCP_NetworkAdapterPci = thisInst.selected(NetworkAdapterPci).filter(x => x.id <= AllNetworking).count;
+					if thisInst.id = "S0N33A" or thisInst.id = "S0N33A#GTA" then (OCP_NetworkingPci + OCP_NetworkAdapterPci) > 0;
+				}
+			}
+			constraint minmaxReqOCP {
+				message: "Maximum 1 quantity of OCP Option can be selected per Base Model(S0N33A)";
+				body:
+				thisInst.selected(NetworkAdapterPci).filter(x => x.id <= "P10103-B21 P10106-B21 P10097-B21 P10115-B21 P26269-B21").count <= 1;
+			}
+			constraint maxReqPCIe {
+				message: "Maximum 2 quantities of PCIe option can be selected per Base Model(S0N33A)";
+				body:
+				{
+					val AllPCIe = "P26253-B21 P08437-B21 P26262-B21 P08443-B21 P08458-B21";
+					val PCIe_NetworkingPci = thisInst.selected(NetworkingPci).filter(x => x.id <= AllPCIe).count;
+					val PCIe_NetworkAdapterPci = thisInst.selected(NetworkAdapterPci).filter(x => x.id <= AllPCIe).count;
+					if(PCIe_NetworkingPci + PCIe_NetworkAdapterPci) <= 2 then true else false;
+				}
+			}
+			constraint NetworkingDisplaNote {
+				message: "Quantity selected is per Server.";
+				body: false;
+			}
+		}
+		subsystem bezelsSubsystem {
+			locationArray bezelsLocArray {
+				rows: 1;
+				fillerClasses: SecurityHardware;
+			}
+			constraint maxReqSecurityHardware {
+				message: "Maximum 1 quantity of Security Hardware option can be selected per Base Model (S0N33A)";
+				body: thisInst.selected(SecurityHardware).filter(x => x.id <= "P14604-B21 867998-B21 875519-B21").count <= 1;
+			}
+		}
+		subsystem softwarePlatformSubsystem {
+			choice AddonSubscriptionsSWChoice {
+				choiceType: multi_select;
+				optional: true;
+				targetClass: CohesitySoftware;
+			}
+			constraint swAddOnKrollMinReqRule2 {
+				message: "If SKU R2D30AAE selected then minimum quantity 3 of SKU R3P08AAE required.";
+				body: if thisInst.selected(CohesityAddSub).filter(x => x.id >= "R2D30AAE").count > 0 then thisInst.selected(CohesityAddSub).filter(x => x.id >= "R3P08AAE").count >= 3;
+			}
+			constraint swAddOnKrollMinReqRule3 {
+				message: "If SKU R2D31AAE selected then minimum quantity 3 of SKU R3P09AAE required.";
+				body: if thisInst.selected(CohesityAddSub).filter(x => x.id >= "R2D31AAE").count > 0 then thisInst.selected(CohesityAddSub).filter(x => x.id >= "R3P09AAE").count >= 3;
+			}
+			constraint swAddOnKrollMinReqRule4 {
+				message: "If SKU R2D32AAE selected then minimum quantity 3 of SKU R3P10AAE required.";
+				body: if thisInst.selected(CohesityAddSub).filter(x => x.id >= "R2D32AAE").count > 0 then thisInst.selected(CohesityAddSub).filter(x => x.id >= "R3P10AAE").count >= 3;
+			}
+			constraint swAddOnKrollMinReqRule5 {
+				message: "If SKU R2D33AAE selected then minimum quantity 3 of SKU R3P11AAE required.";
+				body: if thisInst.selected(CohesityAddSub).filter(x => x.id >= "R2D33AAE").count > 0 then thisInst.selected(CohesityAddSub).filter(x => x.id >= "R3P11AAE").count >= 3;
+			}
+			constraint swAddOnKrollMinReqRule6 {
+				message: "If SKU R2D34AAE selected then minimum quantity 3 of SKU R3P12AAE required.";
+				body: if thisInst.selected(CohesityAddSub).filter(x => x.id >= "R2D34AAE").count > 0 then thisInst.selected(CohesityAddSub).filter(x => x.id >= "R3P12AAE").count >= 3;
+			}
+		}
+		subsystem KrollSubSWSubsystem {
+					
+			
+		}
+		subsystem CohesitycloudSubSubsystem {
+			choice CohesitycloudChoice {
+				targetClass: CohesityAddSub;
+				choiceType: multi_select;
+			}
+			choice CohesitycloudarchiveChoice {
+				targetClass: CohesityLicenses;
+				choiceType: multi_select;
+			}
+		}
+		subsystem CohesityinstallanSubSubsystem {
+			choice CohesityInstallChoice {
+				targetClass: CohesityServices;
+				choiceType: multi_select;
+			}
+		}
+		subsystem AddonaSubscriptionsSWSubsystem {
+			/*locationArray AddonSubscriptionsSWLocArr {
+				columns: 99999;
+				fillerClasses: CohesitySoftware, CohesityAddSub, CohesityLicenses, CohesityServices, CohesitySerSub;
+			}*/
+			choice SoftwarePlatformLA1a {
+				choiceType: multi_select;
+				optional: true;
+				targetClass: CohesitySerSub;
+			}
+			choice SoftwarePlatformLA1 {
+				choiceType: multi_select;
+				optional: true;
+				targetClass: CohesitySoftware;
+			}
+			choice CohesityOptionTypeChoice {
+				targetClass: CohesityTypeOption;
+				choiceType: single_select;
+			}
+			part addDefaultsTrigger: triggerInternalDefaults {
+				string[] modelDefaults: "NEW_CLUSTER";
+			}
+			constraint minReqServices {
+				message: "Minimum 1 quantity of software option must be selected per Server";
+				body:
+				{
+					val required_SofwareOption = thisInst.selected(CohesitySerSub).filter(x => x.id <= "R8F42AAE R8H09AAE R8F43AAE R8H10AAE R8F44AAE
+					R8F51AAE R8H48AAE R8F52AAE R8H49AAE R8F53AAE R8F45AAE R8H22AAE R8F46AAE R8H23AAE R8F47AAE R8F57AAE R8H74AAE R8F58AAE R8H75AAE R8F59AAE").count + thisInst.selected(CohesitySub).filter(x => x.id <= "R1Y22AAE R1Y23AAE R1Y24AAE R1Y25AAE R1Y26AAE 
+					R3P13AAE R3P17AAE R1Y27AAE R1Y28AAE R1Y29AAE R1Y30AAE R1Y31AAE R3P14AAE R3P18AAE").count;
+					if required_SofwareOption = 0 then false else true;
+				}
+			}
+			constraint baseSoftware_rule1 {
+				message: "The following end user (entity that will own/utilize the licenses) information is REQUIRED to deliver the electronic licenses/services: </br>  
+					1) End User Company Name</br>
+					2) End User Company Address </br>
+					3) End User Email Address </br>
+					4) Reseller Name and Address </br>
+					5) Distributor Name and Address";
+				body:
+				{
+					val Selected_Option = thisInst.selected(CohesitySerSub).filter(x => x.id <= "R8F42AAE R8H09AAE R8F43AAE R8H10AAE R8F44AAE 
+					R8F45AAE R8H22AAE R8F46AAE R8H23AAE R8F47AAE R8F57AAE R8H74AAE R8F58AAE R8H75AAE R8F59AAE").count + thisInst.selected(CohesitySerSub).filter(x => x.id <= "R8F51AAE R8H48AAE R8F52AAE R8H49AAE R8F53AAE").count +
+					thisInst.selected(CohesitySerSub).filter(x => x.id <= "R8F51AAE R8H48AAE R8F52AAE R8H49AAE R8F53AAE").count + thisInst.selected(CohesitySoftware).filter(x => x.id <= "R1Y22AAE R1Y23AAE R1Y24AAE R1Y25AAE R1Y26AAE 
+					R3P13AAE R3P17AAE R1Y27AAE R1Y28AAE R1Y29AAE R1Y30AAE R1Y31AAE R3P14AAE R3P18AAE").count;
+					if Selected_Option > 0 then false else true;
+				}
+			}
+			constraint baseSoftware_displayNote_3 {
+				message:
+				"If you are building a configuration for a customer demo/proof-of-concept or for equipment to be installed in an HPE lab, you do not need to order software licenses or software installation SKUs. Cohesity can provide demo copies of their software as needed. If you don’t know how to contact Cohesity to obtain demo software, please reach out to your Big Data and Analytics Geo Category or contact cohesityproductteam@hpe.com.";
+				body:
+				false;
+			}
+			constraint BaseSoftware_DisplayNote1{
+				message:"For Cohesity DataProtect, DataProtect Replica, SmartFiles, SiteContinuity or Archive Services, it is recommended that a minimum 50% of usable capacity be licensed.";
+				body: false;
+			}
+			constraint CohesityInstallationServices_DisplayNote{
+				message:"Qty 1 of SKU R9F01AAE or R9F02AAE are for installation of 3 - 8 nodes. Qty 2 of either SKU would be required for installation of 9 -16 nodes, Qty 3 of either SKU would be required for 17 to 24 nodes and so on";
+				body: false;
+			}
+			constraint typeOptionRequired {
+				message: "Cluster option is required.";
+				body: dependency (CohesitySerSub > 0, CohesityTypeOption >= 1);
+			}
+			part RequiredSoftware: triggerConsequentialSelectionVLQ {
+				string consequentialSelectionVLQFunc: "addCohesitySerOpt";, boolean allowUserToOverride: false;
+			}
+		}
+	}
+}
+		
+		
+		
+
+	

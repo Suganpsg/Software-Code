@@ -1,0 +1,458 @@
+/**
+ * 
+ */
+package com.hp.ngc.compiler;
+
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Map.Entry;
+
+import com.hp.ngc.compiler.exception.CompileException;
+import com.hp.ngc.compiler.util.NGCCompilerUtility;
+import com.hp.ngc.compiler.agentTargets.xmlbean.AgentTargetsDocument;
+import com.hp.ngc.compiler.agentTargets.xmlbean.AgentTargetsDocument.AgentTargets.Properties.Property;
+import com.hp.ngc.compiler.agentTargets.xmlbean.AgentTargetsDocument.AgentTargets.Targets.Target;
+import com.hp.ngc.compiler.agentTargets.xmlbean.AgentTargetsDocument.AgentTargets.Targets.Target.Fileset;
+import com.hp.ngc.compiler.agentTargets.xmlbean.AgentTargetsDocument.AgentTargets.Targets.Target.Fileset.Exclude;
+import com.hp.ngc.compiler.agentTargets.xmlbean.AgentTargetsDocument.AgentTargets.Targets.Target.Fileset.Include;
+import com.hp.ngc.util.IOUtil;
+
+/**
+ * @author rsriniva
+ *
+ */
+public class AgentCompiler {
+
+	private List<File> srcFiles, binFiles;
+	private String _kbdir = null;
+	private static String _delimiter="\n";
+	private static final String _class_length_delimiter=";";
+	private static final String javaVersion = "1.8";
+	private static final String classNamePrefix = "classNamePrefix";
+	private boolean alwaysCleanOutAgents=true;
+	private Properties kbProperties;
+	private String pathDelimiter = System.getProperty("file.separator");
+	private Map<String, String> kbPropertyOverrides;
+	private Map<String,String> compileTargetPropertyMap;
+
+
+	public AgentCompiler(String kbdir, Map<String, String> kbPropertyOverrides)
+	{
+		srcFiles= new ArrayList<File>();
+		binFiles= new ArrayList<File>();
+		compileTargetPropertyMap = new HashMap<String,String>();
+		_kbdir = kbdir;
+		this.kbPropertyOverrides = kbPropertyOverrides;
+	}
+	
+	public AgentCompiler(String kbdir,Properties kbProperties, Map<String, String> kbPropertyOverrides)
+	{
+		srcFiles= new ArrayList<File>();
+		binFiles= new ArrayList<File>();
+		compileTargetPropertyMap = new HashMap<String,String>();
+		_kbdir = kbdir;
+		this.kbProperties = kbProperties;
+		this.kbPropertyOverrides = kbPropertyOverrides;
+	}
+
+	public void executeWrite(IOUtil dos) throws CompileException
+	{
+
+		String pluginsDir=getPluginsDir(_kbdir);
+
+		if (pluginsDir != null) {
+
+			findAgents(new File(_kbdir+pathDelimiter+pluginsDir+pathDelimiter+"src"), ".java");
+			String _targetDir = kbProperties.getProperty("plugins_output_dir", _kbdir+pathDelimiter+pluginsDir+pathDelimiter+"bin");
+
+			if (!srcFiles.isEmpty()) {
+				compile (_targetDir);  
+			}else{
+				File file = new File(_targetDir);
+				if(file.exists()){
+					cleanOutAgents(file);
+				}
+			}
+
+			//this will provide a work round even only provide class files will make the class written to kb,
+			//By Clark 2011/8/16
+			findAgents(new File(_targetDir), ".class");
+		}
+
+		createByteArray(dos);
+	}
+
+	public void execute(IOUtil dos) throws CompileException
+	{ 
+		executeWrite(dos); 
+	}
+
+	private String getPluginsDir (String kbdir) throws CompileException
+	{
+		if(kbProperties == null) loadKbProperties(kbdir);
+		String pluginsDir=kbProperties.getProperty("pluginsDirectory");
+		if (pluginsDir == null || pluginsDir.equals("")) {
+			return null;
+		}
+		else
+			return pluginsDir;
+	}
+
+	private String getPluginsTargetFile (String kbdir) throws CompileException
+	{
+		if(kbProperties == null) loadKbProperties(kbdir);
+		String pluginsTargetFile=kbProperties.getProperty("agentCompileTargetFile");
+		if (pluginsTargetFile == null || pluginsTargetFile.equals("")) {
+			return null;
+		}
+		else
+			return pluginsTargetFile;
+	}
+
+	private String getPluginsTargetCompile (String kbdir) throws CompileException
+	{
+		if(kbProperties == null) loadKbProperties(kbdir);
+		String pluginsTarget=kbProperties.getProperty("agentCompileTarget");
+		if (pluginsTarget == null || pluginsTarget.equals("")) {
+			return null;
+		}
+		else
+			return pluginsTarget;
+	}
+
+	private void loadKbProperties(String kbdir) throws CompileException {
+		try {
+			kbProperties = NGCCompilerUtility.getKbProperty(kbdir);
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+		if (kbPropertyOverrides != null) {
+			for (Entry<String, String> entry : kbPropertyOverrides.entrySet()) {
+				if (! kbProperties.containsKey(entry.getKey())) {
+					throw new CompileException("kb property override not defined in base kb.properties: " + entry.getKey());
+				}
+				kbProperties.setProperty(entry.getKey(), entry.getValue());
+			}
+		}
+	}
+
+	private void findAgents(File dir, String ext) throws CompileException
+	{		
+		File targetFile = null;
+		String pluginsTarget = null;
+		if (ext.equalsIgnoreCase(".java")){
+			String pluginsDir=getPluginsDir(_kbdir);
+			String pluginsFile=getPluginsTargetFile(_kbdir);
+			pluginsTarget=getPluginsTargetCompile(_kbdir);
+			if(pluginsFile != null && pluginsTarget!=null){
+				targetFile = new File(_kbdir + pathDelimiter+ pluginsDir + pathDelimiter+ pluginsFile);
+			}
+		}
+
+		if(ext.equalsIgnoreCase(".java") && targetFile!= null && targetFile.exists()){
+			srcFiles.addAll(findTargetedAgents(targetFile, pluginsTarget));
+		}else{
+			if (ext.equalsIgnoreCase(".java"))
+				srcFiles.addAll(findAllAgents(dir, ext));
+			else
+				binFiles.addAll(findAllAgents(dir, ext));
+		}
+	}
+
+
+
+
+	private List<File> findTargetedAgents(File targetFile, String pluginsTarget) throws CompileException {
+		System.out.println(".. using target '" + pluginsTarget + "' in file: " + targetFile.getPath() + " " );
+		AgentTargetsDocument targetsDoc = null;
+		List<File> agentFiles = new ArrayList<File>();
+		try {
+			targetsDoc = AgentTargetsDocument.Factory.parse(targetFile);
+		} catch (Exception e) {
+			e.printStackTrace();
+			CompileException ce = new CompileException(e.getMessage());
+			ce.setStackTrace(e.getStackTrace());
+			throw ce;
+		}
+
+		HashMap<String,String> propertyMap = new HashMap<String,String>();
+		for(Property property : targetsDoc.getAgentTargets().getProperties().getPropertyList()){
+			propertyMap.put(property.getName(),property.getValue());
+		}
+		compileTargetPropertyMap = propertyMap;
+
+		for(Target target : targetsDoc.getAgentTargets().getTargets().getTargetList()){
+			if(pluginsTarget.equalsIgnoreCase(target.getName())){
+				for(Fileset fileSet : target.getFilesetList()){
+					agentFiles.addAll(loadFileSet(fileSet,propertyMap));
+				}
+			}
+		}
+		return agentFiles;
+	}
+
+	private List<File> loadFileSet(Fileset fileSet, HashMap<String, String> propertyMap) throws CompileException {
+		String pluginsDir=getPluginsDir(_kbdir);
+		String baseDirName = fileSet.getDir().trim();
+		if(baseDirName.startsWith("${") && baseDirName.endsWith("}")){
+			String propName = baseDirName.substring(2, baseDirName.length()-1);
+			if(propertyMap.get(propName) != null){
+				baseDirName = propertyMap.get(propName);
+			}else{
+				throw new CompileException("Agent Compile: Unable to property: " + baseDirName);
+			}
+		}
+		File baseDir = new File(_kbdir + pathDelimiter+ pluginsDir + pathDelimiter+ baseDirName);
+		if(!baseDir.exists() || !baseDir.isDirectory()){
+			throw new CompileException("Agent Compile: Unable to find source folder: " + pluginsDir + pathDelimiter+ baseDirName);
+		}
+		System.out.println("... target dir: " + baseDir.getPath());
+
+		List<String> includes = new ArrayList<String>();
+		for(Include include : fileSet.getIncludeList()){
+			String value = include.getValue().trim();
+			if(value.equals("*")){
+				includes.add("*");
+			}else{
+				String[] parts = value.split("\\*");
+				if(parts.length > 2){
+					throw new CompileException("Agent Compile: Invalid include directive: " + value);
+				}
+				if(parts.length == 2 && parts[1] != null && !parts[1].equals("")){
+					throw new CompileException("Agent Compile: Invalid include directive: " + value);
+				}
+				includes.add(parts[0]);
+			}
+		}
+
+		List<String> excludes = new ArrayList<String>();
+		for(Exclude exclude : fileSet.getExcludeList()){
+			String value = exclude.getValue().trim();
+			if(value.equals("*")){
+				excludes.add("*");
+			}else{
+				String[] parts = value.split("\\*");
+				if(parts.length > 2){
+					throw new CompileException("Agent Compile: Invalid exclude directive: " + value);
+				}
+				if(parts.length == 2 && parts[1] != null && !parts[1].equals("")){
+					throw new CompileException("Agent Compile: Invalid exclude directive: " + value);
+				}
+				excludes.add(parts[0]);
+			}
+		}
+
+		List<File> agentFiles = new ArrayList<File>();
+		for(File agentFile : findAllAgents(baseDir, ".java")){
+			boolean doInclude = false;
+			boolean doExclude = false;
+			String normalizedName = agentFile.getPath();
+			normalizedName = normalizedName.replaceAll("\\"+pathDelimiter, ".");
+			for(String include : includes){
+				if(include.equals("*") || normalizedName.indexOf(include) != -1){
+					doInclude = true;
+					break;
+				}
+			}
+			if(doInclude){
+				for(String exclude : excludes){
+					if(exclude.equals("*") || normalizedName.indexOf(exclude) != -1){
+						doExclude = true;
+						break;
+					}
+				}
+			}
+			if(doInclude && ! doExclude){
+				agentFiles.add(agentFile);
+			}else{
+				//System.out.println("...... excluded: " + agentFile.getPath());
+			}
+		}
+		return agentFiles;
+
+	}
+
+	private List<File> findAllAgents(File dir, String ext) {
+		List<File> agentFiles = new ArrayList<File>();
+		if (dir.isDirectory())
+		{
+			File files[] = dir.listFiles();
+			for (File file : files)
+			{
+				if (file.isDirectory())
+					agentFiles.addAll(findAllAgents(file, ext));
+				else if (file.getName().endsWith(ext)) { 
+					agentFiles.add(file);
+				}
+			}
+		}
+		else {
+			System.out.println ("Warning: Please give the root directory for Agent "+ext+" files in "+dir.getAbsolutePath());	
+		}
+		return agentFiles;
+	}
+
+	private void compile(String _targetDir) throws CompileException
+	{  
+		File file = new File(_targetDir);
+		if(!file.exists()){
+			file.mkdir();		     
+		}
+		else {
+			cleanOutAgents(file);
+		}
+		//class path is default , in eclipse it will pass from the system property java.class.path
+		boolean ret=compileJavaSrc("",srcFiles,file.getAbsolutePath());
+
+		if (!ret)
+			throw new CompileException("Agent compilation failed.");
+	}
+
+	protected boolean compileJavaSrc(String classPath, List<File> srcList, String dest) throws CompileException {
+		JavaAgentCompiler javaCompiler = new JavaAgentCompiler();
+
+		javaCompiler.setClassPath(classPath);
+		javaCompiler.setOutputDir(dest);
+		javaCompiler.setTarget(javaVersion);
+
+		return javaCompiler.compileFiles(srcList); 
+	}
+
+	private void createByteArray(IOUtil dos)
+	{		
+		ArrayList<String> classHeaderList = new ArrayList<String>();
+		long totalClassBytes=0;
+		if (dos != null) {
+
+			// create header table 
+			for (File file:binFiles)
+			{		
+				String classnameFromFile=file.getAbsolutePath().substring(_kbdir.length()+1).replace(pathDelimiter.toCharArray()[0], '.');
+				int index = -1;
+				if (compileTargetPropertyMap.get(classNamePrefix)!=null){
+					String[] prefixes = compileTargetPropertyMap.get(classNamePrefix).split(";");
+					if (prefixes!=null && prefixes.length>0){
+						for(int i = 0;i<prefixes.length;i++){
+							index = classnameFromFile.indexOf(prefixes[i]);
+							if (index>=0)
+								break;
+						}
+					}else{
+						index = classnameFromFile.indexOf("com.");
+					}
+					
+				}else{
+					index = classnameFromFile.indexOf("com.");
+				}
+				
+				StringBuffer sbuf = new StringBuffer();
+				sbuf.append(classnameFromFile.substring(index,classnameFromFile.lastIndexOf(".class"))).append(_class_length_delimiter);
+				sbuf.append(file.length());
+				
+				classHeaderList.add(sbuf.toString());
+				totalClassBytes+=file.length();
+			} 
+
+			try {
+
+				System.out.println("Writing out: tableLength="+classHeaderList.size() +"; classBytesLength="+totalClassBytes);
+
+				dos.writeInt(classHeaderList.size());
+				
+				for(String classHeader : classHeaderList) {
+					dos.writeUTF(classHeader.toString());
+				}
+	
+				// Now write out the .class files
+				for (File file : binFiles) {
+					dos.write(getClassBytes(file));
+				}
+
+			} catch (IOException ioe) {
+				ioe.printStackTrace();
+			}
+		}
+	}
+
+	private byte[] getClassBytes(File classFile) 
+	{		
+		ByteArrayOutputStream buffer=new ByteArrayOutputStream((int)classFile.length());
+		InputStream input=null; 
+		BufferedInputStream bis = null;
+
+		try {            
+			input = new FileInputStream(classFile); 
+			bis = new BufferedInputStream(input,(int)classFile.length());
+			int data = bis.read();
+
+			while(data != -1){
+				buffer.write(data);
+				data = bis.read();
+			}
+
+			return buffer.toByteArray();
+
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally{
+			try {
+				if(input!=null)input.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			try {
+				if(bis!=null)bis.close();
+			} catch (IOException e) { 
+				e.printStackTrace();
+			}
+		}
+		return null;
+
+	}
+
+	public boolean alwaysCleanOutAgents() {
+		return alwaysCleanOutAgents;
+	}
+
+	public void setAlwaysCleanOutAgents(boolean alwaysCleanOutAgents) {
+		this.alwaysCleanOutAgents = alwaysCleanOutAgents;
+	}
+
+	private void cleanOutAgents(File destDirFile)
+	{
+		if (alwaysCleanOutAgents()){
+
+			if (destDirFile.exists() &&
+					destDirFile.isDirectory()) {
+				File[] contents = destDirFile.listFiles();
+				for (File f: contents){
+					recursiveDelete(f);
+				}
+			}
+
+		}
+	}
+
+	private boolean recursiveDelete(File f) {
+		if (f.isDirectory()) {
+			File[] contents = f.listFiles();
+			for (File subFile:contents) 
+				recursiveDelete(subFile);
+		}
+
+		//		System.out.println("Cleaning out agent " +f.getAbsolutePath());
+		return f.delete();
+	}
+}

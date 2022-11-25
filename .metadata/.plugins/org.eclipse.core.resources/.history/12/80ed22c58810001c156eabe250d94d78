@@ -1,0 +1,279 @@
+<div id = "wizard_wrap" class="wizard_content snc prostack-wizard" style="padding-top: 0;">
+	<div id = "save_tips" class="tips-fixed-top" style="display: none;">
+		<button id = "tft_apply" class="button btn-left">Apply</button>
+		<span class="tft-tips-text">Click on the Apply button to make any changes you make in this wizard.Otherwise, they will be discarded.</span>
+	</div>
+	<div class="scrollable">
+		<div class="wizard_header">
+			HPE Nimble Storage dHCI Base Config
+		</div>
+		<i class="icon icon-tools" style="display: none;"
+			title="Click to view wizard options"></i>
+		<div id = "options_div" >
+			<a id="close_options">close</a>
+			<div id = "options_panel">
+				<label class="option_label" id="enable_cabling"> <span class="checkbox_default"></span>Enable Cabling</label>
+			</div>
+		</div>
+		  
+<!-- Top end -->
+
+<%  if(isNewUIEnabled) {  %>
+    <div class="r3-flex-column-container">
+<%  }  %>
+		<div id = "left_div" style="right:60%">
+			<div id = "accordion">
+			   <h3  id="solutionType_section_hd" class="accoridion-section-title">Please select one of the following options to get started</h3>
+				<div id="solutionType_section" class="wizard_radio">
+				        <span></span>
+						<div id="dhci_type_options" style="display: flex; flex-direction: column;"></div>
+				</div>
+				<h3 id="tshirtType_title" class="accoridion-section-title">Please select the desired size of dHCI configuration</h3>
+				<div id="tshirtType_section" class="wizard_section">
+					<div class="wizard_dropdown">
+					   <span>Please select the desired size of dHCI configuration</span>
+						<select id="tshirt_sizes_selection" class="requiredChoice r1-select"></select>
+					</div>
+				</div>
+				<h3 class="accoridion-section-title">Nimble External Storage Arrays</h3>
+				<div id="solution_section" class="wizard_section">
+					<div class="wizard_dropdown">
+						<span>Select ONE Nimble Base Array model</span>
+						<select id="nimble_choice" class="requiredChoice r1-select"></select>
+					</div>
+					<div class="wizard_dropdown">
+						<span>Select Base Array Networking Adapters</span>
+						<select id="nimble_networking_choice" class="requiredChoice r1-select"></select>
+					</div>
+				</div>
+				<h3 class="accoridion-section-title">ProLiant Servers</h3>
+				<div class="wizard_section">
+				<div id="dl_base_checkbox">
+				    <br>
+					<div class="wizard_checkbox">
+	                		<input type="checkbox" id="filteredl360_checkbox">
+	                		<label for="filteredl360_checkbox"><span></span></label>
+	            	</div>
+	            	<div class="wizard_checkbox">
+	                		<input type="checkbox" id="filteredl380_checkbox">
+	                		<label for="filteredl380_checkbox"><span></span></label>
+	            	</div>
+            	</div>
+            	<div id="dl_base_section">
+            		<div id="nimble_selection_bto_info_div" class="isa_info">
+						<i class="fa fa-times-circle"></i>
+						<span id="nimble_selection_bto_info_text" ></span>
+					</div>
+					<div class="wizard_dropdown">
+					   <span>Please select the desired DL base model configuration</span>
+						<select id="dl_basemodel_selection" class="requiredChoice r1-select"></select>
+					</div>
+				</div>
+				<br>	
+				<table class="table_memory" style="margin: 0 0 0; width: 100%">
+						<tr>
+							<td >
+								<span>Select ONE Server model</span>
+							</td>
+							<td >
+								<span>Qty</span>
+							</td>
+						</tr>
+						<tr>
+							<td style="width: 70%; max-width: 1px; overflow-wrap: break-word; overflow: visible;">
+								<div class="wizard_dropdown">
+								<div id="server_base_models_error_message" class="isa_error">
+									<i class="fa fa-times-circle"></i>
+									<span id="server_base_models_error_message_text" ></span>
+								</div>
+									<select id="server_base_models" class="requiredChoice r1-select"></select>
+								</div>
+							</td>
+							<td style="width: 30%">
+								<div class="wizard_textbox">
+									<!-- <label for="dl360_base_models_qty"><span/ ></label> -->
+									<input type="number" id="server_base_models_qty" class="r3-spinner" value="0" min="0" max="32">
+								</div>
+							</td>
+						</tr>
+					</table>	
+					<div id="server_options_div">
+					<div class="wizard_dropdown">
+						<span>Select Server Ethernet FlexibleLOM/OCP3 Adapter</span>
+					<div id="server_options_info_message" class="isa_error">
+						<i class="fa fa-times-circle"></i>
+						<span id="server_options_info_message_text" ></span>
+					</div>
+						<select id="server_flexlom" class="r1-select"></select>
+					</div>
+					<br>					
+					<div class="wizard_dropdown">
+						<span>Select Server Network PCIe Adapter</span>
+					<div id="server_pcie_info_message" class="isa_error">
+						<i class="fa fa-times-circle"></i>
+						<span id="server_pcie_info_message_text" ></span>
+					</div>
+						<select id="server_pcie_choice" class="r1-select"></select>
+					</div>
+					</div>
+					<br>
+					<div id= "server_powercord_div" class="wizard_dropdown">
+						<span>Select Server Power Cord</span>
+					<div id="server_powercord_info_message" class="isa_error">
+						<i class="fa fa-times-circle"></i>
+						<span id="server_powercord_info_message_text" ></span>
+					</div>
+						<select id="server_powercord" class="r1-select"></select>
+					</div>
+					<br>
+					<div class="wizard_checkbox">
+                		<input type="checkbox" id="iLO_checkbox">
+                		<label for="iLO_checkbox"><span></span></label>
+            		</div>
+				</div>
+				<h3 class="accoridion-section-title">Switches</h3>
+				<div id="wizard_section">
+						<div class="constraintError" id="proStackInfo">
+							<div class="message-list">
+						</div>
+						</div>
+					<div id="switch_type_selection_error_message" class="isa_error">
+									<i class="fa fa-times-circle"></i>
+									<span id="switch_type_selection_error_message_text" ></span>
+					</div>	
+
+					<div id="switch_base_section">
+					<div class="wizard_dropdown">
+					   <span>Please select the desired Switch base model configuration</span>
+						<select id="switch_type_selection" class="requiredChoice r1-select"></select>
+					</div>
+				</div>	
+					<div class="wizard_dropdown">
+						<span>Select Switch Block Type</span>
+						<select id="switch_selection" class="requiredChoice r1-select"></select>
+					</div>
+				</div>
+				<h3 class="accoridion-section-title">Select Default Cabling Requirements</h3>
+				<div id="cable_section" class="wizard_radio">
+				        <div id="dhci_cable_options"></div>
+				</div>
+				<h3 class="accoridion-section-title">VMWare Version</h3>
+				<div id="solution_section" class="wizard_section">
+					<div class="wizard_dropdown">
+						<div class="constraintError" id="VMInfo">
+							<div class="message-list"></div>
+						</div>
+						<span>VMware Version</span>
+						<div id="server_vmware_error_message" class="isa_error">
+							<i class="fa fa-times-circle"></i>
+							<span id="server_vmware_error_message_text" ></span>
+						</div>
+						<select id="nimble_software_choice" class="requiredChoice r1-select"></select>
+					</div>
+				</div>
+			</div>
+			<div id="left_installation_section" class="wizard_section">
+				<div id="installation_section" class="wizard_radio">
+				        <br>
+						<span>Installation Services (Select One):</span><br><br>
+				        <div id="dhci_installation_options"></div>
+				</div>
+			</div>
+		</div>
+		<div id="center_div" style="left:40%; right: 20%;">
+				<div id="remarks_div" class="wizard_dropdown">
+					<!-- <br/><br/> -->
+					<center><b>Refer the table for some additional notes:</b></center><br/><br/>
+					<table class="remarks-table">
+						<tr class="remarks-header">
+							<td style="background-color: #58D68D">Remarks:</td>
+						</tr>
+					<!-- </table> -->
+						<tr>
+							<td class="remarks-content" style="text-align:justify; background-color: #F9F9F9;">
+								<div id="nimble_selection_error_message" class="isa_error">
+									<i class="fa fa-times-circle"></i>
+									<span id="nimble_selection_error_message_text" ></span>
+								</div>
+								<div id="nimble_adapter_error_message" class="isa_error">
+									<i class="fa fa-times-circle"></i>
+									<span id="nimble_adapter_error_message_text" ></span>
+								</div>
+								<div id="server_base_models_error_message2" class="isa_error">
+									<i class="fa fa-times-circle"></i>
+									<span id="server_base_models_error_message_text2" ></span>
+								</div>
+								<div id="server_options_info_message2" class="isa_error">
+									<i class="fa fa-times-circle"></i>
+									<span id="server_options_info_message_text2" ></span>
+								</div>
+								<div id="server_pcie_info_message2" class="isa_error">
+									<i class="fa fa-times-circle"></i>
+									<span id="server_pcie_info_message_text2" ></span>
+								</div>
+								<div id="server_powercord_info_message2" class="isa_error">
+									<i class="fa fa-times-circle"></i>
+									<span id="server_powercord_info_message_text2" ></span>
+								</div>
+								<!-- //SK 28-Aug-2019 Added for PERT id[15803]-->
+								<div id="switch_selection_error_message" class="isa_error">
+									<i class="fa fa-times-circle"></i>
+									<span id="switch_selection_error_message_text" ></span>
+								</div>
+								<div class="wizard_section">
+									<p>
+									The base configuraton is driven by selections made within the wizard Upon completing the base solution configuration, the servers / storage / switches are
+									further configured by accessing the corresponding OCA menu by selecting the model from the Components tab in the left menu bar. All standard
+									configuration rules apply.
+									<br><br>
+									<strong>SERVERS:</strong><br>
+									Each DL server requires a pair of internal drives (SSD/HDD) for factory configuration.  Please select these options at the DL server level of the configuration.
+									<br><br>
+									<strong>STORAGE:</strong><br>
+									The storage configuration must only include the iSCSI option for connectivity <br>
+									NOTE: Once the menu view has been used to complete the configuration, all changes will be lost if you re-enter the solution wizard.
+									<br><br>
+									Selection of at least 1 Networking option is required (Networking Adapters)<br>
+									All Base arrays come with the 2 embedded network ports by default ('Q8B83B' HPE NS Embedded 10GBASE-T 2p FIO Adptr)<br>
+									Users can designate the 2 onboard ports ONLY or select, any of the other network options from the list below.<br>
+									If the user selects any of the other network options, the product will still ship with the 2 onboard ports.<br>
+									Notice the iSCSI base storage support only (no Fibre Channel support in the initial release of Nimble dHCI)<br>
+									All Switches: Remember to add to this order, any additional network transceivers AND cables necessary for storage and server connectivity to switches.<br>
+									Review the <a href="https://h20195.www2.hpe.com/v2/GetDocument.aspx?docname=a00067739enw" target="_blank">QuickSpec</a> or <a href="http://vshow.on24.com/vshow/HPETekTalks/#content/2053487" target="_blank">Tek Talk Video</a> for additional instructions and information.
+									<br><br>
+									Aruba Switches JL579A, JL626A, JL627A require unique cabling.  Please review the Switch QuickSpecs for guidelines 
+									</p>
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div>
+			<br/>
+			<svg id="svg"></svg >			
+		</div>	
+		<div id="right_div" style="left:80%">
+			<div class="summary_title">System Summary</div>
+			<div id="price_table" class="price_table" style="width: auto; float: left;"></div>
+			<p><br><br></p>
+			<div class="gauge_div">
+				<div class="gauge" id="compute_gauge"></div>
+			</div>
+			<p><br><br></p>
+			<ul id="system_summary">
+				<li id="prostack_solution_summary" class="section_summary racking ">
+					<div class="legend"></div>
+					Nimble Storage dHCI Base Config Summary
+					<ul id="prostack_solution_summary_list">
+						<li><span id="nimble_summmary">Nimble Base Model</span></li>
+						<li><span id="server_base_models_summary">CTO Base Models</span></li>
+						<li><span id="switch_summary">Switch Models</span></li>
+					</ul>
+				</li>
+			</ul>
+		</div>
+
+<%  if(isNewUIEnabled) {  %>
+    </div> <!-- r3-flex-column-container -->
+<%  }  %>
+<!-- </div>
+</div> -->

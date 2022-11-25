@@ -1,0 +1,252 @@
+<div id="tab_dhci_array_selection" class="wizardTab dhci_array_selection_nimblegen6_tab">
+	<div class="wizardTab">
+		<div id="left_array_selection" class="left_inTab_div">
+			<div>
+				<span></span> Cloud connectivity is required for Registration and Activation of this HPE Alletra 6000 Array. 
+				If cloud connectivity will not be available for Registration and Activation, do not proceed with configuring the array.  
+				The Nimble Storage arrays are recommended if the cloud connectivity requirement cannot be met.
+				NOTE: All Alletra orders must be reviewed and approved by the Storage Concierge team. When configuration and pricing is final,
+				please submit a completed <a href='http://www.hpe.com/storage/concierge' target='_blank'>HPE ALLETRA CONCIERGE WORKSHEET</a> to <a href='mailto:storage_concierge@hpe.com' target='_blank'>STORAGE_CONCIERGE@HPE.COM</a>
+				for review and approval. 
+				
+				<div class="wizard_checkbox w-100">
+					<input type="checkbox" id="dhcinimble_acknowledge_checkbox">
+					<label class="label-checkbox-radio"
+						for="dhcinimble_acknowledge_checkbox"><span></span> 
+						I have confirmed cloud connectivity is possible for Registration and Activation of this array</label>
+				</div>
+			</div>
+			<div id="left_dhci_type_section" class="wizard_section">
+				<div class="wizardSubSection">
+					<div class="sub-row w-100">
+						<span class="sectionTitle">Please select one of the
+							following options to get started:</span> <br>
+					</div>
+					<div class="sub-row w-100">
+						<div id="solutionType_section" class="wizard_radio">
+							<span></span>
+							<div id="dhci_type_options"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="left_array_selection_section" class="wizard_section">
+				<div class="wizardSubSection">
+				 <div class="sub-row w-100">
+						<span class="sectionTitle">Base Array</span> <br>
+				 </div>
+				<!--  </br>
+				<span></span> STORAGE: 
+				</br>
+				<span></span> The storage configuration must only include
+					the iSCSI option for connectivity NOTE: Once the menu view has been
+					used to complete the configuration, all changes will be lost if you
+					re-enter the solution wizard.
+				</br>
+				<span></span> Selection of at least 1 Networking
+					option is required (Networking Adapters) All Base arrays come with
+					the 2 embedded network ports by default ('Q8B83B' HPE NS Embedded
+					10GBASE-T 2p FIO Adptr) Users can designate the 2 onboard ports
+					ONLY or select, any of the other network options from the list
+					below. If the user selects any of the other network options, the
+					product will still ship with the 2 onboard ports. Notice the iSCSI
+					base storage support only (no Fibre Channel support in the initial
+					release of Nimble dHCI)
+				</br> -->
+				</div>
+					<div class="sub-row w-100">
+						<div class="constraintError w-90" id="dhciArraySelectionconstraint">
+							<div class="message-list"></div>
+						</div>
+					</div>
+					<div class="sub-row w-100">
+						<div class="wizard_dropdown w-90">
+							<div class="form-container-border sub-col">
+								<span>Select Base Array Model</span> <select
+									id="dhci_base_array_model"></select>
+							</div>
+						</div>
+					</div>
+					<div class="sub-row w-100" style="display: none;">
+						<div class="wizard_dropdown w-50">
+							<div class="form-container-border sub-col">
+								<span>Debup</span> 
+								<select id="dhci_Debup"></select>
+							</div>
+						</div>
+					</div>
+					</br>
+					<span></span> 
+					VMWare ESXi 7.0 is not available for BTO Server models 
+					</br>
+					<div class="sub-row w-100">
+						<div class="wizard_dropdown w-50">
+							<div class="form-container-border sub-col">
+								<span>VMware Version</span> 
+								<select id="vmwareJs"></select>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div id="left_installation_section" class="wizard_section">
+					<div id="installation_section" class="wizard_radio">
+					        <br>
+							<span>Installation Services (Select One):</span><br><br>
+					        <div id="dhci_installation_options"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="right_array_selection" class="right_inTab_div">
+			<div id="right_array_selection_section" class="wizard_section">
+				<div class="wizardSubSection">
+					<div class="sub-row w-100">
+						<span class="sectionTitle">Servers:</span> <br>
+					</div>
+					</br>
+					<span></span> Configure server from components menu view
+				</br>
+				<!-- <span></span> SERVERS:
+				</br>
+					<span></span> Each DL server requires a pair of internal drives (SSD/HDD) for
+					factory configuration. Please select these options at the DL server
+					level of the configuration.
+				</br> -->
+					<div class="sub-row w-100">
+						<div class="wizard_dropdown w-90">
+							<div class="form-container-border sub-col">
+								<span>Please select the desired size of dHCI
+									configuration</span> <select id="dhci_DLFilter_model"></select>
+							</div>
+						</div>
+					</div>
+					<div class="sub-row w-100">
+						<div class="constraintError w-90" id="dhciserverSelectionconstraint">
+							<div class="message-list"></div>
+						</div>
+					</div>
+					<div id="nimble_selection_bto_info_div" class="isa_info">
+						<i class="fa fa-times-circle"></i>
+						<span id="nimble_selection_bto_info_text" ></span>
+					</div>
+					<div id="nimble_selection_servermax_info_div" class="isa_info">
+						<i class="fa fa-times-circle"></i>
+						<span id="nimble_selection_servermax_info_text" ></span>
+					</div>
+					<div class="sub-row w-100">
+						<div class="wizard_dropdown w-60">
+							<div class="form-container-border sub-col">
+								<span>Select ONE Server model</span> <select
+									id="dhci_cto_base_model"></select>
+							</div>
+						</div>
+						<div class="wizard_textbox wizard-number-selector w-30">
+							<label for="dhci_server_qty">Server Qty</label>
+							<div class="number-input-container">
+								<input type="number" id="dhci_server_qty" class="r3-spinner" min="0" max="32">
+							</div>
+							<span class="min-max" id="dhci_server_qty_text"> 32 Maximum </span>
+						</div>
+					</div>
+					<div id="server_options_div">
+					<div class="sub-row w-100">
+						<div class="constraintError w-90" id="dhciFlexSelectionconstraint">
+							<div class="message-list"></div>
+						</div>
+					</div>
+					<div class="sub-row w-100">
+						<div class="wizard_dropdown w-90">
+							<div class="form-container-border sub-col">
+								<span>Select Server Ethernet FlexibleLOM//OCP3 Adapter</span> <select
+									id="dhci_base_flexLom" ></select>
+							</div>
+						</div>
+					</div>
+					<div class="sub-row w-100">
+						<div class="constraintError w-90" id="dhcipciSelectionconstraint">
+							<div class="message-list"></div>
+						</div>
+					</div>
+					<div class="sub-row w-100">
+						<div class="wizard_dropdown w-90">
+							<div class="form-container-border sub-col">
+								<span>Select Server Network PCIe Adapter</span> <select
+									id="dhci_base_pci" 	></select>
+							</div>
+						</div>
+					</div>
+					</div>
+					<div id="server_powercord_div">
+					<div class="sub-row w-100">
+						<div class="constraintError w-90" id="dhcipowerSelectionconstraint">
+							<div class="message-list"></div>
+						</div>
+					</div>
+					<div id="server_powercord_info_message" class="isa_error">
+						<i class="fa fa-times-circle"></i>
+						<span id="server_powercord_info_message_text" ></span>
+					</div>
+					<div class="sub-row w-100">
+						<div class="wizard_dropdown w-90">
+							<div class="form-container-border sub-col">
+								<span>Select Server Power Cord</span> 
+								<select
+									id="dhci_base_power" class="requiredChoice"></select>
+							</div>
+						</div>
+					</div>
+					</div>
+					<div class="sub-row w-100">
+						<span class="sectionTitle">Switches</span> <br>
+					</div>
+					</br>
+					<span></span> All Switches :
+					</br>
+					<span></span> 
+					Remember to add to this order, any additional network transceivers AND cables necessary for storage and server connectivity to switches. 
+					Review the QuickSpec or Tek Talk Video for additional instructions and information.  
+					Switches require specific transceivers and/or cables. 
+					</br>
+				<div class="sub-row w-100">
+						<div class="constraintError w-90" id="dhciswitchSelectionconstraint">
+							<div class="message-list"></div>
+						</div>
+					</div>
+					
+					<div class="sub-row w-100">
+						<div class="wizard_dropdown w-90">
+							<div class="form-container-border sub-col">
+								<span>Please select the desired Switch base model
+									configuration</span> <select id="dhci_switch_type"></select>
+							</div>
+						</div>
+					</div>
+					<div id="nimble_selection_switchmax_info_div" class="isa_info">
+						<i class="fa fa-times-circle"></i>
+						<span id="nimble_selection_switchmax_info_text" ></span>
+					</div>
+					<div class="sub-row w-100">
+						<div class="wizard_dropdown w-90">
+							<div class="form-container-border sub-col">
+								<span>Select Switch Block Type</span> <select
+									id="dhci_switch_option"></select>
+							</div>
+						</div>
+					</div>
+					<div id="cable_div">
+						<div class="sub-row w-100">
+							<span class="sectionTitle">Select Default Cabling Requirements</span> <br>
+						</div>
+						<br>
+						<div class="sub-row w-100">
+							<div id="cable_section" class="wizard_radio">
+							<span></span>
+								<div id="dhci_cable_options"></div>
+						</div>
+						</div>
+				</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

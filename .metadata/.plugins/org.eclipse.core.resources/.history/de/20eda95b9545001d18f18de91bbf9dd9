@@ -1,0 +1,873 @@
+package com.hp.ngc.plugins.agents.importer;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
+
+import org.apache.commons.lang.StringUtils;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.hp.ngc.engine.api.ISubConfiguration;
+import com.hp.ngc.engine.api_impl.ConfigurationImpl;
+import com.hp.ngc.engine.api_impl.KnowledgeBaseImpl;
+import com.hp.ngc.engine.api_impl.SubConfigurationImpl;
+import com.hp.ngc.engine.exceptions.EngineException;
+import com.hp.ngc.engine.transactions.ConfigurationChange.ReasonForChange;
+import com.hp.ngc.engine.transactions.CreateInstanceOfConfig;
+import com.hp.ngc.engine.transactions.EngineUpdateContext;
+import com.hp.ngc.importer.IJsonConfigurationCreator;
+import com.hp.ngc.kb.modelInstance.ModelInstance;
+import com.hp.ngc.kb.modelInstance.NgcGroupInstance;
+import com.hp.ngc.kb.modelStore.NgcClass;
+import com.hp.ngc.kb.modelStore.NgcObject;
+import com.hp.ngc.kb.modelStore.NgcProduct;
+import com.hp.ngc.plugins.agents.update.AgentUtility;
+import com.hp.ngc.plugins.agents.update.delegate.PrimeraDriveUpdateAgent;
+import com.hp.ngc.plugins.agents.update.install.impl.CISettingsAgent;
+import com.hp.ngc.plugins.agents.update.install.impl.WizardUtility;
+import com.hp.ngc.plugins.builtin.agents.update.DefaultUpdateAgent;
+import com.hp.ngc.uiframework.tool.oca.widgets.support.ServiceUtilityNew;
+import com.hp.ngc.util.Log4NGC;
+import com.hp.ngc.util.UtilityConfigMethods;
+
+public class JsonConfigurationCreator implements IJsonConfigurationCreator {
+
+	private ModelInstance parentModel;
+	private Map<String, JsonObject> groupItemMap;
+	private Map<ModelInstance, List<String>> groupParentMap;
+	private List<String> addGroupItemList;
+	private DefaultUpdateAgent defaultAgent;
+	private ConcurrentSkipListMap<String, JsonObject> subconfigJsonMap;
+	private ConcurrentHashMap<String, JsonObject> rootJsonMap;
+	private ConcurrentHashMap<String, SubConfigurationImpl> importedSubconfigMap;
+	private Map<String, Integer> hostingLevels;
+	
+	private static final String CONTENT = "content";
+	private static final String HEADER = "header";
+	private static final String ROOT = "root";
+	private static final String SUBCONFIGS = "subconfigs";
+	private static final String CONFIG_ID = "configId";
+	private static final String MODEL_CONFIG_ID = "modelConfigId";
+	private static final String TYPE = "type";
+	private static final String MODEL_REF = "modelRef";
+	private static final String PRODUCT_REF = "productRef";
+	private final static String NAME = "name";
+	private static final String QTY = "qty";
+	private static final String ITEMS = "items";
+	//private static final String PRODUCT_ID = "productId";
+	private final static String PART_NUMBER = "partNumber";
+	private static final String DESCRIPTION = "description";
+	
+	private static final String STATUS = "status";
+	private static final String MESSAGES = "messages";
+	private static final String MESSAGE = "message";
+	
+	private static final String STATUS_OK = "OK";
+	private static final String STATUS_INFO = "INFO";
+	private static final String STATUS_WARNING = "WARNING";
+	private static final String STATUS_ERROR = "ERROR";
+	private Map<String, String> nodePairsMap  = new HashMap<String, String>() {{
+		put("N9Z55A", "hpe3ParA630_2N_NodePair");	
+		put("N9Z56A", "hpe3ParC630_2N_NodePair");
+		put("N9Z60A", "hpe3ParA650_2N_NodePair");
+		put("N9Z61A", "hpe3ParA650_4N_NodePair");
+		put("N9Z62A", "hpe3ParC650_2N_NodePair");
+		put("N9Z63A", "hpe3ParC650_4N_NodePair");
+		put("N9Z64A", "hpe3ParA670_2N_NodePair");
+		put("N9Z65A", "hpe3ParA670_4N_NodePair");
+		put("N9Z66A", "hpe3ParC670_2N_NodePair");
+		put("N9Z67A", "hpe3ParC670_4N_NodePair");
+		put("N9Z68A", "hpe3ParA670_2N_NodePair");
+		put("N9Z69A", "hpe3ParA670_4N_NodePair");
+		put("N9Z70A", "hpe3ParC670_2N_NodePair");
+		put("N9Z71A", "hpe3ParC670_4N_NodePair");
+	}};
+	@Override
+	public void createConfiguration(ISubConfiguration subConfiguration, JsonObject jsonData) throws EngineException {
+		System.err.println("JsonConfigurationCreator ---> createConfiguration");
+		List <EngineUpdateContext> eucList = new ArrayList<EngineUpdateContext>();
+		SubConfigurationImpl subCfg = null;
+		ConfigurationImpl config = (ConfigurationImpl) subConfiguration.getConfiguration();
+		
+		if(config.isIconSolution() && config.getCurrentIconSubConfig() != null) {
+			subCfg = (SubConfigurationImpl)config.getCurrentIconSubConfig();
+		} else {
+			subCfg = config.getSolutionSubconfiguration();
+		}
+		if(subCfg != null) {
+			initializeJsonCreator();
+			
+			JsonObject contentJson = jsonData.get(CONTENT).getAsJsonObject();
+			JsonArray rootItems = contentJson.getAsJsonArray(ROOT);
+			JsonArray subconfigsItems = contentJson.getAsJsonArray(SUBCONFIGS);
+			
+			//Post Subconfig JSON
+			for (int i = 0;i < subconfigsItems.size(); i++) {
+				JsonObject subconfigObj = subconfigsItems.get(i).getAsJsonObject();
+				String configId = subconfigObj.get(CONFIG_ID).getAsString();
+				if(subconfigJsonMap.containsKey(configId)) continue;
+				subconfigJsonMap.put(configId, subconfigObj);
+			}
+			for (int i = 0;i < rootItems.size(); i++) {
+				JsonObject rootObj = rootItems.get(i).getAsJsonObject();
+				String productId = rootObj.get(PART_NUMBER).getAsString();
+				if(rootJsonMap.containsKey(productId)) continue;
+				rootJsonMap.put(productId, rootObj);
+			}
+			for (int j = 0;j < subconfigsItems.size(); j++) {
+				JsonObject subconfigObj = subconfigsItems.get(j).getAsJsonObject();
+				String configId = subconfigObj.get(CONFIG_ID).getAsString();
+				if(importedSubconfigMap.containsKey(configId)) continue;
+				if(configId.equalsIgnoreCase("software")) {
+					createStandaloneSoftwareSubconfigurationFromJson(subCfg, subconfigObj, rootItems, eucList);
+					continue;
+				}else if(IsGroupMember(subconfigObj, subCfg))continue;
+				createSubconfigurationFromJson(subCfg, configId, subconfigObj, eucList);
+			}
+			if(parentModel!= null && (parentModel.isDescendantOf("NimbleStorageCommonCTO") || 
+					parentModel.isDescendantOf("MSA206X")) ){
+				addGroupMembers(parentModel, subCfg, eucList);
+			}
+			
+			for (int k = 0;k < rootItems.size(); k++) {
+				JsonObject rootObj = rootItems.get(k).getAsJsonObject();
+				String type = rootObj.get(TYPE).getAsString();
+				if(type.equals(MODEL_REF)) {
+					String modelConfigId = rootObj.get(MODEL_CONFIG_ID).getAsString();
+					if(modelConfigId.equalsIgnoreCase("software"))continue;
+					if(importedSubconfigMap.containsKey(modelConfigId) && !groupItemMap.keySet().contains(rootObj.get(PART_NUMBER).getAsString())) {
+						SubConfigurationImpl targetSub = importedSubconfigMap.get(modelConfigId);
+						int qty = rootObj.get(QTY).getAsInt();
+						
+						for (int x = 0;x < qty; x++) {
+							CreateInstanceOfConfig addChange = new CreateInstanceOfConfig(targetSub, ReasonForChange.REASON_WAS_REQUESTED);
+							subCfg.makeUpdate(addChange);
+						}
+						
+					} else if (!groupItemMap.keySet().contains(rootObj.get(PART_NUMBER).getAsString())){
+						System.err.println("JsonConfigurationCreator  !!!  Cannot find subconfig with ID = " + modelConfigId);
+					}
+				}
+				
+			}
+		}
+			
+		WizardUtility.sortEUCByModelClass(eucList);
+		AgentUtility.closeOrDiscardEUCList(true, eucList);
+
+	}
+
+	private boolean IsGroupMember(JsonObject subconfigObj, SubConfigurationImpl subconfig) throws EngineException {
+		String partNumber = subconfigObj.get(PART_NUMBER).getAsString();
+		if( parentModel != null){
+			List<NgcObject> containerList = parentModel.getNGCObjectsWhichCanContainInstancesOfClass(subconfig.getNgcClass(partNumber));
+			if(parentModel.isDescendantOf("NimbleStorageCommonCTO") || parentModel.isDescendantOf("MSA206X"))
+			for (NgcObject container : containerList) {
+				if (container instanceof NgcGroupInstance) {
+					groupItemMap.put(partNumber, subconfigObj);
+					if(groupParentMap.containsKey(parentModel)) {
+						List<String> childList = groupParentMap.get(groupParentMap);
+						childList.add(partNumber);
+						groupParentMap.put(parentModel, childList);
+					} else {
+						groupParentMap.put(parentModel, Arrays.asList(partNumber));
+					}
+					System.err.println("parent:" + parentModel);
+					System.err.println("switch:" + partNumber);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	@SuppressWarnings("null")
+	private void createStandaloneSoftwareSubconfigurationFromJson(SubConfigurationImpl subconfig, JsonObject subconfigObj,
+			JsonArray rootItems, List<EngineUpdateContext> eucList) throws EngineException {
+		
+		KnowledgeBaseImpl kb = subconfig.getKb();
+		
+		JsonArray itemsArr = subconfigObj.getAsJsonArray(ITEMS);
+		if(itemsArr != null || itemsArr.size() > 0) {
+			
+			//Get Items
+			HashMap<String,ArrayList<JsonObject>> softwareItemsMap = new HashMap<String,ArrayList<JsonObject>>();
+			for (int i = 0; i < itemsArr.size(); i++) {
+				JsonObject itemJson = itemsArr.get(i).getAsJsonObject();
+				String productId = itemJson.get(PART_NUMBER).getAsString();
+				NgcClass itemClass = kb.getNgcClass(productId);
+				
+				if(itemClass != null) {
+					String swModel = ImportUtility.getSoftwareModelForProduct(kb,itemClass);
+					if(softwareItemsMap.containsKey(swModel)) {
+						ArrayList<JsonObject> instanceSet = softwareItemsMap.get(swModel);
+						instanceSet.add(itemJson);
+					} else {
+						ArrayList<JsonObject> instanceSet = new ArrayList<JsonObject>();
+						instanceSet.add(itemJson);
+						softwareItemsMap.put(swModel, instanceSet);
+					}
+				}
+			}
+			
+			if(!softwareItemsMap.isEmpty()) {
+				for(String swModel: softwareItemsMap.keySet()) {
+					ModelInstance newModel = WizardUtility.createModelInNewSubconfig(swModel, defaultAgent, true, subconfig, eucList);
+					importedSubconfigMap.put(swModel, newModel.getSubConfiguration());
+					
+					JsonObject swRootJson = new JsonObject();
+					swRootJson.addProperty(TYPE, MODEL_REF);
+					swRootJson.addProperty(MODEL_CONFIG_ID, swModel);
+					swRootJson.addProperty(QTY, 1);
+					rootItems.add(swRootJson);
+					
+					JsonObject swSubconfigJson = new JsonObject();
+					JsonArray nestedItemsArr = new JsonArray();
+					for(JsonObject swItem: softwareItemsMap.get(swModel)) {
+						nestedItemsArr.add(swItem);
+					}
+					swSubconfigJson.add(ITEMS, nestedItemsArr);
+					
+					createNestedInstancesFromJson(subconfig, newModel, newModel, swSubconfigJson, 0, eucList);
+				}
+			}
+			
+		}
+		
+	}
+	private void createSubconfigurationFromJson(SubConfigurationImpl subconfig, String configId, JsonObject subconfigObj, List<EngineUpdateContext> eucList) throws EngineException {
+		String modelId = subconfigObj.get(PART_NUMBER).getAsString();
+		if(subconfig.getNgcClass(modelId) == null) return;
+		String name = "";
+		if(subconfigObj.has(NAME)) name = subconfigObj.get(NAME).getAsString();
+		ModelInstance newModel = WizardUtility.createModelInNewSubconfig(modelId, defaultAgent, true, subconfig, eucList);
+		UtilityConfigMethods.setAttributeSimple(newModel, "isImportedModel", true);
+		importedSubconfigMap.put(configId, newModel.getSubConfiguration());
+		if(!name.equals(""))newModel.getSubConfiguration().setName(name);
+		if(newModel.isDescendantOf("NimbleStorageCommonCTO") || newModel.isDescendantOf("MSA206X"))
+			parentModel = newModel;
+		createNestedInstancesFromJson(subconfig, newModel, newModel, subconfigObj, 0, eucList);
+		if(newModel.isDescendantOf("Primera600Chassis")) {
+			PrimeraDriveUpdateAgent agentPrimeraDriveUpdateAgent = new PrimeraDriveUpdateAgent();
+			agentPrimeraDriveUpdateAgent.updateAttributeValueOnEachSystem(newModel, null, newModel.getSubConfiguration());
+		}
+		if(subconfigObj.has("combo") && subconfigObj.has("install")) {
+			String comboValue = subconfigObj.get("combo").getAsString();
+			String installValue = subconfigObj.get("install").getAsString();
+			String targetLevel = "syo";
+			if(comboValue.equals(StringUtils.EMPTY) && installValue.equals(StringUtils.EMPTY)){
+				UtilityConfigMethods.setAttributeSimple(newModel, "serviceLevel", "S");
+				UtilityConfigMethods.setAttributeSimple(newModel, "overrideResetServiceLevel", "S");
+				return;
+			} else if(comboValue.equals(StringUtils.EMPTY) || installValue.equals(StringUtils.EMPTY)) {
+				Map<String, String> defaultGBBMap = ServiceUtilityNew.getModelInstallAndComboIdFromGBB(newModel, "S", subconfig.getKb().getDataService(), newModel.getSubConfiguration());
+				if(installValue.equals(StringUtils.EMPTY))
+					installValue = defaultGBBMap.get("installId");
+				if(comboValue.equals(StringUtils.EMPTY))
+					comboValue = defaultGBBMap.get("comboId");
+			}else {
+				comboValue = comboValue.equals("N/A") ? "" : comboValue;
+				installValue = installValue.equals("N/A") ? "" : installValue;
+				if (comboValue.equals(StringUtils.EMPTY)) 
+					targetLevel = "N";
+			}
+			// update service level and no service info
+			// update on ALL instances, since no Support w/o Apply all was not accounting for all instances in the node
+			ServiceUtilityNew.updateServiceAttribute(newModel, targetLevel, null);
+			for(ModelInstance modelInstance : newModel.getChildInstances())
+				ServiceUtilityNew.updateServiceAttribute(modelInstance, targetLevel, null);
+			updateCarePackServiceByKey(newModel,comboValue, "combo"
+					, false, new LinkedList<EngineUpdateContext>(eucList));
+			updateCarePackServiceByKey(newModel,installValue
+					, "install", false, new LinkedList<EngineUpdateContext>(eucList));
+			//Need to update Target Level
+			UtilityConfigMethods.setAttributeSimple(newModel, "serviceLevel", targetLevel);
+			UtilityConfigMethods.setAttributeSimple(newModel, "overrideResetServiceLevel", targetLevel);
+		}
+		//Add remaining as Ad Hoc under the parentModel
+		
+		//Add Post Update step
+		postImportAdjustmentsForModel(newModel);
+	}
+	public void updateCarePackServiceByKey( ModelInstance instance, String sku, String type,
+			boolean ismicroSoftDeclined, LinkedList<EngineUpdateContext> engineContext) throws EngineException {
+		ModelInstance targetInstance = ServiceUtilityNew.getTargetInstance(instance);
+		ServiceUtilityNew.changeServiceSelection(targetInstance, sku, null, type, true, engineContext, Collections.<ModelInstance> emptyList());
+		if("combo".equals(type))
+			ServiceUtilityNew.setMicroSoftDeclined(targetInstance, sku, ismicroSoftDeclined);
+	}
+	
+	private void createNestedInstancesFromJson(SubConfigurationImpl subconfig, ModelInstance parentModel, ModelInstance parentInst, JsonObject parentJson, 
+			int depth, List<EngineUpdateContext> eucList) throws EngineException {
+		JsonArray itemsArr = parentJson.getAsJsonArray(ITEMS);
+		if(itemsArr == null || itemsArr.size() == 0) return;
+		
+		//Get Items
+		List<JsonObject> itemJsonList = new ArrayList<JsonObject>();
+		for (int i = 0; i < itemsArr.size(); i++) {
+			JsonObject itemObj = itemsArr.get(i).getAsJsonObject();
+			String productId = itemObj.get(PART_NUMBER).getAsString();
+			if(productId.endsWith("#0D1"))continue;
+			if(productId.endsWith("#B01"))continue;
+			if(isOptionProduct(subconfig,productId) && !productId.startsWith(parentInst.getId())) {
+				String rootProd = productId.split("#")[0];
+				for (int j = 0; j < itemsArr.size(); j++) {
+					JsonObject newParentObj = itemsArr.get(j).getAsJsonObject();
+					String parentProd = newParentObj.get(PART_NUMBER).getAsString();
+					if(parentProd.equalsIgnoreCase(rootProd)) {
+						JsonArray parentItemsArr = newParentObj.getAsJsonArray(ITEMS);
+						if(parentItemsArr == null) {
+							parentItemsArr = new JsonArray();
+							newParentObj.add("items", parentItemsArr);
+						} 
+						
+						itemObj.addProperty(QTY, 1);//Update to single option to parent
+						parentItemsArr.add(itemObj);
+						
+						break;
+					}
+				}
+				continue;
+			}
+			itemJsonList.add(itemObj);
+		}
+
+		//Sort
+		sortItemList(itemJsonList, subconfig.getKb(), hostingLevels);
+
+		//Add Entry for expansions
+		if(depth == 0)addExpansionsIfNeeded(subconfig, parentInst, itemJsonList);
+
+		//Config Instances call createSubconfigFromJson
+
+		for(JsonObject itemJson : itemJsonList) {
+			String type = itemJson.get(TYPE).getAsString();
+			int qty = itemJson.get(QTY).getAsInt();
+			String productId = itemJson.get(PART_NUMBER).getAsString();
+			if(type.equals(MODEL_REF)) {
+				SubConfigurationImpl childSub = null;
+				String childConfigId = itemJson.get(MODEL_CONFIG_ID).getAsString();
+
+				if(!importedSubconfigMap.containsKey(childConfigId)) {
+					JsonObject modelJson = subconfigJsonMap.get(childConfigId);
+					if(modelJson != null) { 
+						if(IsGroupMember(modelJson, subconfig)){
+							addGroupMembers(parentModel, subconfig, eucList);
+						} else
+							createSubconfigurationFromJson(subconfig, childConfigId, modelJson, eucList);
+					} else
+						type = PRODUCT_REF;
+				}
+				childSub = importedSubconfigMap.get(childConfigId);
+
+				if(childSub != null) {
+					String rackRole = childSub.getPrimaryInstance().getAttributeStringValue("rackRole", "unset");
+					//TODO: Replace check for main rack space
+					ArrayList<ModelInstance> createdModels = ImportUtility.addConfigurationInstanceToModel(parentInst, 
+							childSub, qty, parentInst.isDescendantOf("Rack") && !rackRole.toUpperCase().startsWith("CANNOT"));
+					if(createdModels.size() < qty) {
+						System.err.println("JsonConfigurationCreator Could not create model ID = " + childConfigId + " Missing QTY = " + (qty - createdModels.size()));
+					}
+				}
+				
+				
+			}
+
+			if(type.equals(PRODUCT_REF)) {
+				//Add Options
+				//Check for InstanceQty is embedded in the util
+				System.err.println("product Id:" + productId);
+				NgcClass optionClass = subconfig.getNgcClass(productId);
+				if(optionClass != null && UtilityConfigMethods.isConfigurable(optionClass)) {
+					ModelInstance newModel = WizardUtility.createModelInNewSubconfig(productId, defaultAgent, true, subconfig, eucList);
+					ImportUtility.addConfigurationInstanceToModel(parentInst, newModel.getSubConfiguration(), qty, parentInst.isDescendantOf("Rack"));
+				} else {
+					
+					//Enhance placement check for Primera 600
+					boolean preferExpansions = false;
+					if(preferExpansionsForOption(parentInst,optionClass))preferExpansions = true;
+					
+					ArrayList<ModelInstance> createdOptions = ImportUtility.addOptionToInstance(parentModel, parentInst, productId, qty, preferExpansions, false);
+					//ArrayList<ModelInstance> createdOptions = ImportUtility.addOptionToInstance(parentModel, parentInst, productId, qty, false, false);
+					
+					//Check if all options were created
+					if(createdOptions.size() < qty) {
+						//If PCI Card
+						if(allowPlacementInExpansions(subconfig,parentModel,productId)) {
+							int newQty = qty - createdOptions.size();
+							ArrayList<ModelInstance> createdOptionsExpanded = ImportUtility.addOptionToInstance(parentModel, 
+									parentInst, productId, newQty, true, false);
+							createdOptions.addAll(createdOptionsExpanded);
+						}
+					}
+					
+					int newDepth = depth + 1;
+					for(ModelInstance optionInst: createdOptions) {
+						createNestedInstancesFromJson(subconfig, parentModel, optionInst, itemJson, newDepth, eucList);
+					}
+					
+					int createdQty = 0;
+					if(!createdOptions.isEmpty()) {
+						createdQty = ImportUtility.calculateTotalQuantity(createdOptions, false);
+					}
+					
+					if(qty > createdQty && allowProductAsAdHoc(subconfig.getKb(), productId)) {
+						String desc = itemJson.get(DESCRIPTION).getAsString();
+						ImportUtility.addAdHocItemToModel(parentModel, productId, qty - createdQty, desc);
+					}
+				}
+				
+			}
+		}
+
+	}
+
+	private void addGroupMembers(ModelInstance parentInst,
+			SubConfigurationImpl subconfig, List<EngineUpdateContext> eucList)
+			throws EngineException {
+		if (parentInst.isDescendantOf("NimbleStorageCommonCTO") || parentInst.isDescendantOf("MSA206X")) {
+			for (Entry<String, JsonObject> product : groupItemMap.entrySet()) {
+				parentInst = getGroupParent();
+				if(!addGroupItemList.contains(product.getKey())){
+					JsonObject jsonobj = product.getValue();
+					Integer qty = rootJsonMap.get(product.getKey()).get(QTY).getAsInt();
+					ModelInstance groupInst = ImportUtility.placeOptionInParentModelWithGroupTargets(
+						subconfig, parentInst, product.getKey(), qty);
+					createNestedInstancesFromJson(groupInst.getSubConfiguration(), 
+						groupInst.getTrueModelInstance(), groupInst.getTrueModelInstance(), jsonobj, 0, eucList);
+					addGroupItemList.add(product.getKey());
+				}
+			}
+		}
+	}
+	private ModelInstance getGroupParent()
+			throws EngineException {
+		groupParentMap
+		return null;
+	}
+	private boolean preferExpansionsForOption(ModelInstance parentInst, NgcClass optionClass) {
+		if(parentInst.isDescendantOf("HP3ParStorageArray") && optionClass.isDescendantOf("HP3ParHardDrive")) {
+			return true;
+		}
+		return false;
+	}
+
+	private boolean isOptionProduct(SubConfigurationImpl subconfig, String productId) throws EngineException {
+		NgcClass productClass = subconfig.getNgcClass(productId);
+		if(productClass != null && productId.indexOf("#") > 0){
+			if(productClass.isDescendantOf("SwitchPSCord"))return true;
+			if(productClass.isDescendantOf("SWSubscription"))return true;
+		}
+		return false;
+	}
+
+	private boolean allowPlacementInExpansions(SubConfigurationImpl subconfig, ModelInstance parentModel, String productId) throws EngineException {
+		NgcClass optClass = subconfig.getNgcClass(productId);
+		if(optClass != null) {
+			if(optClass.isDescendantOf("PciCard")
+					|| optClass.isDescendantOf("ProliantHardDrive")
+					) return true;
+			
+			if(parentModel.isDescendantOf("Primera600Chassis")) {
+				if(optClass.isDescendantOf("HPEPrimeraHostAdapter")
+						|| optClass.isDescendantOf("HPEPrimeraTransceivers")
+						) return true;
+			}
+		}
+				
+		return false;
+	}
+
+	private void addExpansionsIfNeeded(SubConfigurationImpl subconfig, ModelInstance newModel,
+			List<JsonObject> itemJsonList) throws EngineException {
+		
+		
+		if(newModel.isDescendantOf("ProliantServers")) {
+			//Max Riser Qty for server - iNumRiserRows
+			int maxRiserQty = newModel.getAttributeIntegerValue("iNumRiserRows", 0);
+			int currentRiserQty = 0;
+			for(JsonObject itemJson : itemJsonList) {
+				String productId = itemJson.get(PART_NUMBER).getAsString();
+				NgcClass itemClass = subconfig.getNgcClass(productId);
+				if(itemClass != null &&  itemClass.isDescendantOf("PciRiser")) {
+					currentRiserQty += itemJson.get(QTY).getAsInt();
+				}
+			}
+			if(currentRiserQty < maxRiserQty) {
+				//Standard Riser  (class = StandardProliantPciRiser)
+				NgcClass riserClass = subconfig.getNgcClass("StandardProliantPciRiser");
+				Set<NgcProduct> risers = newModel.getNgcProductsForClass(riserClass);
+				if(!risers.isEmpty()) {
+					NgcProduct defaultRiser = risers.iterator().next();
+					ImportUtility.addOptionToInstance(newModel, newModel, defaultRiser.getId(), 1, false, false);
+				}
+			}
+			
+		}
+		
+		if(newModel.isDescendantOf("Primera600Chassis")) {
+			UtilityConfigMethods.setAttributeSimple(newModel, "ninjaSTARSImport", true);
+			ImportUtility.addOptionToInstance(newModel, newModel, "primera600NodePair", 1, false, false);
+		}
+		if(newModel.isDescendantOf("HPE3Par600StorageArray")){
+			addNodePairToPrimera(newModel, subconfig, itemJsonList);
+		}
+	}
+	private String NodePairId(List<JsonObject> itemJsonList, ModelInstance newModel) throws EngineException {
+		List<String> nodePairList = Arrays.asList("N9Z55A","N9Z56A", "N9Z60A", "N9Z61A", "N9Z62A", "N9Z63A", "N9Z64A", "N9Z65A", "N9Z66A", "N9Z67A", "N9Z68A", "N9Z69A", "N9Z70A","N9Z71A");
+		for (JsonObject item : itemJsonList){
+			for(String nodePair : nodePairList)
+			if (item.has(PART_NUMBER) && item.get(PART_NUMBER).getAsString().equals(nodePair)) 
+				return nodePair;
+			
+		}
+		return null;
+	}
+	private void addNodePairToPrimera(ModelInstance newModel, SubConfigurationImpl subconfig, List<JsonObject> itemJsonList) {
+		try {
+			KnowledgeBaseImpl kb = subconfig.getKb();
+			newModel.evaluateNgcFunction("getNodePairs", null);
+			String nodePairId = nodePairsMap.get(NodePairId(itemJsonList, newModel));
+			Integer sizerNodePairCount = -1;
+			if (newModel.containsAttribute("sizerNodePairs")) {
+				sizerNodePairCount = (Integer) newModel.getAttributeValue("sizerNodePairs");	
+			}
+			UtilityConfigMethods.setAttributeSimple(newModel, "autoAddSwitchEnabled", false);
+			UtilityConfigMethods.setAttributeSimple(newModel, "autoQuotePrimeraSupport", false); 
+			Integer nodePairCount = sizerNodePairCount >= 0 ? sizerNodePairCount : (Integer) newModel.getAttributeValue("iNumNodePairs");
+			List<ModelInstance> modelInstanceList = ImportUtility.addOptionToInstance(newModel, newModel, nodePairId, nodePairCount, false, true);
+			for( ModelInstance modelInstance : modelInstanceList){
+				for (JsonObject item : itemJsonList) {
+						String productId = item.has(PART_NUMBER) ? item.get(PART_NUMBER).getAsString() : StringUtils.EMPTY;
+						int qty = item.get(QTY).getAsInt() / nodePairCount;
+						NgcClass optClass = kb.getNgcClass(productId);
+						if(optClass.isDescendantOf("HPEPrimeraHostAdapter") ||
+								optClass.isDescendantOf("HP3ParNodeAdapter") 
+								|| optClass.isDescendantOf("HP3ParHardDrive") || optClass.isDescendantOf("HP3ParDriveEnclosure")) {
+							ImportUtility.addOptionToInstance(modelInstance, modelInstance, productId, qty, false, false);
+						}
+				}
+			}
+			List<JsonObject> removeList = new ArrayList<>();
+			for (JsonObject item : itemJsonList) {
+				String productId = item.has(PART_NUMBER) ? item.get(PART_NUMBER).getAsString() : StringUtils.EMPTY;
+				NgcClass optClass = kb.getNgcClass(productId);
+				if(optClass.isDescendantOf("HPEPrimeraHostAdapter") ||
+						optClass.isDescendantOf("HP3ParNodeAdapter") 
+						|| optClass.isDescendantOf("HP3ParHardDrive") || optClass.isDescendantOf("HP3ParDriveEnclosure")) 
+					removeList.add(item);
+			}
+			itemJsonList.removeAll(removeList);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+
+	private void postImportAdjustmentsForModel(ModelInstance newModel) throws EngineException {
+		
+		if(newModel.isDescendantOf("Apollor2x00ChassisG10Plus")) {
+			if(newModel.getLocalChildInstancesOfClass("P20279-B21").isEmpty()) {
+				UtilityConfigMethods.setAttributeSimple(newModel, "airCooled", "false");
+			} else {
+				UtilityConfigMethods.setAttributeSimple(newModel, "airCooled", "true");
+			}
+		}
+		
+		if(instanceRequiresCISoltuionModel(newModel)) {
+			ModelInstance ciInst = CISettingsAgent.getOrCreateInstanceByReferenceId(newModel.getSubConfiguration(), -1, newModel.getQualifiedId());
+			if(ciInst == null) {
+				Log4NGC.error(this.getClass(), "Failed to create CI Solution Model");
+			}
+		}
+		
+	}
+	
+	private static boolean instanceRequiresCISoltuionModel(ModelInstance instance) throws EngineException{
+		 if(instance.isDescendantOf("NimbleStorageCommonCTO") || instance.isDescendantOf("NimbleGen6SolutionCommon"))return true;
+		 
+		 return false;
+	}
+	
+
+	private void initializeJsonCreator() {
+		if (defaultAgent == null) {
+			defaultAgent = new DefaultUpdateAgent();
+		}
+		if(groupParentMap == null){
+			groupParentMap = new ConcurrentHashMap<ModelInstance, List<String>>();
+		} else {
+			groupParentMap.clear();
+		}
+		if(groupItemMap == null){
+			groupItemMap = new ConcurrentHashMap<String, JsonObject>();
+		} else {
+			groupItemMap.clear();
+		}
+		if(addGroupItemMap == null){
+			addGroupItemMap = new ConcurrentHashMap<ModelInstance, String>();
+		} else {
+			addGroupItemMap.clear();
+		}
+		if(subconfigJsonMap == null) {
+			subconfigJsonMap = new ConcurrentSkipListMap <String, JsonObject>();
+		} else {
+			subconfigJsonMap.clear();
+		}
+		if(rootJsonMap == null) {
+			rootJsonMap = new ConcurrentHashMap<String, JsonObject>();
+		} else {
+			rootJsonMap.clear();
+		}
+		if(importedSubconfigMap == null) {
+			importedSubconfigMap = new ConcurrentHashMap<String, SubConfigurationImpl>();
+		} else {
+			importedSubconfigMap.clear();
+		}
+		
+		if(hostingLevels == null) {
+			hostingLevels = new ConcurrentHashMap<String, Integer>();
+			
+			//Expansions
+			hostingLevels.put("ProliantDriveCage", 20);
+			hostingLevels.put("ProliantMemoryBoardKit", 20);
+			hostingLevels.put("PciRiser", 20);
+			
+			//Fillers for Expansions
+			hostingLevels.put("ProliantHardDrive", 25);
+			hostingLevels.put("MemoryArray", 25);
+			hostingLevels.put("PciCard", 25);
+
+			hostingLevels.put("Software", 40);
+			
+			hostingLevels.put("RootProductClass", 100);
+			hostingLevels.put("SupportServices", 50);
+		}
+	}
+
+	@Override
+	public JsonObject validateJson(KnowledgeBaseImpl kb, JsonObject jsonData) throws EngineException {
+		System.err.println("JsonConfigurationCreator ---> validateJson");
+		
+		JsonObject validationJson = new JsonObject();
+		
+		List<String> modelIds = new ArrayList<String>();
+		List<String> optionIds = new ArrayList<String>();
+		JsonObject contentJson = jsonData.get(CONTENT).getAsJsonObject();
+		JsonArray rootItems = contentJson.getAsJsonArray(ROOT);
+		JsonArray subconfigsItems = contentJson.getAsJsonArray(SUBCONFIGS);
+		
+		collectProductIdDataFromJsonArray(rootItems, modelIds, optionIds);
+		
+		
+		for (int j = 0;j < subconfigsItems.size(); j++) {
+			JsonObject subconfigObj = subconfigsItems.get(j).getAsJsonObject();
+			JsonArray itemsArr = subconfigObj.getAsJsonArray(ITEMS);
+			if(itemsArr != null) {
+				collectProductIdDataFromJsonArray(itemsArr, modelIds, optionIds);
+			}
+		}
+		
+		JsonArray messagesArr = new JsonArray();
+		String status = checkProductsForJsonImport(kb, modelIds, optionIds, messagesArr);
+		
+		validationJson.addProperty(STATUS, status);
+		validationJson.add(MESSAGES, messagesArr);
+		return validationJson;
+	}
+	
+	private String checkProductsForJsonImport(KnowledgeBaseImpl kb, List<String> modelIds, List<String> optionIds, JsonArray messagesArr) throws EngineException {
+		String newStatus = STATUS_OK;
+		for(String model: modelIds) {
+			if(model.endsWith("#0D1"))continue;
+			
+			NgcClass modelClass = kb.getNgcClass(model);
+			if(modelClass == null) {
+				newStatus = STATUS_ERROR;
+				JsonObject messageJson = new JsonObject();
+				messageJson.addProperty(MESSAGE, model + " is not found in the KB.");
+				messageJson.addProperty(STATUS, STATUS_ERROR);
+				messagesArr.add(messageJson);
+//			} else if(!UtilityConfigMethods.isConfigurable(modelClass)) {
+//				newStatus = STATUS_ERROR;
+//				JsonObject messageJson = new JsonObject();
+//				messageJson.addProperty(MESSAGE, model + " is not a model in OCA.");
+//				messageJson.addProperty(STATUS, STATUS_ERROR);
+//				messagesArr.add(messageJson);
+			} else if(!isValidModelForImport(modelClass)) {
+				newStatus = STATUS_ERROR;
+				JsonObject messageJson = new JsonObject();
+				messageJson.addProperty(MESSAGE, "(" + model + ") " + modelClass.getDescription() +" is currently not supported for import.");
+				messageJson.addProperty(STATUS, STATUS_ERROR);
+				messagesArr.add(messageJson);
+			}
+		}
+		
+		for(String option: optionIds) {
+			NgcClass optClass = kb.getNgcClass(option);
+			if(optClass == null) {
+				if(!newStatus.equals(STATUS_ERROR)) {
+					newStatus = STATUS_WARNING;
+				} 
+				JsonObject messageJson = new JsonObject();
+				if(allowProductAsAdHoc(kb, option)) {
+					messageJson.addProperty(MESSAGE, option + " is not found in the KB and will be added as Ad Hoc.");
+					messageJson.addProperty(STATUS, STATUS_WARNING);
+				} else {
+					messageJson.addProperty(MESSAGE, option + " will be skipped during import.");
+					messageJson.addProperty(STATUS, STATUS_INFO);
+				}
+				messagesArr.add(messageJson);
+			} else if(UtilityConfigMethods.isConfigurable(optClass)) {
+				if(!newStatus.equals(STATUS_ERROR)) {
+					newStatus = STATUS_WARNING;
+				}
+				JsonObject messageJson = new JsonObject();
+				messageJson.addProperty(MESSAGE, option + " is a model in OCA & has been miscast as an option.");
+				messageJson.addProperty(STATUS, STATUS_WARNING);
+				messagesArr.add(messageJson);
+			}
+		}
+		
+		return newStatus;
+	}
+
+	private boolean isValidModelForImport(NgcClass modelClass) {
+		List<String> invalidClasses = Arrays.asList(
+				"CS900HanaNodeSkylake",
+				"BCSChassis",
+				"SDXModel",
+				"SD2Enclosure",
+				"XPStorageModel",
+				"SolutionModel"
+				);
+		
+		for(String invalidClass : invalidClasses) {
+			if(modelClass.isDescendantOf(invalidClass)) return false;
+		}
+		return true;
+	}
+	
+	private boolean allowProductAsAdHoc(KnowledgeBaseImpl kb, String productId) throws EngineException {
+		if(productId.endsWith("#0D1")) return false;
+		if(productId.endsWith("#B01")) return false;
+		
+		String[] productIdTokens = productId.split("#");
+				
+		String baseProductId = productIdTokens[0];
+		NgcClass prodClass = kb.getNgcClass(baseProductId);
+		if(prodClass != null) {
+			if(prodClass.isDescendantOf("SupportServices")) return false;
+			
+			//Check for localization
+			if(productIdTokens.length > 1) {
+				NgcClass optionClass = kb.getNgcClass(productId);
+				if(optionClass != null) {
+					if(prodClass.getParentClass() == optionClass.getParentClass()) return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	private void collectProductIdDataFromJsonArray(JsonArray dataArray, List<String> modelIds, List<String> optionIds){
+		for (int i = 0; i < dataArray.size(); i++) {
+			JsonObject dataObj = dataArray.get(i).getAsJsonObject();
+			String type = dataObj.get(TYPE).getAsString();
+			String productId = dataObj.get(PART_NUMBER).getAsString();
+			
+			if(type.equals(MODEL_REF)) {
+				if(!modelIds.contains(productId))modelIds.add(productId);
+			}
+			
+			if(type.equals(PRODUCT_REF)) {
+				if(!optionIds.contains(productId))optionIds.add(productId);
+			}
+			
+			JsonArray itemsArr = dataObj.getAsJsonArray(ITEMS);
+			if(itemsArr != null) {
+				collectProductIdDataFromJsonArray(itemsArr, modelIds, optionIds);
+			}
+		}
+	}
+	
+	//LAW TODO:  Need to replace this with a hosting level map
+	
+	public static void sortItemList(List<JsonObject> itemList, KnowledgeBaseImpl kb, Map<String, Integer> hostingMap) {
+		final KnowledgeBaseImpl localKB =  kb;
+		final Map<String, Integer> hosting = hostingMap;
+		
+		Comparator<JsonObject> compareItemJson = new Comparator<JsonObject>(){
+			@Override
+			public int compare(JsonObject o1, JsonObject o2) {
+				Integer id1 = 100;
+				Integer id2 = 100;
+				try {
+					id1 = getItemPriority(o1);
+					id2 = getItemPriority(o2);
+				} catch (EngineException e) {
+					e.printStackTrace();
+				}
+				
+				return id1.compareTo(id2);//id2 - id1;
+			}
+			public int getItemPriority(JsonObject itemJson) throws EngineException{
+				int result = 999;
+				
+				String type = itemJson.get(TYPE).getAsString();
+				if(type.equals(MODEL_REF)) { //Save 50 or less for Models
+					result = 10;
+				} else {
+					String productId = itemJson.get(PART_NUMBER).getAsString();
+					NgcClass itemClass = localKB.getNgcClass(productId);
+					
+					while(itemClass != null) {
+						if(hosting.containsKey(itemClass.getId())) {
+							result = hosting.get(itemClass.getId());
+							break;
+						}
+						itemClass = itemClass.getParentClass();
+					}
+				}
+            	return result;
+			}
+		};
+
+		Collections.sort(itemList, compareItemJson);
+	}
+
+	@Override
+	public Map<String, Integer> getUnconfiguredProducts() {
+		return null;
+	}
+
+	@Override
+	public Map<String, String> getHeaderData(JsonObject jsonData) {
+		
+		JsonObject headerJson = jsonData.get(HEADER).getAsJsonObject();
+		if(headerJson != null) {
+			ConcurrentHashMap<String, String> headerMap = new ConcurrentHashMap<String, String>();
+			for(Entry<String, JsonElement> entry  : headerJson.entrySet()) {
+				String paramName = entry.getKey();
+				String paramValue = entry.getValue().toString();
+				paramValue = paramValue.replaceAll("^\"|\"$", "");
+
+				headerMap.put(paramName, paramValue);
+			}
+			return headerMap;
+		}
+		return null;
+	}
+
+}

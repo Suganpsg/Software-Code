@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="CleanDialogSettings">
+		<item value="662" key="DIALOG_WIDTH"/>
+		<item value="true" key="BUILD_ALL"/>
+		<item value="false" key="TOGGLE_SELECTED"/>
+		<item value="498" key="DIALOG_HEIGHT"/>
+		<item value="true" key="BUILD_NOW"/>
+		<item value="215" key="DIALOG_Y_ORIGIN"/>
+		<item value="379" key="DIALOG_X_ORIGIN"/>
+	</section>
+	<section name="ExternalProjectImportWizard">
+		<item value="false" key="WizardProjectsImportPage.STORE_NESTED_PROJECTS"/>
+		<item value="false" key="WizardProjectsImportPage.STORE_COPY_PROJECT_ID"/>
+		<item value="false" key="WizardProjectsImportPage.STORE_ARCHIVE_SELECTED"/>
+		<list key="WizardProjectsImportPage.STORE_DIRECTORIES">
+			<item value="C:\Users\sengapal\workspace_ocx\hpit119959ngc\Code\KBAgentsExtended"/>
+			<item value="C:\Users\sengapal\workspace_ocx\configkb_smartkb\MenuImportData"/>
+			<item value="C:\Users\sengapal\workspace_ocx\hpit119959ngc\Code\KBAgents"/>
+			<item value="C:\Users\sengapal\workspace_ocx\hpit119959ngc\Code\OCA\ToolsOCA"/>
+			<item value="C:\Users\sengapal\workspace_ocx\hpit119959ngc"/>
+		</list>
+		<list key="WizardProjectsImportPage.STORE_ARCHIVES">
+			<item value=""/>
+		</list>
+	</section>
+	<section name="ResourceNavigator">
+		<item value="" key="ResourceWorkingSetFilter.STORE_WORKING_SET"/>
+		<item value="1" key="ResourceViewer.STORE_SORT_TYPE"/>
+		<item value="true" key="LINK_NAVIGATOR_TO_EDITOR"/>
+	</section>
+	<section name="NewWizardAction">
+		<item value="org.eclipse.jdt.ui.wizards.JavaProjectWizard" key="NewWizardSelectionPage.STORE_SELECTED_ID"/>
+		<list key="NewWizardSelectionPage.STORE_EXPANDED_CATEGORIES_ID">
+		</list>
+	</section>
+	<section name="org.eclipse.ui.dialogs.FilteredResourcesSelectionDialog">
+		<item value="true" key="ShowStatusLine"/>
+		<item value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#x0D;&#x0A;&lt;workingSet workingSetName=&quot;&quot;/&gt;" key="WorkingSet"/>
+		<item value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#x0D;&#x0A;&lt;History&gt;&#x0D;&#x0A;&lt;historyRootNode&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Storage/QumuloSolutions/QumuloSolutions.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Networking/wirelessDevices/ArubaSeries/Aruba1930SwitchSeries.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Server/ProliantServers/DLServer/G10/DL325G10.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/UISpecs/ArubaSeries.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Storage/SDS/DL325Gen10plusV2Weka/DL325Gen10plusV2Solution.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Server/NewGenProliant/NewGenDLServers/NewGenDL300/dl325g10plus.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/UISpecs/DL380Gen10HSX.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Storage/SDS/DL345G10PlusSDS.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/MauiFramework/config/rest-spring-servlet-context.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/MauiFramework/WebContent/WEB-INF/web.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/MauiFramework/config/ApplicationContext.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/WebContent/resources/tools/oca/common/widgets/r2/minotaur_primera_wizard/js/minotaur600_wizard.js&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Storage/NAS/StoreEasy/StoreEasy1660.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/MauiFramework/config/Application.properties&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/ToolsOCA/test/Application.properties&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/ToolsOCA/src/test/java/log4j.properties&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/KBAgents/plugins_src/com/hp/ngc/plugins/agents/update/delegate/weka/WekaDL325G10PlusNVMeAgent.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Storage/HPECompleteSolution/WekaDL360Solution.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Storage/Network/ProductCommon/transceiversProductCommon.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Networking/wirelessDevices/ArubaSeries/Aruba6400SwitchSeries.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Storage/Network/NimbleStorage/GEN6/AllFlashArrayGen6/AllFlashArrayGen6Solution.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/ToolsOCC/src/com/hp/ngc/uiframework/tool/occ/SCESession.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/KBAgents/plugins_src/com/hp/ngc/plugins/agents/update/delegate/QumuloSolutions/QumuloSolutionsAgent.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Storage/Network/ProductCommon/switchModuleProductCommon.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/WebContent/resources/tools/oca/common/widgets/r2/nimble_all_flash_array_gen6_wizard/js/nimble_all_flash_array_gen6_wizard.js&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Storage/Network/NimbleStorage/Alletra5000/Alletra5000Solution.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Storage/SDS/DL325G10PlusNvmeWeka/WekaDL325G10PlusNVMeSolution.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/KBAgents/plugins_src/com/hp/ngc/plugins/agents/update/delegate/weka/WekaDL360G10PlusNvmeAgent.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Server/ProliantServers/SLServer/EdgelineSeries/Edgeline8000/Edgeline8kBlade.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NgcRdal/attribute.txt&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/DataFiles/ATTRIBUTE.txt&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Storage/Online/MSA/MSA2060.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/KBAgents/plugins_src/com/hp/ngc/plugins/agents/views/reports/ReportUtility.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/KBAgents/plugins_src/com/hp/ngc/plugins/agents/update/delegate/Alletra5000/Alletra5000WizardAgent.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/KBAgents/plugins_src/com/hp/ngc/plugins/agents/importer/JsonConfigurationCreator.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Networking/wirelessDevices/ArubaSeries/Aruba6200FSwitchSeries.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Storage/NAS/StoreEasy/StoreEasy1660BSeries.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Storage/NAS/NASCommon.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Storage/Network/SWDSN8700cDirSwitch.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Storage/Network/hpeNetworkingSN8700B.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Storage/Cohesity/DL360G10PlusServerCohesity.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Storage/Cohesity/DL380G10PlusHybridCohesity.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Networking/wirelessDevices/ArubaSeries/Aruba6300Series.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/DataFiles/EFFECTIVITY.txt&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Server/NewGenProliant/NewGenDLServers/NewGenDL300/DL380G10Plus.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Storage/SRX/ScalityRINGX/SRXDL325G10PlusNVMeSolution.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/UISpecs/DL325Gen10plusSDS.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Storage/SDS/DL325G10SDS.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Storage/NAS/StoreEasy/StoreEasy1860BSeries.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Storage/SDS/DL380G10PlusSDS.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/Model/ESSN/Server/ProliantServers/DLServer/G10/DL160G10.ngc&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/plugins/src/com/hp/ngc/plugins/agents/update/delegate/baseline/AvailableQuantitiesUpdateAgent.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NevadaReleaseKB/DataFiles/PRODUCTEX.txt&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/Engine/userDefinedAgents/agentCompileTargets.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NgcCompiler/src/com/hp/ngc/compiler/AgentCompiler.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/ToolsOCA/src/main/java/com/hp/ngc/uiframework/tool/oca/OCASession.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/MauiFramework/src/com/hp/ngc/service/ocx/value/carepack/Facet.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NgcRdal/.classpath&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/NgcCompiler/src/com/hp/ngc/compiler/NgcGlobalCompiler.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/Engine/src/com/hp/ngc/engine/test/CompileNevadaProds.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;/historyRootNode&gt;&#x0D;&#x0A;&lt;/History&gt;" key="History"/>
+		<item value="false" key="ShowDerived"/>
+		<section name="DialogBoundsSettings">
+			<item value="732" key="DIALOG_WIDTH"/>
+			<item value="1|Segoe UI|9.0|0|WINDOWS|1|-15|0|0|0|400|0|0|0|1|0|0|0|0|Segoe UI" key="DIALOG_FONT_NAME"/>
+			<item value="762" key="DIALOG_HEIGHT"/>
+			<item value="191" key="DIALOG_Y_ORIGIN"/>
+			<item value="1147" key="DIALOG_X_ORIGIN"/>
+		</section>
+	</section>
+	<section name="SaveAsDialogSettings">
+		<item value="700" key="DIALOG_WIDTH"/>
+		<item value="1|Segoe UI|9.0|0|WINDOWS|1|-15|0|0|0|400|0|0|0|1|0|0|0|0|Segoe UI" key="DIALOG_FONT_NAME"/>
+		<item value="645" key="DIALOG_HEIGHT"/>
+		<item value="94" key="DIALOG_Y_ORIGIN"/>
+		<item value="619" key="DIALOG_X_ORIGIN"/>
+	</section>
+</section>

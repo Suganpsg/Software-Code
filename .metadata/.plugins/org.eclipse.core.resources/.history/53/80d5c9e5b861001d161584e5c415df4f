@@ -1,0 +1,240 @@
+package essn.storage.qumulo.allflashsolutionqumulo {
+	import common.coremodel.*;
+	import essn.storage.common.storagecommon.*;
+	import common.productcategories.*;
+	import common.agentutility.*;
+	import common.localizations.*;
+	import essn.server.common.servercommon.*;
+	import common.connection.networkconnections.*;
+	import essn.storage.network.hpnetworkingcommon.*;
+	import essn.common.software.*;
+	//import essn.server.proliantservers.xlserver.xl450gen9.*;
+	import essn.server.proliantservers.common.proliantproductoption.*;
+	import essn.rack.tenk_g2_series_rack.*;
+	import essn.storage.qumulosolutions.qumulocommon.*;
+
+	//VM Added for this PERT ID : 20168
+	class AllflashsolutionQumulo extends StorageModel {
+		configurationEntryPoint;
+		description: "HPE Solutions for Qumulo";
+		platformName: "AllflashsolutionQumulo";
+		boolean ocaCompatible: true;
+		string shortLabel: "HPE Solutions for Qumulo";
+		string iconFile: "";
+		//string rackRole: "CannotBeRacked";
+		string logisticServicesPlatform: "HPE Modular Smart Array 1060"; //VM added for this PERT ID : 20209
+		int iHalfEiaUnitsRequired: 2;
+		//VM added for this PERT ID : 20209
+		def getTier1Default (): string[] = {
+			if thisConfig.getProperty("region") = "EU" then "AG466A" else "";
+		}
+		def defaultpowersupply_R3B88A (): string[] = {
+			if thisInst.id >= "R3B88A" then expanderString ("R3W44AAE", 34);
+		}
+		def defaultpowersupply_R6F64A (): string[] = {
+			if thisInst.id >= "R6F64A" then expanderString ("R0G81AAE", 36);
+		}
+		def defaultpowersupply_R6F65A (): string[] = {
+			if thisInst.id >= "R6F65A" then expanderString ("R0G81AAE", 90);
+		}
+		def defaultpowersupply_R6F66A (): string[] = {
+			if thisInst.id >= "R6F66A" then expanderString ("R0G81AAE", 192);
+		}
+		def defaultpowersupply_R6F67A (): string[] = {
+			if thisInst.id >= "R6F67A" then expanderString ("R0W31AAE", 336);
+		}
+		def defaultpowersupply_R3B89A (): string[] = {
+			if thisInst.id >= "R3B89A" then expanderString ("R3W44AAE", 145);
+		}
+		def defaultModelTriggerR8F02A (): string[] = {
+			if (thisInst.id = "R8F01A" || thisInst.id = "R8F01A#GTA") then expanderString ("R8F02A", 2);
+		}
+		def defaultModelTriggerR8F01A (): string[] = {
+			if (thisInst.id = "R8F01A"|| thisInst.id = "R8F01A#GTA") then expanderString ("R3W44AAE", 291);
+		}
+		subsystem QumuloSubsystem {
+		//				locationArray supportLocationArray {
+		//					columns: 146; //145;//PM 25-nov-20 Changing max to 146 as per John mail.Because we need to show all skus in this table.
+		//					fillerClasses: QumuloSoftware;
+		//				}
+		//				locationArray swlicLocationArray {
+		//					columns: 145;
+		//					fillerClasses: QumuloSoftware;
+		//				}
+			choice supportLocationArray {
+				choiceType: multi_select;
+				targetClass: QumuloSoftware;
+			}
+
+			//VM Added for this PERT ID : 19054
+			//PM 20-nov-20 PERT-20144 Removing the below info msg.
+			//			constraint mandatorymessage {
+			//				message: "If this Sku is selected, Then show: message 'MANDATORY: The following end user (entity that will own/utilize the licenses) information is REQUIRED to deliver the electronic licenses/services:</br>
+			//						  1) End User Company Name </br>
+			//						  2) End User Company Address </br>
+			//						  3) End User Email Address</br>
+			//						  4) Reseller Name and Address </br>
+			//						  5) Distributor Name and Address";
+			//				body: false;
+			//			}
+			//PM 25-nov-20 Changing max to 146 as per John mail.Because we need to show all skus in this table.
+			constraint SWruleformaxlimit {
+				message: "Maximum 145 quantity allowed.";
+				body: if(thisInst.id = "R3B88A" || thisInst.id = "R3B89A") then supportLocationArray.contents.filter(x => x.id >= "R3W40AAE" || x.id >= "R3W42AAE" || x.id >= "R3W44AAE").count <= 145;
+			}
+
+			//PM 5-nov-20 ALM-138501 Rewritting the below dependency constraint, Customer asking to show all support skus even max quantity reached.
+			constraint SWrule1 {
+				message: "If (R3B88A ) is selected, Then Qty=34 per NODE of any following SKUs: R3W40AAE, R3W42AAE or R3W44AAE is required.";
+				body: if thisInst.id = "R3B88A" then supportLocationArray.contents.filter(x => x.id >= "R3W40AAE" || x.id >= "R3W42AAE" || x.id >= "R3W44AAE").count >= 34;
+			}
+			constraint SWrule2 {
+				message: "If (R3B89A) is selected, Then Qty=145 per NODE of any following SKUs: R3W40AAE, R3W42AAE or R3W44AAE is required.";
+				body: if thisInst.id = "R3B89A" then supportLocationArray.contents.filter(x => x.id >= "R3W40AAE" || x.id >= "R3W42AAE" || x.id >= "R3W44AAE").count >= 145;
+			}
+			ifEffective KS_PERT_25171{
+				constraint SWrule5 {
+				message: "If (R6F65A) is selected, Then Qty=90 per NODE of any following SKUs: R0G81AAE, R0G83AAE or R0G85AAE is required.";
+				body: if thisInst.id = "R6F65A" then supportLocationArray.contents.filter(x => x.id >= "R3W40AAE" || x.id >= "R3W42AAE" || x.id >= "R3W44AAE").count >= 145;
+			}
+			}
+
+			//			constraint SWrule1 {
+			//				message: "If (R3B88A ) is selected, Then Qty=34 per NODE of any following SKUs: R3W40AAE, R3W42AAE or R3W44AAE is required.  ";
+			//				body: dependency (AllflashsolutionQumulo [ R3B88A ], QumuloSoftware [ R3W40AAE || R3W42AAE || R3W44AAE ] > 33);
+			//			}
+			//			
+			//			constraint SWrule2 {
+			//				message: "If (R3B89A) is selected, Then Qty=145 per NODE of any following SKUs: R3W40AAE, R3W42AAE or R3W44AAE is required.   ";
+			//				body: dependency (AllflashsolutionQumulo [  R3B89A], QumuloSoftware [ R3W40AAE || R3W42AAE || R3W44AAE ] > 144);
+			//			}
+			//VM added for this PERT ID :20168
+//			constraint softwareNoMix {
+//				message: "No mixing Allowed.";
+//				body: thisInst.selected(QumuloSoftware).noMix;
+//			}
+			part defaultModelTriggerR8F02A: triggerConsequentialSelection {
+				string consequentialSelectionFunc: "defaultModelTriggerR8F02A";
+			}
+		}
+		subsystem NetworkcablesandTrans {
+			locationArray NetworkLocationArray {
+				columns: 999;
+				fillerClasses: QSFP28Transceivers;
+			}
+		}
+
+		//VM added for this PERT ID : 20209
+		subsystem servicesSubsystem {
+			part addLSDefaultsTrigger: triggerInternalDefaults {
+				string[] modelDefaultsFunc: "getTier1Default";
+			}
+			choice tier1BasicDeliveryChoice {
+				optional: true;
+				targetClass: Tier1BasicDelivery;
+				choiceType: multi_select;
+				title: "Tier 1 - Basic Delivery";
+			}
+			choice tier2ValueAddonServicesChoice {
+				optional: true;
+				targetClass: Tier2ValueAddServices;
+				choiceType: multi_select;
+				title: "Tier 2 - Value Add Services";
+			}
+			choice tier3ValueAddonServicesChoice {
+				optional: true;
+				targetClass: Tier3ValueAddServices;
+				choiceType: multi_select;
+				title: "Tier 3 - Value Add Services - Flexible Quotation";
+			}
+			constraint restrictTierServicesByRegion {
+				message: "Tier Services are only offered in EMEA.";
+				body: dependency (DeliveryLogistics > 0, region (EU));
+			}
+			constraint tier2RequiresTier1 {
+				message: "If a Tier 2 Service is selected, then a Tier 1 Service must also be selected.";
+				body:
+				if selected(Tier2ValueAddServices).count > 0 then selected(Tier1BasicDelivery).count > 0;
+			}
+			//			constraint thisTier3requiresTier1 {
+			//				message: "If this Tier 3 Service is selected, then a Tier 1 Service must also be selected.";
+			//				body: dependency (Tier3ValueAddServices [ AG628A || BQ335A || BQ337A || P1F77A ] > 0, Tier1BasicDelivery > 0);
+			//			}
+			constraint thisTier3requiresTier1 {
+				message: "If this Tier 3 Service is selected, then a Tier 1 Service must also be selected.";
+				body: //dependency (Tier3ValueAddServices > 0, Tier1BasicDelivery > 0);
+				if selected(Tier3ValueAddServices).count > 0 then selected(Tier1BasicDelivery).count > 0;
+			}
+			constraint tier3ServicesMax999PerServer {
+				message: "Max of 999 is allowed per server.";
+				body: restriction (Tier3ValueAddServices <= 999);
+			}
+			constraint maxTier2Services {
+				message: "Max of 11 per server are allowed in Tier 2 Value Added Services";
+				body: restriction (Tier2ValueAddServices < 12);
+			}
+			constraint P1F69ACANNOTbeTier1 {
+				message: "P1F69A CANNOT be ordered with Tier 1 Door/Dock Services";
+				body: dependency (Tier1BasicDelivery [ AG465A || AG466A || AG467A || AG468A || AG469A ], Tier2ValueAddServices [ P1F69A ] = 0);
+			}
+			constraint tier2requiresac131a {
+				message: "P1F74A can be ordered only with Door/Dock Service";
+				body:
+				if selected(Tier2ValueAddServices).filter(p => p.id >= "P1F74A").count > 0 then thisInst.selected(Tier1BasicDelivery).filter(p => p.id >= "AG465A").count + thisInst.selected(Tier1BasicDelivery).filter(p => p.id >= "AG466A").count +
+				thisInst.selected(Tier1BasicDelivery).filter(p => p.id >= "AG467A").count + thisInst.selected(Tier1BasicDelivery).filter(p => p.id >= "AG468A").count > 0;
+			}
+			constraint rule3_Tier2DLS {
+				message: "Min Max not applicable, however Maximum one of the below option can be selected, <br />
+						  P1F78A HPE Delivery Any Day at 0800 Hours SVC <br />
+						  P1F79A HPE Delivery Any Day at 1300 Hours SVC <br />
+						  P1F80A HPE Delivery Any Day at 1000 Hours SVC <br />
+						  P1F81A HPE Delivery Any Day at 0900 Hours SVC <br />
+						  P1F82A HPE Delivery Any Day at 1500 Hours SVC";
+				body:
+				{
+					thisInst.selected(Tier2ValueAddServices).filter(p => p.id >= "P1F78A" || p.id >= "P1F79A" || p.id >= "P1F80A" || p.id >= "P1F81A" || p.id >= "P1F82A").count < 2;
+				}
+			}
+		}
+		subsystem SpareSSDandHDD {
+			locationArray SpareLocationArray {
+				columns: 999;
+				fillerClasses: ProliantHardDrive_HP_SFF_NVME;
+			}
+			locationArray qumuloDiskLocationArray {
+				columns: 2;
+				fillerClasses: QumuloBundle;
+			}
+			constraint SSDrule3 {
+				message: "If (R3B88A or R3B89A) is selected, THEN hide this sku. ";
+				body: dependency (AllflashsolutionQumulo [ R3B89A || R3B88A ], ProliantHardDrive_HP_SFF_NVME [ P26109-B21 || P50223-B21 ] = 0);
+			}
+			constraint SSDrule2 {
+				message: "If (R3B89A or R8F01A) is selected, THEN hide this sku";
+				body: dependency (AllflashsolutionQumulo [ R8F01A || R8F01A#GTA || R3B89A ], ProliantHardDrive_HP_SFF_NVME [ P16503-B21 || P50218-B21 ] = 0);
+			}
+			constraint SSDrule1 {
+				message: "If (R3B88A or R8F01A) is selected, THEN hide this sku. ";
+				body: dependency (AllflashsolutionQumulo [ R8F01A || R8F01A#GTA || R3B88A ], ProliantHardDrive_HP_SFF_NVME [ P26104-B21 || P50221-B21 ] = 0);
+			}
+		}
+		def containsMsg: string = {
+			if(thisInst.id <= "R3B88A" or thisInst.id <= "R3B89A") then " 
+            <p>  If you are building a configuration for a customer demo/proof-of-concept or for equipment to be installed in an HPE lab, <br>
+                 you do not need to order software licenses or software installation SKUs.<br>
+                 The software partner can provide demo copies of their software for these specific use cases.<br>
+                 If you do not know how to contact the software partner to obtain a demo copy,<br>
+                 please reach out to your Big Data and Analytics Geo Category Manager qumulocategorymanagers@hpe.com or contact qumuloproductteam@hpe.com <br>
+                 Add Qty 1 of SKU R0G89AAE for every 10 nodes to be installed for a cluster. <br>
+                 (E.g. Cluster installation of 1 to 10 nodes requires 1 x R0G89AAE, Cluster installation of 11 to 20 nodes requires 2 x R0G89AAE, etc.) <br>
+                 The sale of HPE Solutions for Qumulo is limited to select countries.<br>
+                 Case by case exceptions for opportunities where the product in not currently available is subject to <br>
+                 HPE Storage/Big Data GBU and Qumulo mutually agreeing that the opportunity is viable and valuable to both companies. <br>
+                 Please contact your Unstructured/Object Storage Geo Category Manager for help with the exception review and approval process. <br>
+                 If you do not know who your category manager is please send an email to: qumuloproductteam@hpe.com <p>";
+		}
+		boolean enableInstanceQuantity: true;
+		string[] instanceQuantityClasses: "QumuloSoftware";
+		productCategories: DoNotDisplay;
+	}
+}

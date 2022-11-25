@@ -1,0 +1,400 @@
+var weka_dl360g10_nvme_solution_wizard_plugin = function($) {
+    'use strict';
+
+    var dataTag = 'weka_dl360g10_nvme_solution_wizard';
+    var updateFlag = false;
+    var namespace;
+    var diagramLeftMargin = 0;
+    var l10n_solutionwizard;
+ 
+    function load(self, widgetData) {
+        updateFlag = false;
+        baseline_wizard_specs.init(widgetData);
+        self.append(maui.template.apply('weka_dl360g10_nvme_solution_wizard', {}));
+        
+        var expandList = '#tab_node h3.ui-accordion-header:visible, #tab_software h3.ui-accordion-header:visible, .config-section h3';
+			
+		var collapseList = '#tab_node h3.ui-accordion-header, #tab_software h3.ui-accordion-header, .config-section h3';	
+         
+        wizard_utils.loadControlsDefault(baseline_wizard_specs,updateUi);        
+        
+		var tableData = baseline_wizard_specs.tableData();
+		
+		for ( var id in tableData) {
+			var tbody = $('#' + id + '>tbody');
+			tableData[id].items.forEach(function(item) {				
+				$('<tr/>', {}).append($('<td/>', {
+					'class' : 'table_qty'
+				}).append($('<input/>', {
+					'id' : item.id,
+					'class' : 'tableQty r3-spinner'					
+				}))).append(
+						$('<td/>', {
+							'class' : 'table_des',
+							text : baseline_wizard_specs
+									.getProductDescription(item.id) + "   (" + item.id + ")"
+						})).appendTo(tbody);
+			});
+			 if(id === 'transceivers_tbl'){
+					setSpinnersTable(id, 0, 0, 12);
+			 } else if(id === 'weka_tiering_software_tbl'){
+	            	setSpinnersTable(id, 0, 0, 9999);
+			 }else{
+	        	  setSpinnersTable(id, 0, 0, 99);
+			 }
+	        	  
+		};		
+        
+        $('.tableQty').spinner({});       
+        
+        wizard_utils.selectPresetsDefault(baseline_wizard_specs,'medium');        
+        wizard_utils.addUpdatesDefault(updateUi);
+        
+        for (var id in tableData) {
+			var tbody = $('#' + id + '>tbody');			
+			tbody.on('change', ':text', updateUi);
+			tbody.on('input', ':text', controlTableNum);
+		}
+        
+        $('.tableQty').spinner({});    
+		
+        //Convert page to tabs
+        $("#tabs_weka_dl360g10_nvme_solution_wizard").tabs();
+        
+		$('.next-button').click(function(){
+
+        	scrollToTop();
+        	console.log('this: ', $(this)[0].dataset.tab);
+        	$( "#tabs_weka_dl360g10_nvme_solution_wizard" ).tabs( "option", "active", $("#tabs_weka_dl360g10_nvme_solution_wizard").tabs("option", "active")+1 );
+
+        })
+               
+        function scrollToTop() {
+        	var pos = $('#tabs_weka_dl360g10_nvme_solution_wizard').position();
+        	var posx = pos.top;
+        	$('#tabContainer').scrollTop(posx);
+        	$('#wizard_wrap').scrollTop(0);
+        } 
+        
+        wizard_utils.checkRequiredChoices(baseline_wizard_specs, null, null, true);
+        
+		wizard_utils.bswDropdownFunctionality();
+		wizard_utils.bswAccordionFunctionality(expandList, collapseList); 	
+		formInteraction();
+		updateAttributes(baseline_wizard_specs); 
+ 		checkConstraints(baseline_wizard_specs);
+         $(".r3-spinner").spinner();
+    }
+    
+    function setSpinnersTable(tableId, _min, _value, _max) {
+        var classId = '#' + tableId + ' .tableQty';
+        $(classId).spinner({
+            min: _min,
+            value: _value,
+            max: _max,
+            change: function(e) {
+                var min = $(this).spinner('option', 'min');
+                var max = $(this).spinner('option', 'max');
+
+                if (isNaN($(this).val())) {
+                    $(this).spinner("value", min);
+                } else if ($(this).val() > max) {
+                    $(this).spinner("value", max);
+                } else if ($(this).val() < min) {
+                    $(this).spinner("value", min);
+                }
+                $(this).change();
+            }
+        });
+    }
+
+    function updateConfig(type) {     
+        serverTransaction({
+            method: 'update_page', widget_id: namespace, updateType: type
+        });
+        unsaveDirtyFlag(true);
+    } 
+    
+    function controlTableNum() {
+		$('td :text').each(function() {
+			var val = $(this).val();
+			if (val === '') {
+
+			} else if (isNaN(val) || parseInt(val) < 0) {
+				$(this).val(0);
+			} else {
+				$(this).val(parseInt($(this).val()));
+			}
+		});
+	}       
+ 
+    function formInteraction() {
+    	var presets = baseline_wizard_specs.presets();
+		var textboxData = baseline_wizard_specs.textboxData();
+		var attributeData = baseline_wizard_specs.attributeData();
+        var choiceData = baseline_wizard_specs.choiceData();
+        var tableData = baseline_wizard_specs.tableData();
+        var qtyMemory = $('#memory_qty').val();
+        if (qtyMemory % 8 != 0){
+			var qtyMemory = parseInt(qtyMemory) + 1;
+			document.getElementById("memory_qty").value = qtyMemory;
+		}
+        for ( var id in textboxData) {
+			if(textboxData[id].type == "number"){
+				if(Number($('#' + id).val()) < Number(textboxData[id].min)) $('#' + id).val(textboxData[id].min);
+				if(textboxData[id].max > 0 && Number($('#' + id).val()) > Number(textboxData[id].max))$('#' + id).val(textboxData[id].max);
+				$('#' + id + '_text').text(textboxData[id].min + " Minimum " + textboxData[id].max + " Maximum");
+			}
+		}
+        var totaltransCount = 0 ;
+        $.each(tableData, function(tableId) {
+            tableData['transceivers_tbl'].items.forEach(function (item) {
+            	totaltransCount = totaltransCount + countSpinner(item.id);
+            	
+            });
+        });
+        $('#transceivers_options_error_message').hide();
+		$('#transceivers_options_error_message').html('');
+		$('#security_error_message').hide();
+		$('#security_error_message').html('');
+		$('#rack_options_error_message').hide();
+		$('#rack_options_error_message').html('');
+    }   
+        
+	function countSpinner(id) {
+        var val = 0;
+        if ($("#" + id).length !== 0) {
+            val = $('#' + id).spinner('value');
+        }
+        return val;
+    }
+	
+    function updateUi() {
+        formInteraction();
+        wizard_utils.applyLimitsDefault(baseline_wizard_specs);        
+        displaySummary(event);
+        updateFlag && update_page();
+    }
+
+    function displaySummary(event) {
+        var presets = baseline_wizard_specs.presets(),
+        oldPresets = $.extend(true, { }, presets);
+     			
+		presets.medium['drop_down_feature_title'] = $('#drop_down_feature_title > option:selected').val();
+								
+        presets.medium['node_qty'] = $('#node_qty').val();
+        
+        presets.medium['processors'] = $('#processors > option:selected').val();
+		
+		presets.medium['heatsink'] = $('#heatsink > option:selected').val();
+		
+		presets.medium['memory'] = $('#memory > option:selected').val();
+		
+		presets.medium['memory_qty'] = $('#memory_qty').val();
+		
+		presets.medium['boot_option'] = $('#boot_option > option:selected').val();
+		
+		presets.medium['boot_option_qty'] = $('#boot_option_qty').val();
+		
+		presets.medium['nvme_data_drive'] = $('#nvme_data_drive > option:selected').val();
+		
+		presets.medium['nvme_data_drive_qty'] = $('#nvme_data_drive_qty').val();
+								
+		presets.medium['network_pcie'] = $('#network_pcie > option:selected').val();
+														
+		presets.medium['network_ocp3'] = $('#network_ocp3 > option:selected').val();
+								
+        presets.medium['select_rack'] = $('#select_rack > option:selected').val();
+								
+		presets.medium['select_weka_eltu_type'] = $('#select_weka_eltu_type > option:selected').val();
+		
+		presets.medium['select_weka_eltu_duration'] = $('#select_weka_eltu_duration > option:selected').val();
+		
+		presets.medium['oneView_management'] = $('#oneView_management > option:selected').val();
+		
+		$.each(presets.medium['transceivers_tbl'], function(id) {
+            presets.medium['transceivers_tbl'][id] = $('#' + id).spinner("value");
+        });
+		
+		$.each(presets.medium['security_tbl'], function(id) {
+            presets.medium['security_tbl'][id] = $('#' + id).spinner("value");
+        });
+		
+		$.each(presets.medium['rack_options_tbl'], function(id) {
+            presets.medium['rack_options_tbl'][id] = $('#' + id).spinner("value");
+        });
+		
+		$.each(presets.medium['weka_tiering_software_tbl'], function(id) {
+            presets.medium['weka_tiering_software_tbl'][id] = $('#' + id).spinner("value");
+        });
+			
+		if (JSON.stringify(presets) !== JSON.stringify(oldPresets)) {
+        triggerUpdateFlag(event);
+        }
+    }    
+    
+    
+    function addConstraintMessage(messageRoot, message, severity){
+	  
+	  var msgDiv = document.createElement('div');
+	  msgDiv.className = 'status-messaging';
+	  messageRoot.append(msgDiv);
+	  
+	  var msgIcon = document.createElement('div');
+	  var msgSpan = document.createElement('span');
+	  msgSpan.innerHTML = message;
+	
+	  if(severity == "ERROR"){
+		  msgIcon.className = 'status-red';
+	  } else if(severity == "WARNING"){
+		  msgIcon.className = 'status-yellow';
+	  } else {
+		  msgIcon.className = 'status-green';
+	  }
+	  msgDiv.appendChild(msgIcon);
+	  msgDiv.appendChild(msgSpan);
+		
+  }
+  
+  function checkConstraints(specs){
+  	var constraintData = specs.constraintData(), errorSection =$('#wekatypeInfo'), hasConstraintErrors = false;	
+  	var typeBuleNote = errorSection.find('.message-list');
+  	typeBuleNote.empty();
+  	if(constraintData['wekatypeBuleNote'].severity != "OK"){  
+  		hasConstraintErrors = addConstraintMessage(typeBuleNote, constraintData['wekatypeBuleNote'].message, constraintData['wekatypeBuleNote'].severity);
+  	}
+  	if(typeBuleNote.children().size() == 0){
+  		addOKStatusMessage(typeBuleNote, "");
+  		$('#wekatypeInfo').hide();
+  	}
+  	
+  	errorSection =$('#wekaInculdeInfo');
+  	var inculdeNote = errorSection.find('.message-list');
+  	inculdeNote.empty();
+  	if(constraintData['wekeInculdeBuleNote'].severity != "OK"){  
+  		hasConstraintErrors = addConstraintMessage(inculdeNote, constraintData['wekeInculdeBuleNote'].message, constraintData['wekeInculdeBuleNote'].severity);
+  	}
+  	if(inculdeNote.children().size() == 0){
+  		addOKStatusMessage(inculdeNote, "");
+  		$('#wekaInculdeInfo').hide();
+  	}
+  	
+  	errorSection =$('#wekaSoftwareInfo');
+  	var SwBuleNote = errorSection.find('.message-list');
+  	SwBuleNote.empty();
+  	if(constraintData['softwareBuleNote'].severity != "OK"){  
+  		hasConstraintErrors = addConstraintMessage(SwBuleNote, constraintData['softwareBuleNote'].message, constraintData['softwareBuleNote'].severity);
+  	}
+  	if(SwBuleNote.children().size() == 0){
+  		addOKStatusMessage(SwBuleNote, "");
+  		$('#wekaSoftwareInfo').hide();
+  	}
+  	
+  	errorSection =$('#wekaMemoryError');
+  	var wekaMemoryerror = errorSection.find('.message-list');
+  	wekaMemoryerror.empty();
+  	if(constraintData['memoryRule'].severity != "OK"){  
+  		hasConstraintErrors = addConstraintMessage(wekaMemoryerror, constraintData['memoryRule'].message, constraintData['memoryRule'].severity);
+  	}
+  	if(wekaMemoryerror.children().size() == 0){
+  		addOKStatusMessage(wekaMemoryerror, "");
+  		$('#wekaMemoryError').hide();
+  	}
+  }
+  
+ function addOKStatusMessage(messageRoot, message){
+  	  
+  	  var msgDiv = document.createElement('div');
+  	  msgDiv.className = 'status-messaging';
+  	  messageRoot.append(msgDiv);
+  	  
+  	  var msgIcon = document.createElement('div');
+  	  var msgSpan = document.createElement('span');
+  	  msgSpan.innerHTML = message;
+  	  msgIcon.className = 'status-green';
+  	  msgDiv.appendChild(msgIcon);
+  	  msgDiv.appendChild(msgSpan);
+    }
+ 
+  function updateAttributes(specs){
+	var attributeData = specs.attributeData();	
+  }
+
+  function showConstraintErrorMsg(constraint, errorSectionId){
+  	errorSectionId.html(constraint.message);
+  }
+ 
+  function update_page (e) {
+  	serverTransaction({
+    	method: 'update_page', widget_id: namespace
+    });
+    unsaveDirtyFlag(true);
+    updateFlag = false;
+  }
+
+  function triggerUpdateFlag() {
+      maui.server.notifyServer({
+          method: 'synchronize_data',
+          widget_id: namespace,
+          presets: baseline_wizard_specs.presets()
+      }, true);
+      updateFlag = true;
+  }
+
+  function handleException(e) {
+      maui.blockUI.forceHide();
+      displayHTMLInModalDialog($.i18n.prop('Alert'), 'name=' + e.name
+              + " message=" + e.message, 300, 200);
+  }
+
+  var methods = {
+      init : function(options, widgetData) {
+          l10n_solutionwizard = {
+
+          };
+          this.data(dataTag, options);
+          namespace = widgetData.namespace;
+          load(this, widgetData);
+          return this;
+      },
+      update: function (updateData) {
+      	baseline_wizard_specs.init(updateData);
+      	
+      	if(updateData.refreshUI !== undefined){
+      		var specs = baseline_wizard_specs,
+      		values = specs.presets()['medium'];
+          		
+			if(updateData.refreshUI == 'ConfigurationType'){            		
+          		var v_drop_down_feature_title = values['drop_down_feature_title'];
+          		wizard_utils.reloadChoice(drop_down_feature_title, values[drop_down_feature_title], specs, updateUi);
+           	}					
+          }
+          var actionData = baseline_wizard_specs.actionData();
+          wizard_utils.checkRequiredChoices(baseline_wizard_specs, null, null, true);
+		  updateAttributes(baseline_wizard_specs);
+		  var attributeData = baseline_wizard_specs.attributeData();
+          checkConstraints(baseline_wizard_specs);
+      },
+      refreshUI: function () {
+
+      }
+  };
+
+  $.fn.weka_dl360g10_nvme_solution_wizard = function(method) {
+      if (methods[method]) {
+          return methods[method].apply(this, Array.prototype.slice.call(
+                  arguments, 1));
+      } else if (typeof method === 'object' || !method) {
+          return methods.init.apply(this, arguments);
+      } else {
+          $.error('Method ' + method
+              + ' does not exist on jQuery.weka_dl360g10_nvme_solution_wizard');
+      }
+  };
+
+};
+
+weka_dl360g10_nvme_solution_wizard_plugin.prototype = {};
+weka_dl360g10_nvme_solution_wizard_plugin(jQuery);
+				
+		

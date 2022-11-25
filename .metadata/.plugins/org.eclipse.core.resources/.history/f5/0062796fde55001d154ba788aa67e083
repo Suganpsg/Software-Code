@@ -1,0 +1,287 @@
+package essn.storage.nas.storeeasy.storeeasy1660bseries {
+	import common.agentutility.*;
+	import common.coremodel.*;
+	import common.localizations.*;
+	import common.productcategories.*;
+	import essn.common.software.*;
+	import essn.storage.network.hpnetworkingcommon.*;
+	import essn.storage.nas.nascommon.*;
+	import essn.server.proliantservers.common.proliantproductoption.*;
+	import essn.server.common.servercommon.*;
+	class StoreEasy1660BSeries extends NASModel {
+		description: "HPE StoreEasy 1660 Storage";
+		configurationEntryPoint;
+		platformName: "StoreEasy1660B";
+		productCategories: HPEStoreEasy1660B, StoreEasy1660BAce;
+		boolean ocaCompatible: true;
+		int iNumProcessorSlots: 2;
+		int iNumMemoryRows: 12;
+		int iNumMemoryColumns: 2;
+		int iNumHarddiskBays: 16;
+		int iNumDriveCages: 1;
+		int iHalfEiaUnitsRequired: 4;
+		string[] validRackList: "P9K04A", "P9K06A", "P9K38A", "P9K08A", "P9K40A", "P9K10A", "P9K50A", "P9K52A", "P9K03A", "P9K05A", "P9K37A", "P9K07A", "P9K39A", "P9K09A", "P9K19A", "P9K51A";
+		string[] virtualRackList: "ZU715A";
+		def containsMsg_R7G22B: string = {
+			if(thisInst.id >= "R7G22B") then "Includes:
+			 <p>HPE DL380 Gen10+ 12LFF NC CTO Svr<br>
+				INT Xeon-S 4309Y CPU for HPE<br>
+				HPE 16GB 2Rx8 PC4-3200AA-R Smart Kit<br>
+                (8) HPE 4TB SAS 7.2K LFF LP MV HDD<br>
+                INT I350 1GbE 4p BASE-T OCP3 Adptr<br>
+                HPE SR100i Gen10+ FIO SW<br>
+				HPE MR416i-a Gen10+ Controller<br>
+				HPE Smart Hybrid Capacitor w/ 145mm Cbl<br>
+				HPE DL380 Gen10+ 2SFF SAS/SATA BC Kit<br>
+				(2) HPE 480GB SATA MU SFF BC MV SSD<br>
+				HPE 800W FS Plat Ht Plg LH PS Kit<br>
+				HPE iLO Adv 1-svr Lic 1yr Support <p>" else "";
+		}
+		def containsMsg_R7G23B: string = {
+			if(thisInst.id >= "R7G23B") then "Includes:
+ 				<p>HPE DL380 Gen10+ 12LFF NC CTO Svr<br>
+				INT Xeon-S 4309Y CPU for HPE<br>
+				HPE 16GB 2Rx8 PC4-3200AA-R Smart Kit<br>
+                (8) HPE 8TB SAS 7.2K LFF LP 512e MV HDD<br>
+                INT I350 1GbE 4p BASE-T OCP3 Adptr<br>
+                HPE SR100i Gen10+ FIO SW<br>
+				HPE MR416i-a Gen10+ Controller<br>
+				HPE Smart Hybrid Capacitor w/ 145mm Cbl<br>
+				HPE DL380 Gen10+ 2SFF SAS/SATA BC Kit<br>
+				(2) HPE 480GB SATA MU SFF BC MV SSD<br>
+				HPE 800W FS Plat Ht Plg LH PS Kit<br>
+				HPE iLO Adv 1-svr Lic 1yr Support<p>" else "";
+		}
+		def containsMsg_R7G24B: string = {
+			if(thisInst.id >= "R7G24B") then "Includes:
+ 				<p>HPE DL380 Gen10+ 12LFF NC CTO Svr<br>
+				Intel Xeon-Silver 4309Y 2.8GHz 8-core 105W Processor<br>
+				HPE 16GB (1x16GB) Dual Rank x8 DDR4-3200 CAS-22-22-22 Registered Smart Memory Kit<br>
+                HPE SR100i Gen10+ FIO SW<br>
+                HPE MR416i-a Gen10+ Controller<br>
+                HPE DL380 Gen10+ 2SFF SAS/SATA BC Kit<br>
+				HPE 800W FS Plat Ht Plg LH PS Kit<br>
+				HPE DL380 Gen10+ x8/x16/x8 Prim FIO Kit<p>" else "";
+		}
+		def defaultHeatSinkwithProcessor (): string[] = {
+			if(thisInst.id = "R7G24B" || thisInst.id = "R7G22B" || thisInst.id = "R7G23B") and thisInst.selected(ProliantProcessor).filter(x => x.id <= "P36920-B21").count = 2 then expanderString ("P37034-B21", 2) else "";
+		}
+		def defaultHeatSinkwithProcessor2 (): string[] = {
+			if(thisInst.id = "R7G24B" || thisInst.id = "R7G22B" || thisInst.id = "R7G23B") and thisInst.selected(ProliantProcessor).filter(x => x.id <= "P36920-B21").count = 1 then expanderString ("P37034-B21", 1) else "";
+		}
+		def defaultOCP (): string[] = {
+			if(thisInst.id = "R7G24B") then expanderString ("P08449-B21", 1) else "";
+		}
+		def defaultBootDrive (): string[] = {
+			if(thisInst.id = "R7G24B") then expanderString ("P40502-K21", 2) else "";
+		}
+		subsystem processorSubsystem {
+			locationArray processorSlots {
+				rows: iNumProcessorSlots;
+				fillerClasses: Processor;
+			}
+
+			constraint processor_Rule2 {
+				message: "If two processors are installed <br>Then same amount of memory must be installed with each processor.";
+				body: dependency (ProliantProcessor = 2, ProliantMemoryArray.pairs);
+			}
+
+			locationArray HeatsinkKitLocArray {
+				rows: 2;
+				fillerClasses: HeatSinkKit;
+			}
+			part setHeatSinkwithProcessorDefault: triggerConsequentialSelection {
+				string consequentialSelectionFunc: "defaultHeatSinkwithProcessor";
+			}
+			part setHeatSinkwithProcessor2Default: triggerConsequentialSelection {
+				string consequentialSelectionFunc: "defaultHeatSinkwithProcessor2";
+			}
+			constraint matchHeatSinkandProcessor {
+				message: "Number of Heatsink selections must match number of Processor selected";
+				body:
+				selected(HeatSinkKit).count = selected(ProliantProcessor).count;
+			}
+		}
+		subsystem memorySubsystem {
+			locationArray memorySlots {
+				rows: iNumMemoryRows;
+				columns: iNumMemoryColumns;
+				fillerClasses: ProliantMemoryArray;
+			}
+			constraint memoryMinMax {
+				message: "Minimum 1 and Maximum 16 quantities of memory kits allowed for 1P model and Minimum 2 and Maximum 32 
+				quantities of memory kits allowed for 2P model";
+				body: dependency (ProliantProcessor = 1, ProliantMemoryArray [ P06031-K21 ] >= 1 and ProliantMemoryArray [ P06031-K21 ] <= 16); // 
+				dependency (ProliantProcessor = 2, ProliantMemoryArray [ P06031-K21 ] >= 2 and ProliantMemoryArray [ P06031-K21 ] <= 32);
+			}
+			locationArray memoryaccesories {
+				rows: 16;
+				columns: 2;
+				fillerClasses: MemoryBlankKit;
+			}
+			constraint DIMMBlankKitmemoryMinMax {
+				message: "Minimum 1 and Maximum 32 quantities of DIMM Blank Kits must be selected per base model and
+				DIMM Blank Kit Option cannot be selected if Memory qty is 32";
+				body:
+				if(thisInst.selected(ProliantMemoryArray).count < 32) and thisInst.selected(ProliantDriveCage).count > 0 then thisInst.selected(MemoryBlankKit).filter(x => x.id <= "P07818-B21").count > 0;
+			}
+			constraint DIMMBlankKitMinMaxSelection {
+				message: "Minimum 1 and Maximum 32 quantities of DIMM Blank Kits must be selected per base model";
+				body: dependency (StoreEasy1660BSeries > 0 and ProliantMemoryArray < 32, MemoryBlankKit > 0 and MemoryBlankKit <= 32);
+			}
+			constraint DIMMBlankKitSelection {
+				message: "DIMM Blank Kit Option cannot be selected if Memory qty is 32";
+				body: dependency (StoreEasy1660BSeries > 0 and ProliantMemoryArray = 32, MemoryBlankKit = 0);
+			}
+		}
+		def drivesSelected (): int = {
+			val bundleDrives4 = thisInst.selected(ProliantHardDrive).filterByAttribute(iNumOfHardDrives, 4).count * 4;
+			val bundleDrives2 = thisInst.selected(ProliantHardDrive).filterByAttribute(iNumOfHardDrives, 2).count * 2 ;
+			val bundleDrives1 = thisInst.selected(ProliantHardDrive).filterByAttribute(iNumOfHardDrives, 1).count * 1;
+			val bootDrives = thisInst.StoreEasy1660BSeries.deviceSubsystem.Boot_Drives_MinMax.contents.count;
+			
+			(bundleDrives4 + bundleDrives2 + bundleDrives1) - bootDrives ;
+		}
+		
+		def maxDrivesFunc (): int = {
+			 if thisInst.selected(ProliantDriveCage).count > 0 then 16 else 12;
+		}
+		 
+		def maxLimitsforDrivesFunc (): int = {
+			maxDrivesFunc () - drivesSelected() ;
+		}
+		subsystem deviceSubsystem {
+			locationArray driveCageSlots {
+				rows: iNumDriveCages;
+				columns: 1;
+				fillerClasses: ProliantDriveCage;
+			}
+			locationArray hardDriveBays {
+				rows: iNumHarddiskBays;
+				rowsConsumed: iNumOfHardDrives;
+				columns: 1;
+				fillerClasses: HardDrive;
+			}
+			locationArray Boot_Drives_MinMax {
+				rows: 2;
+				fillerClasses: ProliantHardDrive_HP_SFF_SATA;
+			}
+			
+			constraint maxDriveSupport {
+				message: "Max $a{maxDrivesFunc} Drives Supported";
+				body: if drivesSelected () <= maxDrivesFunc() then true else false;
+			}
+									
+			constraint BootDrives_MinMax_R7G24B {
+				message: "Minimum and Maximum 2 quantities of Boot Drives must be selected per Base model (R7G24B).";
+				body: dependency (StoreEasy1660BSeries [ R7G24B ] > 0, ProliantHardDrive_HP_SFF_SATA [ P40502-K21 || P40503-K21 ] = 2);
+			}
+			part setBootDriveDefault: triggerConsequentialSelection {
+				string consequentialSelectionFunc: "defaultBootDrive";
+			}
+			constraint MinMaxDriveCage {
+				message: "Maximum 1 quantity of Drive Cage can be selected per Base model.";
+				body: dependency (StoreEasy1660BSeries > 0, ProliantDriveCage [ P55700-B21 ] <= 1); //P26919-B21
+			}
+			constraint reqDIMMBlankKit {
+				message: "If ( P55700-B21 ) selected with memory quantity less than max (Qty 32) <br>
+				Then DIMM Blanks Kit (P07818-B21) must be selected.";
+				body: dependency (StoreEasy1660BSeries > 0 and ProliantDriveCage [ P55700-B21 ] > 0 and ProliantMemoryArray < 32, MemoryBlankKit > 0); //P26919-B21
+			}
+		}
+		subsystem RiserCardSubsystem {
+			locationArray RiserCardLocArray {
+				rows: 1;
+				fillerClasses: ProliantPciRiser;
+			}
+			constraint RiserReq2Processor {
+				message: "Selected RiserCard Requires second processor";
+				body: dependency (ProliantPciRiser > 0, ProliantProcessor > 1);
+			}
+		}
+		subsystem pciUpgradeSubsystem {
+		   	locationArray networkAdapterUpgrade {
+		   		rows: 1;
+		   		fillerClasses: PciCard;
+		   	}
+		   	part setOCPDefault: triggerConsequentialSelection {
+		   		string consequentialSelectionFunc: "defaultOCP";
+		   	}
+		   ifEffective KS_PERT_26394 {
+		   	constraint MaxOCP {
+		   		message: "Minimum 1/Maximum 1 quantity of OCP option must be selected per Base model.";
+		   		body: dependency (StoreEasy1660BSeries [ R7G24B ] > 0, PciCard [ P08449-B21 || P10103-B21 || P10097-B21 || P10115-B21 || P26256-B21 ] = 1); 
+
+		   	}
+		   }
+		   otherwise {
+		   	constraint MaxOCP {
+		   		message: "Maximum 1 quantity of OCP option can be selected per Base model.";
+		   		body: dependency (StoreEasy1660BSeries [ R7G24B ] > 0, PciCard [ P08449-B21 || P10103-B21 || P10097-B21 || P10115-B21 || P26256-B21 ] <= 1); //P26259-B21
+		   	}
+		   }
+		   }
+		subsystem NetworkingSubsystem {
+			locationArray NetworkingLocArray {
+				rows: 6;
+				fillerClasses: NetworkAdapterPci, NetworkingPci;
+			}
+			locationArray transceiverslocationarray {
+				columns: 14;
+				rows: 1;
+				fillerClasses: SFPPlusTransceivers;
+			}
+			locationArray controllerlocationarray {
+				columns: 3;
+				rows: 1;
+				fillerClasses: ProliantStorageContSASSA;
+			}
+		ifEffective KS_PERT_26394 {
+			constraint PCIe {
+				message: "Maximum 3 quantities of PCIe option can be selected per Base model.";
+				body:
+				{
+					val Networking_Pci = thisInst.selected(NetworkingPci).filter(x => x.id <= "P22702-B21 P10094-B21").count;
+					val NetworkAdapter_Pci = thisInst.selected(NetworkAdapterPci).filter(x => x.id <= "P26253-B21 P26259-B21").count;
+					if thisInst.selected(ProliantPciRiser).count = 0 then Networking_Pci + NetworkAdapter_Pci <= 3 else if thisInst.selected(ProliantPciRiser).count = 1 and (Networking_Pci + NetworkAdapter_Pci) > 6 then false else true;
+				}
+			}
+		}
+		otherwise {
+			constraint PCIe {
+				message: "Maximum 3 quantities of PCIe option can be selected per Base model.";
+				body:
+				{
+					val Networking_Pci = thisInst.selected(NetworkingPci).filter(x => x.id <= "P22702-B21 P10094-B21").count;
+					val NetworkAdapter_Pci = thisInst.selected(NetworkAdapterPci).filter(x => x.id <= "P26253-B21").count;
+					if thisInst.selected(ProliantPciRiser).count = 0 then Networking_Pci + NetworkAdapter_Pci <= 3 else if thisInst.selected(ProliantPciRiser).count = 1 and (Networking_Pci + NetworkAdapter_Pci) > 6 then false else true;
+					}
+				}
+			}
+		}
+		subsystem tpmSubsystem {
+			locationArray tpmlocationarray {
+				columns: iNumPowerOptions;
+				rows: 1;
+				fillerClasses: SecurityHardware;
+			}
+		}
+		subsystem pciSubsystem {
+			locationArray pciSlots {
+				rows: 0;
+				columns: 1;
+				fillerClasses: PciCard;
+			}
+			locationArray riserSlots {
+				rows: 0;
+				columns: 1;
+				fillerClasses: ProliantPciRiser;
+				layout {
+					range (1, -1);
+				}
+			}
+		}
+	} //End of class STOREEASY1660B	Series
+
+} //End of package
+

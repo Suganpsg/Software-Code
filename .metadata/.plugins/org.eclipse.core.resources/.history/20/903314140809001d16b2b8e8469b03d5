@@ -1,0 +1,1470 @@
+package essn.cas.prostackcommon {
+	import common.coremodel.*;
+	import essn.storage.common.storagecommon.*;
+	import essn.storage.network.hpnetworkingcommon.*;
+	import common.productcategories.*;
+	import essn.common.software.*;
+	import common.agentutility.*;
+	import common.localizations.*;
+	import essn.cas.cascommon.*;
+	//import essn.cas.CS380_Migration.*;
+	import essn.rack.rackcommon.*;
+	import essn.storage.network.nimblestorage.nimblestoragecommoncto.*;
+	import essn.networking.wirelessdevices.arubaseries.common.arubaseriescommon.*;
+	import essn.server.proliantservers.dlserver.g10.dl360g10.*;
+	import essn.server.proliantservers.dlserver.g10.dl380g10.*;
+	import essn.server.proliantservers.dlserver.g10.dl325g10.*;
+	import essn.server.proliantservers.dlserver.g10.dl385g10.*;
+	import essn.server.proliantservers.dlserver.g10.dl560g10.*;
+	import essn.server.proliantservers.dlserver.g10.dl580g10.*;
+	import essn.server.newgenproliant.newgendlservers.newgendl300.dl325g10plus.*;
+	import essn.server.newgenproliant.newgendlservers.newgendl300.dl385g10plus.*;
+	import essn.server.newgenproliant.newgencommon.newgenproliantserver.*;
+	import essn.server.newgenproliant.newgendlservers.newgendl300.dl360g10plus.*;
+	import essn.server.newgenproliant.newgendlservers.newgendl300.dl380g10plus.*;
+	import essn.server.newgenproliant.newgendlservers.newgendl300.dl325g10plusv2.*;
+	import essn.server.newgenproliant.newgendlservers.newgendl300.dl365g10plus.*;
+	import essn.server.newgenproliant.newgendlservers.newgendl300.dl385g10plusv2.*;
+	import essn.server.proliantservers.dlserver.dlservercommon.*;
+	import essn.storage.network.sn3700mswitch.*;
+	import essn.server.common.servercommon.*;
+	import essn.storage.network.sn2000mswitch.*;
+	import essn.server.proliantservers.common.proliantproductoption.*;
+	import common.globalsupport.SWSubscription;
+	class ProStackCommon extends ConvergedSystemsModel {
+		string[] defaultList: "";
+		string serverNetworkFlexLOMAdapterConfigured: "none";
+		string serverNetworkPCIeAdapterConfigured: "none";
+		string serverPowerCordConfigured: "none";
+		string[] inheritSupportedOnDataFrom: "";
+		int ServerBaseModelsQty: 0;
+		def defaultProstackParts (): string[] = defaultList;
+		int iNumServerBaseModelsQty: 32;
+		ifEffective GKK_24945_Vol {
+			boolean isStrDataRelease: true;
+		}
+		otherwise {
+			boolean isStrDataRelease: false;
+		}
+		subsystem defaultsSubsystem {
+			part ocaAddDefaultsTrigger: ocaDefaultsTrigger {
+				string modelDefaultsFunc: "defaultProstackParts";
+			}
+		}
+		subsystem groupTypeSys {
+			locationArray TrackingSkuArray {
+				rows: 1;
+				columns: 1;
+				fillerClasses: ProStackSolutionTracking;
+			}
+			locationArray prostackServerTracking {
+				rows: iNumServerBaseModelsQty;
+				columns: 1;
+				fillerClasses: ProStackServerTracking;
+			}
+			locationArray prostackSwitchTracking {
+				rows: 2;
+				columns: 1;
+				fillerClasses: ThorSwitchTracking;
+			}
+
+			//TD group underneath rack on site
+			group rackGroup {
+				groupPartType: csRackGroup;
+				memberClasses: Rack;
+			}
+			//TD nimble group
+			group ProStackNimbleGroup {
+				groupPartType: proStackNimbleGroup;
+				memberClasses: NimbleStorageCommonCTO;
+			}
+			// server group
+			group ProStackServerGroup {
+				groupPartType: proStackServerGroup;
+				memberClasses: DLSeries, NewGenProliantServer, NimbleProliantBTO;
+			}
+			// switch group
+			group ProStackSwitchGroup {
+				groupPartType: proStackSwitchGroup;
+				memberClasses: HPNSwitch, ArubaSeriesCommon, SN2000MSwitch, SN3700MSwitch;
+			}
+		}
+		//MS for PERT: 24948
+		subsystem NimbleExternalStorageArraysSubsystem {
+			locationArray HCIManagerChoice {
+				rows: 1;
+				fillerClasses: SWSubscription, ProStackServiceSoftware;
+			}
+		}		
+		subsystem ProLiantServersSubsystem {
+			locationArray CTOBaseModelsChoice {
+				rows: iNumServerBaseModelsQty;
+				fillerClasses: PSCTOBaseModelsChoiceItemFlag;
+			}
+			locationArray ServerNetworkFlexLOMAdaptersChoice {
+				rows: 1;
+				fillerClasses: NetworkingPci, NetworkingFlex, NetworkAdapterPci;
+			}
+			locationArray ServerNetworkPCIeAdaptersChoice {
+				rows: 1;
+				fillerClasses: NetworkingPci, NetworkAdapterPci;
+			}
+			locationArray ServerPowerCordChoice {
+				rows: 1;
+				fillerClasses: ProliantPowerCord;
+			}
+			choice ProStackServeriLOChoice {
+				choiceType: single_select;
+				optional: true;
+				targetClass: PSServeriLOChoiceItemFlag;
+			}
+			choice ProStackDL360FilterChoice {
+				choiceType: single_select;
+				optional: true;
+				targetClass: FilterDL360ChoiceItemFlag;
+			}
+			choice ProStackDL380FilterChoice {
+				choiceType: single_select;
+				optional: true;
+				targetClass: FilterDL380ChoiceItemFlag;
+			}
+			choice ProStackFilterChoice {
+				choiceType: multi_select;
+				optional: true;
+				targetClass: ProBaseModelsChoiceItemFlag;
+			}
+			constraint filterBaseModels {
+				message: "Show DL Server Choices Selected";
+				body: dependency (ProBaseModelsChoiceItemFlag [ basemodelName = 'dl360' ] = 0, PSCTOBaseModelsChoiceItemFlag [ basemodelName = 'dl360' ] = 0);
+				dependency (ProBaseModelsChoiceItemFlag [ basemodelName = 'dl380' ] = 0, PSCTOBaseModelsChoiceItemFlag [ basemodelName = 'dl380' ] = 0);
+				dependency (ProBaseModelsChoiceItemFlag [ basemodelName = 'dl325' ] = 0, PSCTOBaseModelsChoiceItemFlag [ basemodelName = 'dl325' ] = 0);
+				dependency (ProBaseModelsChoiceItemFlag [ basemodelName = 'dl325+' ] = 0, PSCTOBaseModelsChoiceItemFlag [ basemodelName = 'dl325+' ] = 0);
+				dependency (ProBaseModelsChoiceItemFlag [ basemodelName = 'dl385' ] = 0, PSCTOBaseModelsChoiceItemFlag [ basemodelName = 'dl385' ] = 0);
+				dependency (ProBaseModelsChoiceItemFlag [ basemodelName = 'dl385+' ] = 0, PSCTOBaseModelsChoiceItemFlag [ basemodelName = 'dl385+' ] = 0);
+				dependency (ProBaseModelsChoiceItemFlag [ basemodelName = 'dl560' ] = 0, PSCTOBaseModelsChoiceItemFlag [ basemodelName = 'dl560' ] = 0);
+				dependency (ProBaseModelsChoiceItemFlag [ basemodelName = 'dl580' ] = 0, PSCTOBaseModelsChoiceItemFlag [ basemodelName = 'dl580' ] = 0);
+				dependency (ProBaseModelsChoiceItemFlag [ basemodelName = 'btoIntel' ] = 0, PSCTOBaseModelsChoiceItemFlag [ basemodelName = 'btoIntel' ] = 0);
+				dependency (ProBaseModelsChoiceItemFlag [ basemodelName = 'btoAMD' ] = 0, PSCTOBaseModelsChoiceItemFlag [ basemodelName = 'btoAMD' ] = 0);
+				dependency (ProBaseModelsChoiceItemFlag [ basemodelName = 'dl360+' ] = 0, PSCTOBaseModelsChoiceItemFlag [ basemodelName = 'dl360+' ] = 0);
+				dependency (ProBaseModelsChoiceItemFlag [ basemodelName = 'dl380+' ] = 0, PSCTOBaseModelsChoiceItemFlag [ basemodelName = 'dl380+' ] = 0);
+				dependency (ProBaseModelsChoiceItemFlag [ basemodelName = 'dl325+v2' ] = 0, PSCTOBaseModelsChoiceItemFlag [ basemodelName = 'dl325+v2' ] = 0);
+				dependency (ProBaseModelsChoiceItemFlag [ basemodelName = 'dl365+' ] = 0, PSCTOBaseModelsChoiceItemFlag [ basemodelName = 'dl365+' ] = 0);
+				dependency (ProBaseModelsChoiceItemFlag [ basemodelName = 'dl385+v2' ] = 0, PSCTOBaseModelsChoiceItemFlag [ basemodelName = 'dl385+v2' ] = 0);
+			}
+			constraint Dl_pciRestriction {
+				message: "PCI Adapter not compatible with DL base array.";
+				body: dependency (ProBaseModelsChoiceItemFlag [ basemodelName = 'dl360' || basemodelName = 'dl380' ], NetworkingFlex [ ~ (700751-B21 || 700759-B21 || 727054-B21) ] = 0 and NetworkAdapterPci [ P25960-B21 || P10112-B21 || P11341-B21 ||
+				P10097-B21 || P10115-B21 || P26256-B21 || P28778-B21 || P26253-B21 || P26259-B21 || P26262-B21 || P28787-B21 ] = 0 and NetworkingPci [ ~ (817709-B21 || 817721-B21 || 817745-B21 || 867334-B21 || 652503-B21 || 656596-B21 || 727055-B21
+				|| 813661-B21 || 817718-B21 || 817738-B21 || 867328-B21 || 867707-B21 || 874253-B21) ] = 0);
+				dependency (ProBaseModelsChoiceItemFlag [ basemodelName = 'dl325' ], NetworkingFlex [ ~ (700751-B21 || 700759-B21 || 727054-B21) ] = 0 and NetworkAdapterPci [ P25960-B21 || P10112-B21 || P11341-B21 || P10097-B21 || P10115-B21 ||
+				P26256-B21 || P28778-B21 || P26253-B21 || P26259-B21 || P26262-B21 || P28787-B21 ] = 0 and NetworkingPci [ ~ (817709-B21 || 817721-B21 || 817745-B21 || 867334-B21 || 652503-B21 || 656596-B21 || 727055-B21 || 813661-B21 || 817718-B21
+				|| 817738-B21 || 867328-B21 || 867707-B21 || P08446-B21 || P11338-B21) ] = 0);
+				dependency (ProBaseModelsChoiceItemFlag [ basemodelName = 'dl325+' ], NetworkingFlex = 0 and NetworkAdapterPci [ P25960-B21 || 764302-B21 || 817749-B21 || 817753-B21 || P10097-B21 || P10115-B21 || P26256-B21 || P28778-B21 ||
+				P26253-B21 || P26259-B21 || P26262-B21 || P28787-B21 ] = 0 and NetworkingPci [ ~ (P08452-B21 || P10103-B21 || P10118-B21 || P08437-B21 || P10094-B21 || P13188-B21 || P21109-B21 || P21927-B21 || P21930-B21 || P21933-B21 || P22702-B21)
+				] = 0);
+				dependency (ProBaseModelsChoiceItemFlag [ basemodelName = 'dl385' ], NetworkingFlex [ ~ (727054-B21) ] = 0 and NetworkAdapterPci [ P25960-B21 || P10112-B21 || P11341-B21 || P10097-B21 || P10115-B21 || P26256-B21 || P28778-B21 ||
+				P26253-B21 || P26259-B21 || P26262-B21 || P28787-B21 ] = 0 and NetworkingPci [ ~ (817709-B21 || 817721-B21 || 817745-B21 || 867334-B21 || 727055-B21 || 813661-B21 || 817718-B21 || 817738-B21 || 867328-B21 || 867707-B21 || P08446-B21
+				|| P11338-B21) ] = 0);
+				dependency (ProBaseModelsChoiceItemFlag [ basemodelName = 'dl385+' ], NetworkingFlex = 0 and NetworkAdapterPci [ P25960-B21 || 764302-B21 || 817749-B21 || 817753-B21 || P10097-B21 || P10115-B21 || P26256-B21 || P28778-B21 ||
+				P26253-B21 || P26259-B21 || P26262-B21 || P28787-B21 ] = 0 and NetworkingPci [ ~ (P08452-B21 || P10103-B21 || P10118-B21 || P08437-B21 || P10094-B21 || P13188-B21 || P21109-B21 || P21927-B21 || P21930-B21 || P21933-B21 || P22702-B21)
+				] = 0);
+				dependency (ProBaseModelsChoiceItemFlag [ basemodelName = 'dl560' ], NetworkingFlex [ ~ (700751-B21 || 700759-B21 || 727054-B21) ] = 0 and NetworkAdapterPci [ P25960-B21 || P10112-B21 || P11341-B21 || P10097-B21 || P10115-B21 ||
+				P26256-B21 || P28778-B21 || P26253-B21 || P26259-B21 || P26262-B21 || P28787-B21 ] = 0 and NetworkingPci [ ~ (817709-B21 || 817721-B21 || 817745-B21 || 867334-B21 || 867331-B21 || 652503-B21 || 656596-B21 || 727055-B21 || 813661-B21
+				|| 817718-B21 || 817738-B21 || 867328-B21 || 867707-B21 || P08446-B21 || P11338-B21) ] = 0);
+				dependency (ProBaseModelsChoiceItemFlag [ basemodelName = 'dl580' ], NetworkingFlex [ ~ (700751-B21 || 700759-B21 || 727054-B21) ] = 0 and NetworkAdapterPci [ P25960-B21 || P10112-B21 || P11341-B21 || P10097-B21 || P10115-B21 ||
+				P26256-B21 || P28778-B21 || P26253-B21 || P26259-B21 || P26262-B21 || P28787-B21 ] = 0 and NetworkingPci [ ~ (817709-B21 || 817721-B21 || 817745-B21 || 867334-B21 || 652503-B21 || 656596-B21 || 727055-B21 || 813661-B21 || 817718-B21
+				|| 817738-B21 || 867328-B21 || 867707-B21 || P08446-B21 || P11338-B21) ] = 0);
+				//				dependency (PSCTOBaseModelsChoiceItemFlag = 0, 
+				//					NetworkingFlex = 0 and
+				//					 NetworkingPci = 0 and 
+				//					 NetworkAdapterPci = 0
+				//				);
+				dependency (PSCTOBaseModelsChoiceItemFlag [ basemodelName = 'btoIntel' || basemodelName = 'btoAMD' ] > 0, NetworkingFlex = 0 and NetworkingPci = 0 and NetworkAdapterPci = 0);
+				dependency (PSCTOBaseModelsChoiceItemFlag [ ~ (basemodelName = 'btoIntel' || basemodelName = 'btoAMD') ] > 0, ProliantPowerCord = 0);
+				dependency (ProBaseModelsChoiceItemFlag [ basemodelName = 'dl325+v2' || basemodelName = 'dl385+v2' ], NetworkingPci [ ~ (P08452-B21 || P10103-B21 || P10106-B21 || P10118-B21 || P08437-B21 || P08443-B21 || P08458-B21 || P10094-B21 ||
+				P13188-B21 || P21109-B21 || P21933-B21 || P22702-B21 || P24437-B21 || P22767-B21 || P21112-B21 || P31246-B21) ] = 0 and NetworkAdapterPci [ 817753-B21 || 764302-B21 || 817749-B21 || P11341-B21 ] = 0 and NetworkingFlex = 0);
+				dependency (ProBaseModelsChoiceItemFlag [ basemodelName = 'dl365+' ], NetworkingPci [ ~ (P08452-B21 || P10103-B21 || P10106-B21 || P10118-B21 || P08437-B21 || P08443-B21 || P08458-B21 || P10094-B21 || P13188-B21 || P21109-B21 ||
+				P21933-B21 || P22702-B21 || P24437-B21 || P22767-B21 || P31246-B21) ] = 0 and NetworkAdapterPci [ 817753-B21 || 764302-B21 || 817749-B21 || P11341-B21 ] = 0 and NetworkingFlex = 0);
+				dependency (ProBaseModelsChoiceItemFlag [ basemodelName = 'dl380+' ], NetworkingPci [ ~ (P08452-B21 || P10103-B21 || P10106-B21 || P10118-B21 || P08437-B21 || P08443-B21 || P08458-B21 || P10094-B21 || P13188-B21 || P21109-B21 ||
+				P21933-B21 || P22702-B21 || P24437-B21 || P22767-B21 || P21112-B21 || P31246-B21 || P10180-B21) ] = 0 and NetworkAdapterPci [ 817753-B21 || 764302-B21 || 817749-B21 || P11341-B21 ] = 0 and NetworkingFlex = 0);
+				dependency (ProBaseModelsChoiceItemFlag [ basemodelName = 'dl360+' ], NetworkingPci [ ~ (P08452-B21 || P10103-B21 || P10106-B21 || P10118-B21 || P08437-B21 || P08443-B21 || P08458-B21 || P10094-B21 || P13188-B21 || P21109-B21 ||
+				P21933-B21 || P22702-B21 || P24437-B21 || P22767-B21 || P21112-B21 || P31246-B21) ] = 0 and NetworkAdapterPci [ 817753-B21 || 764302-B21 || 817749-B21 || P11341-B21 || P28778-B21 ] = 0 and NetworkingFlex = 0);
+			}
+			constraint powerCordSuppport {
+				message: "No Support Power Cord";
+				body: dependency (PSCTOBaseModelsChoiceItemFlag [ PSR7E80A || PSR7E83A ], ProliantPowerCord [ Q0H80A || J6X00A ] = 0);
+				dependency (PSCTOBaseModelsChoiceItemFlag [ PSR7E82A ], ProliantPowerCord [ ~ (AF570A || AF573A || AF568A || AF572A || AF556A || R1C65A || Q0H80A || J6X00A) ] = 0);
+			}
+		}
+
+		//PM 2-dec-20 PERT-21294
+		subsystem SwitchesSubsystem {
+			choice SwitchesTypeChoice {
+				choiceType: single_select;
+				optional: true;
+				targetClass: ProSwitchModelsChoiceItemFlag;
+			}
+			choice SwitchesChoice {
+				choiceType: single_select;
+				optional: true;
+				targetClass: PSSwitchesChoiceItemFlag;
+			}
+			constraint filterSwitchModels {
+				message: "Show Switch Choices Selected";
+				body: dependency (ProSwitchModelsChoiceItemFlag [ switchType = 'aruba' ] = 0, PSSwitchesChoiceItemFlag [ switchType = 'aruba' ] = 0);
+				dependency (ProSwitchModelsChoiceItemFlag [ switchType = 'storefabric' ] = 0, PSSwitchesChoiceItemFlag [ switchType = 'storefabric' ] = 0);
+				dependency (ProSwitchModelsChoiceItemFlag [ switchType = 'flexfabric' ] = 0, PSSwitchesChoiceItemFlag [ switchType = 'flexfabric' ] = 0);
+			}
+		}
+		subsystem dHCITypeSubsystem {
+			choice dHCITypeChoice {
+				choiceType: single_select;
+				optional: false;
+				targetClass: dHCITypeChoiceItemFlag;
+			}
+			constraint dHCITypeSupportted {
+				message: "BaseModel compatible based on the dHCI Type selection";
+				body: dependency (dHCITypeChoiceItemFlag [ simplivitydHCI ] > 0, PSBaseArrayChoiceItemFlag [ isSimplivity = false ] = 0);
+				dependency (dHCITypeChoiceItemFlag [ standarddHCI ] > 0, PSBaseArrayChoiceItemFlag [ isSimplivity = true ] = 0);
+			}
+		}
+		subsystem dhciBaseComponentSubSystem {
+			choice dHCIInstallationChoice {
+				choiceType: single_select;
+				optional: false;
+				targetClass: dHCIInstallationChoiceItemFlag;
+			}
+		}
+		boolean pert24858: true;
+	}
+	part proStackNimbleGroup GenericGroupType {
+		boolean isConfigInstanceGroup: true;
+		boolean isSolutionConfigGroup: true;
+	}
+	part proStackServerGroup GenericGroupType {
+		boolean isConfigInstanceGroup: true;
+		boolean isSolutionConfigGroup: true;
+	}
+	part proStackSwitchGroup GenericGroupType {
+		boolean isConfigInstanceGroup: true;
+		boolean isSolutionConfigGroup: true;
+	}
+	class ProStackNimbleSoftware extends RootProductClass {
+		string source: "MANUAL";
+	}
+	class ProStackServerSoftware extends RootProductClass {
+		string source: "MANUAL";
+	}
+	class ProStackServiceSoftware extends RootProductClass {
+		string source: "MANUAL";
+	}
+	class ProStackSolutionTracking extends CSTrackingSKU {
+		int sequenceNumber: 10;
+		int childSequenceNumber: 10;
+		boolean hasNimbleControllerRefreshEnabled: true;
+		string levelAvailability: "010";
+		// MG Tech Care Migration PERT: 21296 and 21380
+		// boolean supportsTechCare : true;
+		boolean newDataCenterDropdownEnabled: true;
+	}
+	product R0R08A ProStackSolutionTracking {
+		boolean supportsTechCare: true;
+		boolean hasNimbleControllerRefreshEnabled: false;
+		boolean isTechRefreshEnabled: true;
+	}
+	product R0R09A ProStackSolutionTracking {
+		boolean supportsTechCare: true;
+		boolean hasNimbleControllerRefreshEnabled: false;
+		boolean isTechRefreshEnabled: true;
+	}
+	product R8E16A ProStackSolutionTracking {
+		boolean hasNimbleControllerRefreshEnabled: false;
+		boolean supportsTechCare: true;
+		boolean newDataCenterDropdownEnabled: false;
+	}
+	product R8E17A ProStackSolutionTracking {
+		boolean hasNimbleControllerRefreshEnabled: false;
+		boolean supportsTechCare: true;
+	}
+	class ProStackServerTracking extends CSTrackingSKU {
+	}
+	class ThorSwitchTracking extends CSTrackingSKU {
+	}
+	product R0R11A ThorSwitchTracking {
+		boolean supportsTechCare: true;
+		string flexServiceDefault: "HU4A6A5";
+	}
+	product R0R10A ProStackServerTracking {
+		boolean supportsTechCare: true;
+		string flexServiceDefault: "HU4A6A5";
+	}
+
+	// Filler Class for BaseArrayChoice
+	class PSBaseArrayChoiceItemFlag extends ChoiceItemFlag {
+		string productId: "";
+		boolean isSimplivity: false;
+		//move to agent since it depends on expansion string[] options: "R2H12A";
+
+	}
+
+	// Filler Class for BaseArrayNetworkingAdaptersChoice
+	class PSBaseArrayNetworkingAdaptersChoiceItemFlag extends ChoiceItemFlag {
+		string productId: "";
+	}
+	class VMWareChoiceItem extends ChoiceItemFlag {
+		string[] choiceSort: "a";
+		string dHCIBaseArray_VMSKU : "";
+		string dHCIBaseServer_VMSKU : "";
+		string dHCIExpArray_VMSKU : "";
+		string dHCIExpServer_VMSKU : "";
+	}
+	product vmware6p7 VMWareChoiceItem{
+		string productId: "vmware6p7";
+		string[] choiceSort: "a";
+		ifEffective GKK_24945_Vol {
+			string dHCIBaseArray_VMSKU : "R8E98A";	
+			string dHCIExpArray_VMSKU : "R8E99A";
+		}otherwise{
+			string dHCIBaseArray_VMSKU : "R2H12A";	
+			string dHCIExpArray_VMSKU : "R2H13A";
+		}
+		string dHCIBaseServer_VMSKU : "R2H14A";
+		string dHCIExpServer_VMSKU : "R2H14A";
+	}
+	product vmware7p0 VMWareChoiceItem{
+		string productId: "vmware7p0";
+		string[] choiceSort: "b";
+		string dHCIBaseArray_VMSKU : "R8E98A";
+		string dHCIBaseServer_VMSKU : "R8E93A";
+		string dHCIExpArray_VMSKU : "R8E99A";
+		string dHCIExpServer_VMSKU : "R8E93A";
+	}
+	product vmware7p0_cloud VMWareChoiceItem{
+		string productId: "vmware7p0_cloud";
+		string[] choiceSort: "c";
+		string dHCIBaseArray_VMSKU : "R9M80A";
+		string dHCIBaseServer_VMSKU : "R9Q69A";
+		string dHCIExpArray_VMSKU : "";
+		string dHCIExpServer_VMSKU : "R9Q69A";
+	}
+
+	// Filler Class for CTOBaseModelsChoice
+	class PSCTOBaseModelsChoiceItemFlag extends ChoiceItemFlag {
+		string productId: "";
+		//string[] options: "R2H14A","ZU706A","BD505A";
+		//string[] options: "R2H14A", "BD505A", "P18420-B21", "P18420-B21", "804331-B21", "P01366-B21"; //PM 23-sep-19 PERT-15803
+		boolean isDL360: false;
+		boolean isDL380: false;
+		string basemodelName: ""; // must set basemodel Name eg: dl360 or dl380
+		string sChangeUISpecTo: ""; //TD change to customer UISpecs, must be set to a class name
+
+	}
+
+	// Filler Class for ServerNetworkPCIeAdaptersChoice
+	class PSServeriLOChoiceItemFlag extends ChoiceItemFlag {
+		string productId: "";
+	}
+	class FilterDL360ChoiceItemFlag extends ChoiceItemFlag {
+	}
+	class FilterDL380ChoiceItemFlag extends ChoiceItemFlag {
+	}
+
+	// Filler Class for SwitchesChoice
+	class PSSwitchesChoiceItemFlag extends ChoiceItemFlag {
+		string productId: "";
+		string switchType: ""; //PM 2-dec-20 PERT-21294
+		//string[] options: "R0R11A";
+
+	}
+	class dHCITypeChoiceItemFlag extends ChoiceItemFlag {
+	}
+	class dHCICableChoiceItemFlag extends ChoiceItemFlag {
+	}
+	class dHCIInstallationChoiceItemFlag extends ChoiceItemFlag {
+	}
+	product dHCIAlletraInstSoftware dHCIInstallationChoiceItemFlag {
+		string choiceSort: "A";
+	}
+	product dHCIAlletraInstallation dHCIInstallationChoiceItemFlag {
+		string choiceSort: "B";
+	}
+	product dHCIAlletraNoInstallation dHCIInstallationChoiceItemFlag {
+		string choiceSort: "C";
+	}
+	class TshirtSizesChoiceItemFlag extends ChoiceItemFlag {
+		string productId: "";
+	}
+	class ProBaseModelsChoiceItemFlag extends ChoiceItemFlag {
+		string productId: "";
+		string basemodelName: "";
+	}
+	product btoIntel_ProStack ProBaseModelsChoiceItemFlag {
+		string[] choiceSort: "a";
+		string basemodelName: "btoIntel";
+	}
+	product btoAMD_ProStack ProBaseModelsChoiceItemFlag {
+		string[] choiceSort: "b";
+		string basemodelName: "btoAMD";
+	}
+	product dl360_ProStack ProBaseModelsChoiceItemFlag {
+		string[] choiceSort: "c";
+		string basemodelName: "dl360";
+	}
+	product dl380_ProStack ProBaseModelsChoiceItemFlag {
+		string[] choiceSort: "e";
+		string basemodelName: "dl380";
+	}
+	product dl325_ProStack ProBaseModelsChoiceItemFlag {
+		string[] choiceSort: "e";
+		string basemodelName: "dl325";
+	}
+	product dl325_Plus_ProStack ProBaseModelsChoiceItemFlag {
+		string[] choiceSort: "i";
+		string basemodelName: "dl325+";
+	}
+	product dl385_ProStack ProBaseModelsChoiceItemFlag {
+		string[] choiceSort: "l";
+		string basemodelName: "dl385";
+	}
+	product dl385_Plus_ProStack ProBaseModelsChoiceItemFlag {
+		string[] choiceSort: "m";
+		string basemodelName: "dl385+";
+	}
+	product dl560_ProStack ProBaseModelsChoiceItemFlag {
+		string[] choiceSort: "g";
+		string basemodelName: "dl560";
+	}
+	product dl580_ProStack ProBaseModelsChoiceItemFlag {
+		string[] choiceSort: "h";
+		string basemodelName: "dl580";
+	}
+
+	//TD new entries
+	product dl325_Plus_V2_ProStack ProBaseModelsChoiceItemFlag {
+		string[] choiceSort: "j";
+		string basemodelName: "dl325+v2";
+	}
+	product dl360_Plus_ProStack ProBaseModelsChoiceItemFlag {
+		string[] choiceSort: "d";
+		string basemodelName: "dl360+";
+	}
+	product dl380_Plus_ProStack ProBaseModelsChoiceItemFlag {
+		string[] choiceSort: "f";
+		string basemodelName: "dl380+";
+	}
+	product dl385_Plus_V2_ProStack ProBaseModelsChoiceItemFlag {
+		string[] choiceSort: "n";
+		string basemodelName: "dl385+v2";
+	}
+	product dl365_Plus_ProStack ProBaseModelsChoiceItemFlag {
+		string[] choiceSort: "k";
+		string basemodelName: "dl365+";
+	}
+
+	//PM 2-dec-20 PERT-21294
+	class ProSwitchModelsChoiceItemFlag extends ChoiceItemFlag {
+		string productId: "";
+		string switchType: "";
+	}
+	product arubaswitch_ProStack ProSwitchModelsChoiceItemFlag {
+		string[] choiceSort: "1";
+		string switchType: "aruba";
+	}
+	product storefabricswicth_ProStack ProSwitchModelsChoiceItemFlag {
+		string[] choiceSort: "2";
+		string switchType: "storefabric";
+	}
+	product flexfabricswitch_ProStack ProSwitchModelsChoiceItemFlag {
+		string[] choiceSort: "3";
+		string switchType: "flexfabric";
+	}
+	product OnsiteNetworking ProSwitchModelsChoiceItemFlag {
+		string[] choiceSort: "4";
+		string switchType: "Onsite";
+	}
+	product PSQ8H39A PSBaseArrayChoiceItemFlag {
+		string[] choiceSort: "a";
+		string productId: "Q8H39A";
+		string productIdForPLC: "Q8H39A";
+	}
+	product PSQ8H40A PSBaseArrayChoiceItemFlag {
+		string[] choiceSort: "b";
+		string productId: "Q8H40A";
+		string productIdForPLC: "Q8H40A";
+	}
+	product PSQ8H41A PSBaseArrayChoiceItemFlag {
+		string[] choiceSort: "c";
+		string productId: "Q8H41A";
+		string productIdForPLC: "Q8H41A";
+	}
+	product PSQ8H42A PSBaseArrayChoiceItemFlag {
+		string[] choiceSort: "d";
+		string productId: "Q8H42A";
+		string productIdForPLC: "Q8H42A";
+	}
+	product PSQ8H43A PSBaseArrayChoiceItemFlag {
+		string[] choiceSort: "e";
+		string productId: "Q8H43A";
+		string productIdForPLC: "Q8H43A";
+	}
+	product PSQ8H70A PSBaseArrayChoiceItemFlag {
+		string[] choiceSort: "f";
+		string productId: "Q8H70A";
+		string productIdForPLC: "Q8H70A";
+	}
+	product PSQ8H71A PSBaseArrayChoiceItemFlag {
+		string[] choiceSort: "g";
+		string productId: "Q8H71A";
+		string productIdForPLC: "Q8H71A";
+	}
+	product PSQ8H72A PSBaseArrayChoiceItemFlag {
+		string[] choiceSort: "h";
+		string productId: "Q8H72A";
+		string productIdForPLC: "Q8H72A";
+	}
+	product PSQ8H73A PSBaseArrayChoiceItemFlag {
+		string[] choiceSort: "i";
+		string productId: "Q8H73A";
+		string productIdForPLC: "Q8H73A";
+	}
+	product PSQ8H74A PSBaseArrayChoiceItemFlag {
+		string[] choiceSort: "j";
+		string productId: "Q8H74A";
+		string productIdForPLC: "Q8H74A";
+	}
+	product PSR0P42A PSBaseArrayChoiceItemFlag {
+		string[] choiceSort: "k";
+		string productId: "R0P42A";
+		string productIdForPLC: "R0P42A";
+	}
+	product PSR0P43A PSBaseArrayChoiceItemFlag {
+		string[] choiceSort: "l";
+		string productId: "R0P43A";
+		string productIdForPLC: "R0P43A";
+	}
+	product PSR4S84A PSBaseArrayChoiceItemFlag {
+		string[] choiceSort: "m";
+		string productId: "R4S84A";
+		string productIdForPLC: "R4S84A";
+		boolean isSimplivity: true;
+	}
+	product PSR4S86A PSBaseArrayChoiceItemFlag {
+		string[] choiceSort: "n";
+		string productId: "R4S86A";
+		string productIdForPLC: "R4S86A";
+		boolean isSimplivity: true;
+	}
+	product PSR4S89A PSBaseArrayChoiceItemFlag {
+		string[] choiceSort: "o";
+		string productId: "R4S89A";
+		string productIdForPLC: "R4S89A";
+		boolean isSimplivity: true;
+	}
+	product PSR4S90A PSBaseArrayChoiceItemFlag {
+		string[] choiceSort: "p";
+		string productId: "R4S90A";
+		string productIdForPLC: "R4S90A";
+		boolean isSimplivity: true;
+	}
+	product PSR4S91A PSBaseArrayChoiceItemFlag {
+		string[] choiceSort: "q";
+		string productId: "R4S91A";
+		string productIdForPLC: "R4S91A";
+		boolean isSimplivity: true;
+	}
+	product PSR4S80A PSBaseArrayChoiceItemFlag {
+		string[] choiceSort: "r";
+		string productId: "R4S80A";
+		string productIdForPLC: "R4S80A";
+		boolean isSimplivity: true;
+	}
+	product PSR4S81A PSBaseArrayChoiceItemFlag {
+		string[] choiceSort: "s";
+		string productId: "R4S81A";
+		string productIdForPLC: "R4S81A";
+		boolean isSimplivity: true;
+	}
+	product PSR4S82A PSBaseArrayChoiceItemFlag {
+		string[] choiceSort: "t";
+		string productId: "R4S82A";
+		string productIdForPLC: "R4S82A";
+		boolean isSimplivity: true;
+	}
+	product PSR4S87A PSBaseArrayChoiceItemFlag {
+		string[] choiceSort: "u";
+		string productId: "R4S87A";
+		string productIdForPLC: "R4S87A";
+		boolean isSimplivity: true;
+	}
+	product PSR4S88A PSBaseArrayChoiceItemFlag {
+		string[] choiceSort: "v";
+		string productId: "R4S88A";
+		string productIdForPLC: "R4S88A";
+		boolean isSimplivity: true;
+	}
+	product PSR4S83A PSBaseArrayChoiceItemFlag {
+		string[] choiceSort: "w";
+		string productId: "R4S83A";
+		string productIdForPLC: "R4S83A";
+		boolean isSimplivity: true;
+	}
+	product PSR4S85A PSBaseArrayChoiceItemFlag {
+		string[] choiceSort: "x";
+		string productId: "R4S85A";
+		string productIdForPLC: "R4S85A";
+		boolean isSimplivity: true;
+	}
+	product PSR7E80A PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "a";
+		string productId: "R7E80A";
+		string productIdForPLC: "R7E80A";
+		string basemodelName: "btoIntel";
+		string sChangeUISpecTo: "";
+		//string[] options: "R2H14A"; //"BD505A"
+
+	}
+	product PSR7E81A PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "c";
+		string productId: "R7E81A";
+		string productIdForPLC: "R7E81A";
+		string basemodelName: "btoIntel";
+		string sChangeUISpecTo: "";
+		//string[] options: "R2H14A"; //"BD505A"
+
+	}
+	product PSR7E83A PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "b";
+		string productId: "R7E83A";
+		string productIdForPLC: "R7E83A";
+		string basemodelName: "btoIntel";
+		string sChangeUISpecTo: "";
+		//string[] options: "R2H14A"; //"BD505A"
+
+	}
+	product PSR7E82A PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "a";
+		string productId: "R7E82A";
+		string productIdForPLC: "R7E82A";
+		string basemodelName: "btoAMD";
+		string sChangeUISpecTo: "";
+		//string[] options: "R2H14A"; //"BD505A"
+
+	}
+	product PSP19766-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "a";
+		string productId: "P19766-B21";
+		string productIdForPLC: "P19766-B21";
+		boolean isDL360: true;
+		string basemodelName: "dl360";
+		string sChangeUISpecTo: "UIDL360dHCI";
+		string[] options: "BD505A", "874543-B21", "P18420-B21", "P18420-B21", "804331-B21", "P01366-B21", "734811-B21"; //872252
+
+	}
+	product PSP19769-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "b";
+		string productId: "P19769-B21";
+		string productIdForPLC: "P19769-B21";
+		boolean isDL360: true;
+		string basemodelName: "dl360";
+		string sChangeUISpecTo: "UIDL360dHCI";
+		string[] options: "BD505A", "874543-B21", "P18420-B21", "P18420-B21", "804331-B21", "P01366-B21", "734811-B21"; //872252
+
+	}
+	product PSP19720-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "c";
+		string productId: "P19720-B21";
+		string productIdForPLC: "P19720-B21";
+		boolean isDL380: true;
+		string basemodelName: "dl380";
+		string sChangeUISpecTo: "UIDL380dHCI";
+		string[] options: "BD505A", "P18420-B21", "P18420-B21", "804331-B21", "P01366-B21", "733660-B21", "733664-B21"; //"872252-B21",
+
+	}
+	product PSP04654-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "d";
+		string productId: "P04654-B21";
+		string productIdForPLC: "P04654-B21";
+		string basemodelName: "dl325";
+		string sChangeUISpecTo: "UIDL325dHCI"; //325
+		string[] options: "BD505A", "P18420-B21", "P18420-B21", "869081-B21", "P01366-B21", "866448-B21", "734807-B21", "734811-B21";
+	}
+	product PSP04848-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "e";
+		string productId: "P04848-B21";
+		string productIdForPLC: "P04848-B21";
+		string basemodelName: "dl325";
+		string sChangeUISpecTo: "UIDL325dHCI"; //325
+		string[] options: "BD505A", "P18420-B21", "P18420-B21", "869081-B21", "P01366-B21", "866448-B21", "734807-B21", "734811-B21";
+	}
+	product PSP18606-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "f";
+		string productId: "P18606-B21";
+		string productIdForPLC: "P18606-B21";
+		string basemodelName: "dl325+";
+		string sChangeUISpecTo: "UIDL325PlusdHCI"; //325+
+		string[] options: "BD505A", "P15511-B21", "P18420-B21", "P18420-B21", "869081-B21", "782961-B21", "P16979-B21", "P20422-B21", "P18544-B21", "P18546-B21";
+	}
+	product PS878612-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "g";
+		string productId: "878612-B21";
+		string productIdForPLC: "878612-B21";
+		string basemodelName: "dl385";
+		string sChangeUISpecTo: "UIDL385dHCI"; //385
+		string[] options: "BD505A", "P18420-B21", "P18420-B21", "804331-B21", "P01366-B21", "733660-B21", "733664-B21";
+	}
+	product PS878616-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "h";
+		string productId: "878616-B21";
+		string productIdForPLC: "878616-B21";
+		string basemodelName: "dl385";
+		string sChangeUISpecTo: "UIDL385dHCI"; //385
+		string[] options: "BD505A", "P18420-B21", "P18420-B21", "804331-B21", "P01366-B21", "733660-B21", "733664-B21";
+	}
+	product PSP14278-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "i";
+		string productId: "P14278-B21";
+		string productIdForPLC: "P14278-B21";
+		string basemodelName: "dl385+";
+		string sChangeUISpecTo: "UIDL385PlusdHCI"; //385+
+		ifEffective GOM_PERT_25138 {
+			string[] options: "BD505A", "standardDL385G10PRiser", "P12965-B21", "P22018-B21", "P22020-B21", "873763-B21";
+		} otherwise {
+			string[] options: "BD505A", "standardDL385G10PRiser", "P18420-B21", "P18420-B21", "804331-B21", "P01366-B21", "P22018-B21", "P22020-B21";
+		}
+	}
+	product PS841730-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "j";
+		string productId: "841730-B21";
+		string productIdForPLC: "841730-B21";
+		string basemodelName: "dl560";
+		string sChangeUISpecTo: "UIDL560dHCI"; //560
+		string[] options: "BD505A", "standardDL560G10Riser", "P18420-B21", "P18420-B21", "869081-B21", "P01366-B21", "733662-B21", "733664-B21";
+	}
+	product PS875797-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "k";
+		string productId: "875797-B21";
+		string productIdForPLC: "875797-B21";
+		string basemodelName: "dl560";
+		string sChangeUISpecTo: "UIDL560dHCI"; //560
+		string[] options: "BD505A", "standardDL560G10Riser", "P18420-B21", "P18420-B21", "869081-B21", "P01366-B21", "733662-B21", "733664-B21";
+	}
+	product PS869854-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "l";
+		string productId: "869854-B21";
+		string productIdForPLC: "869854-B21";
+		string basemodelName: "dl580";
+		string sChangeUISpecTo: "UIDL580dHCI"; //580
+		string[] options: "BD505A", "P18420-B21", "P18420-B21", "878214-B21", "830824-B21", "P01366-B21";
+	}
+	product PS878213-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "m";
+		string productId: "878213-B21";
+		string productIdForPLC: "878213-B21";
+		string basemodelName: "dl580";
+		string sChangeUISpecTo: "UIDL580dHCI"; //580
+		string[] options: "BD505A", "P18420-B21", "P18420-B21", "878214-B21", "830824-B21", "P01366-B21";
+	}
+	product PS867958-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "a";
+		string productId: "867958-B21";
+		string productIdForPLC: "867958-B21";
+		boolean isDL360: true;
+		string[] options: "BD505A", "872252-B21", "P09687-B21", "P09687-B21", "804331-B21", "P01366-B21";
+	}
+	product PS867959-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "c";
+		string productId: "867959-B21";
+		string productIdForPLC: "867959-B21";
+		boolean isDL360: true;
+		string sChangeUISpecTo: "UIDL360dHCI";
+		string[] options: "BD505A", "872252-B21", "P18420-B21", "P18420-B21", "804331-B21", "P01366-B21";
+	}
+	product PS867960-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "c";
+		string productId: "867960-B21";
+		string productIdForPLC: "867960-B21";
+		boolean isDL360: true;
+		string[] options: "BD505A", "872252-B21", "P18420-B21", "P18420-B21", "804331-B21", "P01366-B21";
+	}
+	product PS875965-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "d";
+		string productId: "875965-B21";
+		string productIdForPLC: "875965-B21";
+		boolean isDL360: true;
+		string[] options: "BD505A", "872252-B21", "P09687-B21", "P09687-B21", "804331-B21", "P01366-B21";
+	}
+	product PS875966-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "d";
+		string productId: "875966-B21";
+		string productIdForPLC: "875966-B21";
+		boolean isDL360: true;
+		string sChangeUISpecTo: "UIDL360dHCI";
+		string[] options: "BD505A", "872252-B21", "P18420-B21", "P18420-B21", "804331-B21", "P01366-B21";
+	}
+	product PS875967-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "f";
+		string productId: "875967-B21";
+		string productIdForPLC: "875967-B21";
+		boolean isDL360: true;
+		string[] options: "BD505A", "872252-B21", "P18420-B21", "P18420-B21", "804331-B21", "P01366-B21";
+	}
+	product PS868704-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "g";
+		string productId: "868704-B21";
+		string productIdForPLC: "868704-B21";
+		boolean isDL380: true;
+		string[] options: "BD505A", "733660-B21", "P18420-B21", "P18420-B21", "804331-B21", "P01366-B21";
+	}
+	product PS868705-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "h";
+		string productId: "868705-B21";
+		string productIdForPLC: "868705-B21";
+		boolean isDL380: true;
+		string[] options: "BD505A", "872252-B21", "P09687-B21", "P09687-B21", "804331-B21", "P01366-B21";
+	}
+	product PS868706-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "i";
+		string productId: "868706-B21";
+		string productIdForPLC: "868706-B21";
+		boolean isDL380: true;
+		string[] options: "BD505A", "872252-B21", "P09687-B21", "P09687-B21", "804331-B21", "P01366-B21";
+	}
+	product PS868703-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "f";
+		string productId: "868703-B21";
+		string productIdForPLC: "868703-B21";
+		boolean isDL380: true;
+		string sChangeUISpecTo: "UIDL380dHCI";
+		string[] options: "BD505A", "733660-B21", "P18420-B21", "P18420-B21", "804331-B21", "P01366-B21";
+	}
+	product PS875785-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "k";
+		string productId: "875785-B21";
+		string productIdForPLC: "875785-B21";
+		boolean isDL380: true;
+		string[] options: "BD505A", "872252-B21", "P09687-B21", "P09687-B21", "804331-B21", "P01366-B21";
+	}
+	product PS875783-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "l";
+		string productId: "875783-B21";
+		string productIdForPLC: "875783-B21";
+		boolean isDL380: true;
+		string[] options: "BD505A", "733660-B21", "P18420-B21", "P18420-B21", "804331-B21", "P01366-B21";
+	}
+	product PS875784-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "m";
+		string productId: "875784-B21";
+		string productIdForPLC: "875784-B21v";
+		boolean isDL380: true;
+		string[] options: "BD505A", "872252-B21", "P09687-B21", "P09687-B21", "804331-B21", "P01366-B21";
+	}
+	product PS875782-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "g";
+		string productId: "875782-B21";
+		string productIdForPLC: "875782-B21";
+		boolean isDL380: true;
+		string sChangeUISpecTo: "UIDL380dHCI";
+		string[] options: "BD505A", "733660-B21", "P18420-B21", "P18420-B21", "804331-B21", "P01366-B21";
+	}
+
+	//TD new gen10 plus models
+	product PSP28948-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "a";
+		string productId: "P28948-B21";
+		string productIdForPLC: "P28948-B21";
+		boolean isDL360: true;
+		string basemodelName: "dl360+";
+		string sChangeUISpecTo: "UIDL360PlusdHCI";
+		ifEffective SP_PERT_26212{
+			string[] options: "BD505A", "standardDL360G10PlusRiser", "P26427-B21", "P26485-B21", "P26489-B21", "867998-B21", "875519-B21" ,"P12965-B21","P38579-B21";
+		} otherwise {
+			string[] options: "BD505A", "standardDL360G10PlusRiser", "P26427-B21", "P40496-B21", "P40496-B21", "869079-B21", "P26485-B21", "P26489-B21", "867998-B21", "875519-B21", "P26449-B21";
+		}
+	}
+	product PSP42650-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "b";
+		string productId: "P42650-B21";
+		string productIdForPLC: "P42650-B21";
+		boolean isDL360: true;
+		string basemodelName: "dl360+";
+		string sChangeUISpecTo: "UIDL360PlusdHCI";
+		string[] options: "standardDL360G10PlusRiser", "P26427-B21", "P40496-B21", "P40496-B21", "869079-B21", "P26485-B21", "P26489-B21", "867998-B21", "875519-B21";
+	}
+	product PSP05172-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "c";
+		string productId: "P05172-B21";
+		string productIdForPLC: "P05172-B21";
+		boolean isDL380: true;
+		string basemodelName: "dl380+";
+		string sChangeUISpecTo: "UIDL380PlusdHCI";
+		ifEffective SP_PERT_26212{
+			string[] options: "BD505A", "P22018-B21", "P22020-B21", "867809-B21", "P12965-B21","875519-B21";
+		} otherwise {
+			string[] options: "BD505A", "P40496-B21", "P40496-B21", "804331-B21", "P01366-B21", "P22018-B21", "P22020-B21", "867809-B21", "875519-B21";
+		}
+	}
+	product PSP42566-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "c";
+		string productId: "P42566-B21";
+		string productIdForPLC: "P42566-B21";
+		boolean isDL380: true;
+		string basemodelName: "dl380+";
+		string sChangeUISpecTo: "UIDL380PlusdHCI";
+		string[] options: "P40496-B21", "P40496-B21", "804331-B21", "P01366-B21", "P22018-B21", "P22020-B21", "867809-B21", "875519-B21";
+	}
+	product PSP38471-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "f";
+		string productId: "P38471-B21";
+		string productIdForPLC: "P38471-B21";
+		string basemodelName: "dl325+v2";
+		string sChangeUISpecTo: "UIDL325PlusV2dHCI"; //325+
+		ifEffective SP_PERT_26212{
+		string[] options: "BD505A",  "P38473-B21", "P26489-B21", "P18547-B21", "875519-B21", "P12965-B21","P26485-B21";
+		} otherwise {
+			string[] options: "BD505A", "P38473-B21", "P40496-B21", "P40496-B21", "869079-B21", "P39137-B21", "P26485-B21", "P26489-B21", "P18547-B21", "875519-B21";
+		}
+	}
+	product PSP43248-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "f";
+		string productId: "P43248-B21";
+		string productIdForPLC: "P43248-B21";
+		string basemodelName: "dl325+v2";
+		string sChangeUISpecTo: "UIDL325PlusV2dHCI"; //325+
+		string[] options: "P38473-B21", "P40496-B21", "P40496-B21", "869079-B21", "P39137-B21", "P26485-B21", "P26489-B21", "P18547-B21", "875519-B21";
+	}
+	product PSP38578-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "c";
+		string productId: "P38578-B21";
+		string productIdForPLC: "P38578-B21";
+		boolean isDL380: true;
+		string basemodelName: "dl365+";
+		string sChangeUISpecTo: "UIDL365PlusdHCI";
+		ifEffective SP_PERT_26212{
+			string[] options: "BD505A", "P26489-B21","867998-B21","875519-B21","P26485-B21","P12965-B21","P38579-B21";
+		}otherwise{
+			string[] options: "BD505A", "P38579-B21", "P40496-B21", "P40496-B21", "869079-B21", "P26485-B21", "P26489-B21", "867998-B21", "875519-B21", "P26449-B21";
+		}
+		
+	}
+	product PSP43251-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "c";
+		string productId: "P43251-B21";
+		string productIdForPLC: "P43251-B21";
+		boolean isDL380: true;
+		string basemodelName: "dl365+";
+		string sChangeUISpecTo: "UIDL365PlusdHCI";
+		string[] options: "P40496-B21", "P40496-B21", "869079-B21", "P01366-B21", "P26485-B21", "P26489-B21", "867998-B21", "875519-B21";
+	}
+	product PSP38411-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "i";
+		string productId: "P38411-B21";
+		string productIdForPLC: "P38411-B21";
+		string basemodelName: "dl385+v2";
+		string sChangeUISpecTo: "UIDL385PlusV2dHCI"; //385+
+		ifEffective GOM_PERT_25138{
+			string[] options: "BD505A", "standardDL385G10V2Riser", "P22018-B21", "P22020-B21", "867809-B21", "875519-B21", "P12965-B21", "873763-B21";
+		}otherwise{
+			string[] options: "BD505A", "standardDL385G10V2Riser", "P40496-B21", "P40496-B21", "P22018-B21", "P22020-B21", "867809-B21", "875519-B21", "P12965-B21", "873763-B21";
+		}
+	}
+	product PSP43209-B21 PSCTOBaseModelsChoiceItemFlag {
+		string[] choiceSort: "i";
+		string productId: "P43209-B21";
+		string productIdForPLC: "P43209-B21";
+		string basemodelName: "dl385+v2";
+		string sChangeUISpecTo: "UIDL385PlusV2dHCI"; //385+
+		string[] options: "standardDL385G10V2Riser", "P40496-B21", "P40496-B21", "P22018-B21", "P22020-B21", "867809-B21", "875519-B21", "P12965-B21", "873763-B21";
+	}
+	product PSBD505A PSServeriLOChoiceItemFlag {
+		string[] choiceSort: "a";
+		string productId: "BD505A";
+		string productIdForPLC: "BD505A";
+	}
+	// flexfabric
+	product PSJL585A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "a";
+		string productId: "JL585A";
+		string productIdForPLC: "JL585A";
+		string switchType: "flexfabric";
+	}
+	product PSJL586A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "b";
+		string productId: "JL586A";
+		string productIdForPLC: "JL586A";
+		string switchType: "flexfabric";
+	}
+	product PSJL587A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "c";
+		string productId: "JL587A";
+		string productIdForPLC: "JL587A";
+		string switchType: "flexfabric";
+	}
+	product PSJL689A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "d";
+		string productId: "JL689A";
+		string productIdForPLC: "JL689A";
+		string switchType: "flexfabric";
+	}
+	product PSJQ074A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "e";
+		string productId: "JQ074A";
+		string productIdForPLC: "JQ074A";
+		string switchType: "flexfabric";
+	}
+	product PSJQ076A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "f";
+		string productId: "JQ076A";
+		string productIdForPLC: "JQ076A";
+		string switchType: "flexfabric";
+	}
+	product PSJQ075A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "g";
+		string productId: "JQ075A";
+		string productIdForPLC: "JQ075A";
+		string switchType: "flexfabric";
+	}
+	product PSJQ077A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "h";
+		string productId: "JQ077A";
+		string productIdForPLC: "JQ077A";
+		string switchType: "flexfabric";
+	}
+
+	// Aruba
+	product PSJL581A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "a";
+		string productId: "JL581A";
+		string productIdForPLC: "JL581A";
+		string switchType: "aruba";
+	}
+	product PSJL479A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "b";
+		string productId: "JL479A";
+		string productIdForPLC: "JL479A";
+		string switchType: "aruba";
+	}
+	product PSJL624A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "c";
+		string productId: "JL624A";
+		string productIdForPLC: "JL624A";
+		string switchType: "aruba";
+	}
+	product PSJL625A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "d";
+		string productId: "JL625A";
+		string productIdForPLC: "JL625A";
+		string switchType: "aruba";
+	}
+	product PSJL658A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "e";
+		string productId: "JL658A";
+		string productIdForPLC: "JL658A";
+		string switchType: "aruba";
+	}
+	product PSJL579A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "f";
+		string productId: "JL579A";
+		string productIdForPLC: "JL579A";
+		string switchType: "aruba";
+	}
+	product PSJL626A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "g";
+		string productId: "JL626A";
+		string productIdForPLC: "JL626A";
+		string switchType: "aruba";
+	}
+	product PSR9G08A PSSwitchesChoiceItemFlag {
+		string choiceSort: "a";
+		string productId: "R9G08A";
+		string productIdForPLC: "R9G08A";
+		string switchType: "aruba";
+	}
+	product PSR9G09A PSSwitchesChoiceItemFlag {
+		string choiceSort: "b";
+		string productId: "R9G09A";
+		string productIdForPLC: "R9G09A";
+		string switchType: "aruba";
+	}
+	product PSR9G10A PSSwitchesChoiceItemFlag {
+		string choiceSort: "c";
+		string productId: "R9G10A";
+		string productIdForPLC: "R9G10A";
+		string switchType: "aruba";
+	}
+	product PSR9G11A PSSwitchesChoiceItemFlag {
+		string choiceSort: "d";
+		string productId: "R9G11A";
+		string productIdForPLC: "R9G11A";
+		string switchType: "aruba";
+	}
+	product PSR9G12A PSSwitchesChoiceItemFlag {
+		string choiceSort: "e";
+		string productId: "R9G12A";
+		string productIdForPLC: "R9G12A";
+		string switchType: "aruba";
+	}
+	product PSR9G13A PSSwitchesChoiceItemFlag {
+		string choiceSort: "f";
+		string productId: "R9G13A";
+		string productIdForPLC: "R9G13A";
+		string switchType: "aruba";
+	}
+	product PSR9G16A PSSwitchesChoiceItemFlag {
+		string choiceSort: "g";
+		string productId: "R9G16A";
+		string productIdForPLC: "R9G16A";
+		string switchType: "aruba";
+	}
+	product PSR9G17A PSSwitchesChoiceItemFlag {
+		string choiceSort: "h";
+		string productId: "R9G17A";
+		string productIdForPLC: "R9G17A";
+		string switchType: "aruba";
+	}
+	product PSR9F63A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "i";
+		string productId: "R9F63A";
+		string productIdForPLC: "R9F63A";
+		string switchType: "aruba";
+	}
+	product PSR9F64A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "j";
+		string productId: "R9F64A";
+		string productIdForPLC: "R9F64A";
+		string switchType: "aruba";
+	}
+	product PSR9F65A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "k";
+		string productId: "R9F65A";
+		string productIdForPLC: "R9F65A";
+		string switchType: "aruba";
+	}
+	product PSR9F66A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "l";
+		string productId: "R9F66A";
+		string productIdForPLC: "R9F66A";
+		string switchType: "aruba";
+	}
+	product PSR9F67A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "m";
+		string productId: "R9F67A";
+		string productIdForPLC: "R9F67A";
+		string switchType: "aruba";
+	}
+	product PSJL627A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "h";
+		string productId: "JL627A";
+		string productIdForPLC: "JL627A";
+		string switchType: "aruba";
+	}
+	ifEffective GKK_24945_Swit {
+	}
+	otherwise {
+		product PSJL700A PSSwitchesChoiceItemFlag {
+			string[] choiceSort: "i";
+			string productId: "JL700A";
+			string productIdForPLC: "JL700A";
+			string switchType: "aruba";
+		}
+		product PSJL701A PSSwitchesChoiceItemFlag {
+			string[] choiceSort: "j";
+			string productId: "JL701A";
+			string productIdForPLC: "JL701A";
+			string switchType: "aruba";
+		}
+		product PSJL702A PSSwitchesChoiceItemFlag {
+			string[] choiceSort: "k";
+			string productId: "JL702A";
+			string productIdForPLC: "JL702A";
+			string switchType: "aruba";
+		}
+		product PSJL703A PSSwitchesChoiceItemFlag {
+			string[] choiceSort: "l";
+			string productId: "JL703A";
+			string productIdForPLC: "JL703A";
+			string switchType: "aruba";
+		}
+		product PSJL706A PSSwitchesChoiceItemFlag {
+			string[] choiceSort: "m";
+			string productId: "JL706A";
+			string productIdForPLC: "JL706A";
+			string switchType: "aruba";
+		}
+		product PSJL707A PSSwitchesChoiceItemFlag {
+			string[] choiceSort: "n";
+			string productId: "JL707A";
+			string productIdForPLC: "JL707A";
+			string switchType: "aruba";
+		}
+		product PSJL710A PSSwitchesChoiceItemFlag {
+			string[] choiceSort: "o";
+			string productId: "JL710A";
+			string productIdForPLC: "JL710A";
+			string switchType: "aruba";
+		}
+		product PSJL711A PSSwitchesChoiceItemFlag {
+			string[] choiceSort: "p";
+			string productId: "JL711A";
+			string productIdForPLC: "JL711A";
+			string switchType: "aruba";
+		}
+	}
+	// storefabric
+	product PSQ9E63A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "a";
+		string productId: "Q9E63A";
+		string productIdForPLC: "Q9E63A";
+		string switchType: "storefabric";
+	}
+	product PSR0P77A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "b";
+		string productId: "R0P77A";
+		string productIdForPLC: "R0P77A";
+		string switchType: "storefabric";
+	}
+	product PSR0P78A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "c";
+		string productId: "R0P78A";
+		string productIdForPLC: "R0P78A";
+		string switchType: "storefabric";
+	}
+	product PSQ2F23A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "d";
+		string productId: "Q2F23A";
+		string productIdForPLC: "Q2F23A";
+		string switchType: "storefabric";
+	}
+	product PSQ2F24A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "e";
+		string productId: "Q2F24A";
+		string productIdForPLC: "Q2F24A";
+		string switchType: "storefabric";
+	}
+	product PSR0P75A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "f";
+		string productId: "JG894A";
+		string productIdForPLC: "JG894A";
+		string switchType: "storefabric";
+	}
+	product PSR0P76A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "g";
+		string productId: "R0P76A";
+		string productIdForPLC: "R0P76A";
+		string switchType: "storefabric";
+	}
+	product PSQ6M28A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "h";
+		string productId: "Q6M28A";
+		string productIdForPLC: "Q6M28A";
+		string switchType: "storefabric";
+	}
+	product PSQ2F22A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "i";
+		string productId: "Q2F22A";
+		string productIdForPLC: "Q2F22A";
+		string switchType: "storefabric";
+	}
+	product PSQ6M27A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "j";
+		string productId: "Q6M27A";
+		string productIdForPLC: "Q6M27A";
+		string switchType: "storefabric";
+	}
+	product PSQ6M29A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "k";
+		string productId: "Q6M29A";
+		string productIdForPLC: "Q6M29A";
+		string switchType: "storefabric";
+	}
+	product PSR0P73A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "l";
+		string productId: "R0P73A";
+		string productIdForPLC: "R0P73A";
+		string switchType: "storefabric";
+	}
+	product PSR0P74A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "m";
+		string productId: "R0P74A";
+		string productIdForPLC: "R0P74A";
+		string switchType: "storefabric";
+	}
+	product PSQ2F21A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "n";
+		string productId: "Q2F21A";
+		string productIdForPLC: "Q2F21A";
+		string switchType: "storefabric";
+	}
+	product PSQ6M26A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "o";
+		string productId: "Q6M26A";
+		string productIdForPLC: "Q6M26A";
+		string switchType: "storefabric";
+	}
+	product PSR0P71A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "p";
+		string productId: "R0P71A";
+		string productIdForPLC: "R0P71A";
+		string switchType: "storefabric";
+	}
+	product PSR0P72A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "q";
+		string productId: "R0P72A";
+		string productIdForPLC: "R0P72A";
+		string switchType: "storefabric";
+	}
+	product PSR3B14A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "r";
+		string productId: "R3B14A";
+		string productIdForPLC: "R3B14A";
+		string switchType: "storefabric";
+	}
+
+	// Not in use
+	product PSJG894A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "j";
+		string productId: "JG894A";
+		string productIdForPLC: "JG894A";
+	}
+	product PSJG896A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "j";
+		string productId: "JG896A";
+		string productIdForPLC: "JG896A";
+	}
+	product PSJG898A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "j";
+		string productId: "JG898A";
+		string productIdForPLC: "JG898A";
+	}
+	product PSJH390A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "j";
+		string productId: "JH390A";
+		string productIdForPLC: "JH390A";
+	}
+	product PSJH391A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "j";
+		string productId: "JH391A";
+		string productIdForPLC: "JH391A";
+	}
+	product PSJH394A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "j";
+		string productId: "JH394A";
+		string productIdForPLC: "JH394A";
+	}
+	product PSJH395A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "j";
+		string productId: "JH395A";
+		string productIdForPLC: "JH395A";
+	}
+	product PSJH396A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "j";
+		string productId: "JH396A";
+		string productIdForPLC: "JH396A";
+	}
+	product PSJH397A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "j";
+		string productId: "JH397A";
+		string productIdForPLC: "JH397A";
+	}
+	product PSJH398A PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "j";
+		string productId: "JH398A";
+		string productIdForPLC: "JH398A";
+	}
+	product OnsiteCiscoNetworking PSSwitchesChoiceItemFlag {
+		string[] choiceSort: "x";
+		string productId: "";
+	}
+	class UIDL360dHCI extends DL360Gen10 {
+		boolean isProductClass: false;
+		productCategories: DoNotDisplay;
+		platformName: "dontset";
+		//Cost Optimization
+		boolean showCostOptimizationView: false;
+	}
+	class UIDL380dHCI extends DL380Gen10 {
+		boolean isProductClass: false;
+		productCategories: DoNotDisplay;
+		platformName: "dontset";
+		//Cost Optimization
+		boolean showCostOptimizationView: false;
+	}
+	class UIDL325dHCI extends DL325Gen10 {
+		boolean isProductClass: false;
+		productCategories: DoNotDisplay;
+		platformName: "dontset";
+		//Cost Optimization
+		boolean showCostOptimizationView: false;
+	}
+	class UIDL325PlusdHCI extends DL325G10Plus {
+		boolean isProductClass: false;
+		productCategories: DoNotDisplay;
+		platformName: "dontset";
+		//Cost Optimization
+		boolean showCostOptimizationView: false;
+	}
+	class UIDL385dHCI extends DL385Gen10 {
+		boolean isProductClass: false;
+		productCategories: DoNotDisplay;
+		platformName: "dontset";
+		//Cost Optimization
+		boolean showCostOptimizationView: false;
+	}
+	class UIDL385PlusdHCI extends DL385G10Plus {
+		boolean isProductClass: false;
+		productCategories: DoNotDisplay;
+		platformName: "dontset";
+		//Cost Optimization
+		boolean showCostOptimizationView: false;
+	}
+	class UIDL560dHCI extends DL560Gen10 {
+		boolean isProductClass: false;
+		productCategories: DoNotDisplay;
+		platformName: "dontset";
+		//Cost Optimization
+		boolean showCostOptimizationView: false;
+	}
+	class UIDL580dHCI extends DL580Gen10 {
+		boolean isProductClass: false;
+		productCategories: DoNotDisplay;
+		platformName: "dontset";
+		//Cost Optimization
+		boolean showCostOptimizationView: false;
+	}
+
+	//TD new models
+	class UIDL360PlusdHCI extends DL360G10Plus {
+		boolean isProductClass: false;
+		productCategories: DoNotDisplay;
+		platformName: "dontset";
+		//Cost Optimization
+		boolean showCostOptimizationView: false;
+	}
+	class UIDL380PlusdHCI extends DL380G10Plus {
+		boolean isProductClass: false;
+		productCategories: DoNotDisplay;
+		platformName: "dontset";
+		//Cost Optimization
+		boolean showCostOptimizationView: false;
+	}
+	class UIDL325PlusV2dHCI extends DL325G10PlusV2 {
+		boolean isProductClass: false;
+		productCategories: DoNotDisplay;
+		platformName: "dontset";
+		//Cost Optimization
+		boolean showCostOptimizationView: false;
+	}
+	class UIDL365PlusdHCI extends DL365G10Plus {
+		boolean isProductClass: false;
+		productCategories: DoNotDisplay;
+		platformName: "dontset";
+		//Cost Optimization
+		boolean showCostOptimizationView: false;
+	}
+	class UIDL385PlusV2dHCI extends DL385G10PlusV2 {
+		boolean isProductClass: false;
+		productCategories: DoNotDisplay;
+		platformName: "dontset";
+		//Cost Optimization
+		boolean showCostOptimizationView: false;
+	}
+}

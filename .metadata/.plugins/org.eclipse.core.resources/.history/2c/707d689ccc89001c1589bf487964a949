@@ -1,0 +1,671 @@
+package com.hp.ngc.plugins.agents.update.delegate.Alletra5000;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.hp.ngc.agents.ICustomChoicesAgent;
+import com.hp.ngc.engine.api.ISubConfiguration;
+import com.hp.ngc.engine.api.component.IChoiceItem;
+import com.hp.ngc.engine.api.component.ISection;
+import com.hp.ngc.engine.api.references.OperationParameter;
+import com.hp.ngc.engine.api.request.ModificationRequest;
+import com.hp.ngc.engine.api.request.ModificationRequest.RequestStatusCode;
+import com.hp.ngc.engine.api.request.OperationRequest;
+import com.hp.ngc.engine.api_impl.ConfigurationImpl;
+import com.hp.ngc.engine.api_impl.KnowledgeBaseImpl;
+import com.hp.ngc.engine.api_impl.SubConfigurationImpl;
+import com.hp.ngc.engine.api_impl.component.Choice;
+import com.hp.ngc.engine.api_impl.component.ChoiceText;
+import com.hp.ngc.engine.exceptions.EngineException;
+import com.hp.ngc.engine.transactions.ConfigurationChange.ReasonForChange;
+import com.hp.ngc.engine.transactions.CreateInstanceOfConfig;
+import com.hp.ngc.engine.transactions.EngineUpdateContext;
+import com.hp.ngc.engine.uispecs.xmlbean.SectionType;
+import com.hp.ngc.kb.modelInstance.AvailableQuantities;
+import com.hp.ngc.kb.modelInstance.ChoiceInstanceSingleSelect;
+import com.hp.ngc.kb.modelInstance.ConfigurationInstance;
+import com.hp.ngc.kb.modelInstance.ModelInstance;
+import com.hp.ngc.kb.modelInstance.NgcChoiceInstance;
+import com.hp.ngc.kb.modelInstance.NgcGroupInstance;
+import com.hp.ngc.kb.modelInstance.NgcLocationArrayInstance;
+import com.hp.ngc.kb.modelStore.NgcAttribute;
+import com.hp.ngc.kb.modelStore.NgcAttribute.AttributeType;
+import com.hp.ngc.plugins.agents.update.AgentUtility;
+import com.hp.ngc.plugins.agents.update.install.impl.WizardUtility;
+import com.hp.ngc.plugins.builtin.agents.update.BaseDelegateAgent;
+import com.hp.ngc.plugins.builtin.agents.update.DefaultUpdateAgent;
+import com.hp.ngc.plugins.builtin.agents.views.InstanceChoices;
+import com.hp.ngc.util.Log4NGC;
+import com.hp.ngc.util.UtilityConfigMethods;
+
+public class Alletra5000WizardAgent extends BaseDelegateAgent implements ICustomChoicesAgent {
+
+	protected static final String transactionName = "Alletra 5000 Solution";
+
+	protected HashMap<String, SubConfigurationImpl> subconfigMap = null;
+	protected List<EngineUpdateContext> eucList = null;
+
+	private static final String nimbleBaseGroup = "nimbleStorageGroup";
+	private static final String wizardSwitchBaseGroup = "ProStackSwitchGroup" ;
+	private static final String switchBaseGroup = "hpSwitchGroup";
+
+	protected ModelInstance targetInstance = null;
+	protected ModelInstance nimbleBaseInstance = null;
+	protected ModelInstance wizardSwitchBaseInstance = null;
+
+	protected NgcGroupInstance nimbleNgcGroup;
+	protected NgcGroupInstance wizardSwitchNgcGroup;
+
+	private static final String BASE_ARRAY_SECTION = "nimbleArraySection";
+
+	private static final String CONNECTIVITY_UISPEC_CHOICE = "alletraConnectivityChoice";
+	private static final String BASE_ARRAY_MODEL_UISPEC_CHOICE = "alletraBaseArrayModelChoice";
+	private static final String HPN_SWITCH_UISPEC_CHOICE = "hpnSwitchOptionChoice";
+
+	private static final String BASE_ARRAY_SUBSYSTEM = "nimbleArraySubsystem";
+
+	private static final String NIMBLE_BASE_CHOICE = "alletraBaseArrayModelChoice";
+	private static final String HPN_SWITCH_CHOICE = "hpnSwitchChoice";
+
+	protected static final String NimbleStorageClass = "Alletra5000";
+	protected static final String HPSwitchClass = "HPSwitch";
+
+	protected static final String NimbleStorageChoiceItemClass = "Alletra5000BaseArrayChoiceItem";
+	protected static final String HPNSwitchChoiceItemClass = "NimbleSwitchChoiceItem";
+	protected static final String ConnectivityChoiceItemClass = "NimbleConnectivityChoiceItem";
+
+	protected static final String nimbleBaseConfiguredAtt = "nimbleBaseConfigured";
+	protected static final String hpnSwitchConfiguredAtt = "hpnSwitchConfigured_";
+	protected static final String isNimbleCloudConnectedAttr = "isNimbleCloudConnected";
+	protected static final String productIdAtt = "productId";
+	protected static final String isProductClassAtt = "isProductClass";
+	protected static final String optionsListAtt = "productIdList";
+	protected static final String validContainerAtt = "productInstalledContainerId";
+
+	protected static final List<String> solutionPlatformDependentModels = Arrays.asList();
+	protected boolean isExpansion = false;
+	protected boolean isExceptionOccur = false;
+
+	@Override
+	public RequestStatusCode executeRequest(OperationRequest opRequest,
+			ModificationRequest request) throws EngineException {
+		Log4NGC.info(Alletra5000WizardAgent.class,"Welcome to Alletra 5000 Wizard");
+
+		long time1 = System.currentTimeMillis();
+
+		eucList = new ArrayList<EngineUpdateContext>();
+
+		if (defaultAgent == null)
+			setDefaultAgent(new DefaultUpdateAgent());
+
+		boolean opRequestNull = (opRequest == null);
+
+		Choice choice = null;
+		if (opRequestNull) {
+			targetInstance = subConfig.getPrimaryInstance();
+		} else {
+			choice = (Choice) opRequest.getOperationParameterValues().get(0).getMappedValue();
+			if (choice == null) {
+				request.setCode(RequestStatusCode.FAILED);
+				return request.getStatusCode();
+			}
+			targetInstance = ((InstanceChoices) choice.getParentChoicePoint().getParentView()).getPrimaryInstance();
+
+			defaultAgent.executeOperation(opRequest, request, true);
+			OperationRequest opRequestConsequential = UtilityConfigMethods.getPostUpdateRequest();
+			ModificationRequest mRequest = new ModificationRequest(opRequestConsequential);
+			defaultAgent.runPostUpdate(defaultAgent.getDelegator(), mRequest);
+		}
+		if (targetInstance == null) {
+			request.setCode(RequestStatusCode.FAILED);
+			return request.getStatusCode();
+		}
+
+		subconfigMap = new HashMap<String, SubConfigurationImpl>();
+		nimbleNgcGroup = targetInstance.getGroupById(nimbleBaseGroup);
+		dHCISwitchNgcGroup = targetInstance.getGroupById(dHCIswitchBaseGroup);
+
+		 if(choice != null){
+			List<OperationParameter> paramValues = opRequest.getOperationParameterValues();
+			ISection choiceSection = choice != null ? choice.getSection() : null;
+			if(nimbleNgcGroup.getMembers().size() > 0){
+				ModelInstance currentNimbleStorage = nimbleNgcGroup.getMembers().get(0);
+				nimbleBaseInstance = AgentUtility.getTrueModelInstance(currentNimbleStorage);
+			}
+			String lastCharofChoiceID = "" + choice.getId().charAt(choice.getId().length() -1);
+			if (choiceSection != null && choiceSection.getId().startsWith(BASE_ARRAY_SECTION) ) { 
+				if (choice.getId().endsWith(CONNECTIVITY_UISPEC_CHOICE)) {
+				}
+				if (choice.getId().endsWith(BASE_ARRAY_MODEL_UISPEC_CHOICE)) {
+					nimbleBaseInstance = getCreateOrModifyNimbleProduct(NIMBLE_BASE_CHOICE,nimbleBaseConfiguredAtt,NimbleStorageChoiceItemClass);
+					quoteSubItemsForBase();
+					//supportItemFromShelf();
+					removeUnSupportItemFromBase();
+				}
+				if (choice.getId().endsWith(HPN_SWITCH_UISPEC_CHOICE + lastCharofChoiceID)) {
+					getCreateOrModifySwitchProduct((HPN_SWITCH_CHOICE+ lastCharofChoiceID), (hpnSwitchConfiguredAtt+ lastCharofChoiceID));
+				}
+			}
+		}
+
+		long time2 = System.currentTimeMillis();
+		Log4NGC.info(Alletra5000WizardAgent.class,"Alletra5000WizardAgent.executeRequest took: " + (time2 - time1) + "ms");
+
+		WizardUtility.sortEUCByModelClass(eucList);
+		AgentUtility.closeOrDiscardEUCList(request.getStatusCode() != RequestStatusCode.FAILED, eucList);
+		defaultAgent.setSubConfiguration(subConfig);
+		return request.getStatusCode();
+	}
+	protected void getCreateOrModifySwitchProduct(String containerId, String previousSelectionAttribute){
+		ModelInstance switches = null;
+		NgcGroupInstance switchGrp = null;
+		try{
+			List<ModelInstance> solutionChoices = getListFromContainer(targetInstance,containerId);
+
+			if (nimbleBaseInstance == null){
+				return;	
+			}
+			String previousSelection = "none";
+			String optionId = "none";
+			List<String> switchAdds = new ArrayList<String>();
+
+			if(targetInstance.attributeDefined(previousSelectionAttribute)){
+				previousSelection = targetInstance.getAttributeStringValue(previousSelectionAttribute);
+			}
+
+			if(!solutionChoices.isEmpty()){
+				if(solutionChoices.get(0).attributeDefined(productIdAtt)){
+					optionId = solutionChoices.get(0).getAttributeStringValue(productIdAtt);
+				}else{
+					optionId = solutionChoices.get(0).getId();
+				}
+
+				if (nimbleBaseInstance != null){
+					switchGrp = nimbleBaseInstance.getGroupById(switchBaseGroup);
+				}
+				if(switchGrp.getMembers().isEmpty()){
+					AgentUtility.openTransaction(nimbleBaseInstance.getSubConfiguration(),eucList,transactionName);
+					switches = createNewModelWithOptions(subconfigMap,optionId,false,switchAdds,0);
+					WizardUtility.addOrRemoveInstanceFromGroup(switches.getSubConfiguration(),switchGrp,1);
+					UtilityConfigMethods.setAttributeSimple(switches, validContainerAtt, containerId);
+				} else {
+
+					if(optionId.equals(previousSelection)){
+
+					} else {
+
+						if (switchGrp != null){
+							AgentUtility.openTransaction(nimbleBaseInstance.getSubConfiguration(),eucList,transactionName);
+							for(ModelInstance instance :switchGrp.getMembers()){
+								ModelInstance trueModel = AgentUtility.getTrueModelInstance(instance);
+								addOrRemoveInstanceFromGroup(trueModel.getSubConfiguration(),switchGrp,-1,validContainerAtt,containerId);
+							}
+						}
+						switches = createNewModelWithOptions(subconfigMap,optionId,false,switchAdds,0);
+						WizardUtility.addOrRemoveInstanceFromGroup(switches.getSubConfiguration(),switchGrp,1);		
+						UtilityConfigMethods.setAttributeSimple(switches, validContainerAtt, containerId);
+					}
+				}
+				for(ModelInstance optionChild : solutionChoices){
+					AgentUtility.getTrueModelInstance(optionChild).getAttribute(isProductClassAtt).setValue(false, true);
+				}
+
+				targetInstance.getAttribute(previousSelectionAttribute).setValue(optionId, true);
+
+			} else {
+				if (nimbleBaseInstance != null){
+					switchGrp = nimbleBaseInstance.getGroupById(switchBaseGroup);
+				}
+				List<ModelInstance> instancestoDelete = switchGrp.getMembers();
+				if (instancestoDelete != null){
+					AgentUtility.openTransaction(nimbleBaseInstance.getSubConfiguration(),eucList,transactionName);
+					for(ModelInstance instance :instancestoDelete){
+						ModelInstance trueModel = AgentUtility.getTrueModelInstance(instance);
+						addOrRemoveInstanceFromGroup(trueModel.getSubConfiguration(),switchGrp,-1,validContainerAtt,containerId);
+					}
+				}
+				targetInstance.getAttribute(previousSelectionAttribute).setValue("none", true);
+			}
+		} catch(Exception e){
+			System.err.println("Operation failed for Nimble Solution in getCreateOrModifySwitchProduct method");
+		}
+	}
+	public static void addOrRemoveInstanceFromGroup(SubConfigurationImpl nestedsubConfig, NgcGroupInstance groupById,int numToAddOrDelete,String removeInstAtt ,String removeInstAttValue ) {
+		try {
+			if (groupById != null && groupById.getSubConfiguration() != null) {
+				SubConfigurationImpl parentSubConfig = groupById
+						.getSubConfiguration();
+
+				int numToDelete = Math.abs(numToAddOrDelete);
+				List<ModelInstance> groupMembers = groupById.getMembers();
+				List<ModelInstance> instancesToDelete = new ArrayList<ModelInstance>();
+				for (ModelInstance groupMember : groupMembers) {
+					if (groupMember.attributeDefined(removeInstAtt)) {
+						if (groupMember.getAttributeStringValue(removeInstAtt).equalsIgnoreCase(removeInstAttValue)) {
+							if (groupMember.getSubConfiguration() == parentSubConfig) {
+								if (numToDelete > 0) {
+									instancesToDelete.add(groupMember);
+								} else {
+									break;
+								}
+								numToDelete--;
+							}
+						}
+					}
+				}
+				for (ModelInstance del : instancesToDelete) {
+					parentSubConfig.deleteInstanceDoNotOptimize(del);
+				}
+
+			}
+		} catch (Exception e) {
+
+		}
+	}
+	protected void quoteSubItemsForBase() {
+		try {
+			OperationRequest opRequestConsequential = UtilityConfigMethods.getPostUpdateRequest();
+			ModificationRequest mRequest = new ModificationRequest(opRequestConsequential);
+			defaultAgent.runPostUpdate(defaultAgent.getDelegator(), mRequest);
+
+			for (int i = 1; i <= 2; i++) {
+				getCreateOrModifySwitchProduct((HPN_SWITCH_CHOICE+ i), (hpnSwitchConfiguredAtt+ i));
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+	}
+	
+	private void removeUnSupportItemFromBase() throws EngineException{
+
+		if(targetInstance.attributeDefined(nimbleBaseConfiguredAtt)){
+			String	nimbleBaseId = targetInstance.getAttributeStringValue(nimbleBaseConfiguredAtt);
+			List <String> validComponentList = new ArrayList <String>();
+
+			if(!validComponentList.isEmpty()){
+				for(String skuId : validComponentList){ //  removing From  Wizard Solution
+					AgentUtility.openTransaction(targetInstance.getSubConfiguration(),eucList,transactionName);
+					WizardUtility.addOrRemoveOptionToMatchQuantity(targetInstance, skuId,0);
+				}
+				for(String skuId : validComponentList){ //  removing From  Nimble Basemodel
+					AgentUtility.openTransaction(nimbleBaseInstance.getSubConfiguration(),eucList,transactionName);
+					WizardUtility.addOrRemoveOptionToMatchQuantity(nimbleBaseInstance, skuId,0);
+				}
+			}
+		}
+	}
+	protected List<ModelInstance> getListFromContainer(ModelInstance modelInstance, String containerId) throws EngineException {
+		List<ModelInstance> solutionChoices = new ArrayList<ModelInstance>();
+
+		if(modelInstance.getLocationArrayByName(containerId) != null){
+			NgcLocationArrayInstance solutionLocationArray = (NgcLocationArrayInstance) modelInstance.getLocationArrayByName(containerId);
+			solutionChoices = solutionLocationArray.getChildInstances();
+		}else if (modelInstance.getChoiceByName(containerId) != null) {
+			NgcChoiceInstance solutionChoice = (NgcChoiceInstance) modelInstance.getChoiceByName(containerId);
+			solutionChoices = solutionChoice.getChildInstances();
+		}
+
+		return solutionChoices;		 
+	}
+	@SuppressWarnings("unchecked")
+	protected List<String> createListOfOption(ModelInstance choice, String listAttr) {
+		List<String> options = new ArrayList<String>();
+		try {
+			if (choice.attributeDefined(listAttr)) {
+				if (choice.getAttributeValue(listAttr) instanceof List) {
+					ArrayList<String> optionsList = (ArrayList<String>) choice.getAttributeValue(listAttr);
+					for (int i = 0; i < optionsList.size(); i++) {
+						if (!optionsList.get(i).equals("")) {
+							options.add(optionsList.get(i));
+						}
+					}
+				} else {
+					String option = choice.getAttributeStringValue(listAttr);
+					options.add(option);
+				}
+			}
+
+		} catch (Exception e) {
+			System.err.println("Operation failed for Nimble Solution in createListOfOption method");
+		}
+		return options;
+	}
+	protected ModelInstance createNewModelWithOptions(HashMap<String, SubConfigurationImpl> subconfigMap, String modelId,
+			boolean suppressInternalDefaults, List<String> options, int indexNo) {
+		try {
+			ModelInstance newModel = createNewSubConfig(subconfigMap, modelId, suppressInternalDefaults, indexNo);
+			if (newModel != null) {
+				if (options != null && !options.isEmpty()) {
+					WizardUtility.addOptionsToModelWithAttributes(newModel, options);
+				}
+			}
+			return newModel;
+		} catch (Exception e) {
+			System.err.println("Operation failed for Nimble Solution in createNewModelWithOptions method");
+			return null;
+		}
+	}
+	protected ModelInstance createNewSubConfig(HashMap<String, SubConfigurationImpl> subconfigMap, String modelId, boolean suppressInternalDefaults, int indexNo) {
+		try {
+			ModelInstance newModelInstance = WizardUtility.createModelInNewSubconfig(modelId, defaultAgent,suppressInternalDefaults, subConfig, eucList);
+			subconfigMap.put(modelId + (indexNo == 0 ? "" : indexNo),newModelInstance.getSubConfiguration());
+
+			if (solutionPlatformDependentModels.contains(modelId)) {
+				newModelInstance.setPlatformName(targetInstance.getPlatformName());
+				newModelInstance.addAttribute("platformNameAtt", new NgcAttribute("platformNameAtt",AttributeType.StringType,false,newModelInstance,null));
+				newModelInstance.getAttribute("platformNameAtt").setValue(targetInstance.getPlatformName(), true);
+			}
+			return newModelInstance;
+		} catch (Exception e) {
+			return null;
+		}
+	}
+	protected ModelInstance getCreateOrModifyNimbleProduct(String containerId, String previousSelectionAttribute, String serverOptionClass){
+		ModelInstance nimble = null;
+		try{
+			List<ModelInstance> solutionChoices = getListFromContainer(targetInstance,containerId);
+
+			String previousSelection = "none";
+			String optionId = "none";
+			List<String> nimbleGroupsToDelete = new ArrayList<String>();
+			List<String> nimbleAdds = new ArrayList<String>();
+
+
+			if(targetInstance.attributeDefined(previousSelectionAttribute)){
+				previousSelection = targetInstance.getAttributeStringValue(previousSelectionAttribute);
+			}
+
+			if(!solutionChoices.isEmpty()){
+				if(solutionChoices.get(0).attributeDefined(productIdAtt)){
+					optionId = solutionChoices.get(0).getAttributeStringValue(productIdAtt);
+				}else{
+					optionId = solutionChoices.get(0).getId();
+				}
+				ModelInstance nimbleOpt = AgentUtility.getTrueModelInstance(solutionChoices.get(0));
+				nimbleAdds.addAll(createListOfOption(nimbleOpt, optionsListAtt));
+
+				NgcGroupInstance nimbleGrp = targetInstance.getGroupById(nimbleBaseGroup);
+				if(nimbleGrp.getMembers().isEmpty()){
+					nimble = createNewModelWithOptions(subconfigMap,optionId,false,nimbleAdds,0);
+					if(nimbleOpt.attributeDefined("sChangeUISpecTo")){
+						String uiSpec = nimbleOpt.getAttributeStringValue("sChangeUISpecTo");
+						if(uiSpec != null && !uiSpec.equals("")){
+							UtilityConfigMethods.setAttributeSimple(nimble, "uiSpecToUse", uiSpec);
+						}
+					}
+					WizardUtility.addOrRemoveInstanceFromGroup(nimble.getSubConfiguration(),nimbleGrp,1);
+				} else {
+					//see if it changed or stays the same
+					ModelInstance currentNimble = nimbleGrp.getMembers().get(0);
+					if(optionId.equals(previousSelection)){
+						//do nothing stays the same
+						nimble = currentNimble;
+					} else {
+						//delete existing and create new
+						resetSelectionsInWizardSection(targetInstance);
+						nimbleGroupsToDelete.add(nimbleBaseGroup);
+						deleteModelAndSubConfigBasedOnGroup(targetInstance,nimbleGroupsToDelete);
+						nimble = createNewModelWithOptions(subconfigMap,optionId,false,nimbleAdds,0);
+						if(nimbleOpt.attributeDefined("sChangeUISpecTo")){
+							String uiSpec = nimbleOpt.getAttributeStringValue("sChangeUISpecTo");
+							if(uiSpec != null && !uiSpec.equals("")){
+								UtilityConfigMethods.setAttributeSimple(nimble, "uiSpecToUse", uiSpec);
+							}
+						}
+						WizardUtility.addOrRemoveInstanceFromGroup(nimble.getSubConfiguration(),nimbleGrp,1);
+					}
+				}
+				for(ModelInstance optionChild : solutionChoices){
+					AgentUtility.getTrueModelInstance(optionChild).getAttribute(isProductClassAtt).setValue(false, true);
+				}
+				targetInstance.getAttribute(previousSelectionAttribute).setValue(optionId, true);
+
+			} else {
+				nimbleGroupsToDelete.add(nimbleBaseGroup);
+				deleteModelAndSubConfigBasedOnGroup(targetInstance,nimbleGroupsToDelete);
+				targetInstance.getAttribute(previousSelectionAttribute).setValue("none", true);
+			}
+		} catch(Exception e){
+			System.err.println("Operation failed for Nimble Solution in getCreateOrModifyNimbleProduct method");
+
+		}
+		return nimble;
+	}
+	protected void deleteModelAndSubConfigBasedOnGroup(ModelInstance targetInstance, List<String> groupsToConsider){
+		try{
+			ArrayList<ModelInstance> instancesToDelete = new ArrayList<ModelInstance>();
+			Collection<NgcGroupInstance> groups = new ArrayList<NgcGroupInstance>();
+			for (String groupName : groupsToConsider) {
+				groups.add(targetInstance.getGroupById(groupName));
+			}
+
+			//get members to delete
+			for(NgcGroupInstance g : groups){
+				instancesToDelete.addAll(g.getMembers());
+			}
+
+			ArrayList<SubConfigurationImpl> subConfigsToDelete = new ArrayList<SubConfigurationImpl>();
+
+			for(ModelInstance deleteInst: instancesToDelete){
+				SubConfigurationImpl subconfig = ((ConfigurationInstance) deleteInst).getMasterSubConfiguration();
+				if(subconfig.getCurrentTransaction() == null && !subConfigsToDelete.contains(subconfig)) subConfigsToDelete.add(subconfig);
+			}
+
+			for(SubConfigurationImpl deleteSubconfig: subConfigsToDelete){
+				eucList.add(new EngineUpdateContext(deleteSubconfig, "LITE", false, false));
+			}
+			//delete instances
+			for(ModelInstance deleteInst2: instancesToDelete){
+				if(deleteInst2 == null)continue;
+				System.err.println("Instance being deleted: " + deleteInst2.getName());
+				targetInstance.getSubConfiguration().deleteInstanceDoNotOptimize(deleteInst2);
+			}
+		} catch (Exception e){
+			System.err.println("Operation failed for Nimble Solution in deleteModelAndSubConfigBasedOnGroup method");
+		}
+
+	}
+	public void resetSelectionsInWizardSection(ModelInstance targetModel) throws EngineException {
+
+		//		List<String> attributeIds = Arrays.asList(new String[] {
+		//				"powerSupplyConfigured",
+		//				"ssdCapacityConfigured_1",
+		//				"ssdCapacityConfigured_2",
+		//				"networkControllerConfigured_1",
+		//				"networkControllerChildConfigured_1",
+		//				"networkControllerConfigured_2",
+		//				"networkControllerChildConfigured_2",
+		//				"networkControllerConfigured_3",
+		//				"networkControllerChildConfigured_3",
+		//				"networkControllerConfigured_4",
+		//				"networkControllerChildConfigured_4",
+		//				"networkControllerConfigured_5",
+		//				"networkControllerChildConfigured_5",
+		//				"networkControllerConfigured_6",
+		//				"networkControllerChildConfigured_6",
+		//				"nosSofwareConfigured"});
+		//		
+		//		List<String> choiceIdsOfSingleSelect = Arrays.asList(new String[] {
+		//				"SSDCapacityChoice1", "SSDCapacityChoice2", 
+		//				"NOSSoftwareChoice","PowerSupplyChoice",
+		//				"TransceiverforNetworkCardChoice1","TransceiverforNetworkCardChoice2","TransceiverforNetworkCardChoice3",
+		//				"TransceiverforNetworkCardChoice4","TransceiverforNetworkCardChoice5","TransceiverforNetworkCardChoice6"});
+		//		
+		//		List<String> locationArrayClear = Arrays.asList(new String[] { 
+		//				"ControllerLocationArray1", "ControllerLocationArray2", "ControllerLocationArray3", 
+		//				"ControllerLocationArray4", "ControllerLocationArray5", "ControllerLocationArray6"});
+		//	
+		//		for (String att : attributeIds) {
+		//			UtilityConfigMethods.setAttributeSimple(targetModel, att, "none");
+		//		}
+		//		// Delete current selection
+		//		for (String choiceId : choiceIdsOfSingleSelect) {
+		//			ChoiceInstanceSingleSelect choiceTarget = (ChoiceInstanceSingleSelect) targetModel.getChoiceByName(choiceId);
+		//			if (choiceTarget.isSelected()) {
+		//				AgentUtility.openTransaction(targetModel.getSubConfiguration(),eucList,transactionName);
+		//				targetModel.getSubConfiguration().deleteInstance(choiceTarget.getSelectedInstance(), false, false, true,false, ReasonForChange.REASON_BY_AGENT);
+		//			}
+		//		}
+		//		for (String containerId : locationArrayClear) {
+		//		  List<ModelInstance> solutionChoices = getListFromContainer(targetInstance,containerId);
+		//		   if(!solutionChoices.isEmpty()){
+		//			   for (ModelInstance containment : solutionChoices) {
+		//					AgentUtility.openTransaction(targetModel.getSubConfiguration(),eucList,transactionName);
+		//					targetModel.getSubConfiguration().deleteInstance(containment, true, false, true, false, ReasonForChange.REASON_BY_AGENT);
+		//			   }
+		//		}
+		//		}
+		/*for (String choiceId : choiceIdsOfMultiSelect) {
+			String targetId = choiceId.replaceFirst("%", targetIndex);
+			ChoiceInstanceMultiSelect choiceTarget = (ChoiceInstanceMultiSelect) targetModel.getChoiceByName(targetId);
+			if (choiceTarget.isSelected()) {
+				targetModel.getSubConfiguration().deleteInstance(choiceTarget.getSelectedInstance(), false, false, true, false, ReasonForChange.REASON_BY_AGENT);
+			}
+		}*/
+	}
+
+	private void setAttributeValueFromChoice(
+			List<OperationParameter> paramValues, ModelInstance targetInstance,
+			String choiceID) {
+		try {
+			// Number Textbox value for SSD Qty
+			String oldValue = ((ChoiceText) paramValues.get(0).getMappedValue()).getText();
+			String newValue = (String) paramValues.get(1).getMappedValue();
+			if (!newValue.equals(oldValue)) {
+				UtilityConfigMethods.setAttribute(targetInstance, choiceID,Integer.parseInt(newValue));
+			}
+		} catch (Exception exception) {
+			exception.printStackTrace();
+		}
+
+	}
+
+	protected void getCreateOrModifySoftware() throws EngineException {
+
+		Map<String, String> softwareELTUMap = new LinkedHashMap<String, String>();
+
+	}
+
+	protected ModelInstance getCreateOrModifyRack(
+			HashMap<String, SubConfigurationImpl> subconfigMap)
+					throws EngineException {
+		try {
+			ModelInstance rack = null;
+			List<String> rackAdds = new ArrayList<String>();
+			List<String> rackGroupsToDelete = new ArrayList<String>();
+			return rack;
+		} catch (Exception e) {
+			Log4NGC.error(Alletra5000WizardAgent.class,
+					"ERROR: Unable to create Rack solution for Aletra 5000 wizard.");
+			return null;
+		}
+	}
+
+
+	private void buildAdhocContainer(ModelInstance targetModel) {
+		try {
+			SubConfigurationImpl subCfg = null;
+			ConfigurationImpl config = subConfig.getConfiguration();
+			if(config.isIconSolution() && config.getCurrentIconSubConfig() != null) {
+				subCfg = (SubConfigurationImpl)config.getCurrentIconSubConfig();
+			} else {
+				subCfg = config.getSolutionSubconfiguration();
+			}
+			if(subCfg != null) {
+				Map<String, Object> controlParameters = new HashMap<String, Object>();
+				controlParameters.put("createInNewSubConfig", false);
+				controlParameters.put("setPrimaryInstance", "true");
+				ISubConfiguration sameConfig = subCfg.getConfiguration().createSubConfiguration(1);
+				subCfg.setRecentlyAddedIncidentID(sameConfig.getId());
+				KnowledgeBaseImpl kb = subCfg.getKb();
+				UtilityConfigMethods.addModelToConfig(sameConfig, kb.getAdHocContainerProduct(), controlParameters);
+				eucList.addAll(AgentUtility.getEUCCollection("addModel", Collections.singleton((SubConfigurationImpl)sameConfig)));
+
+				CreateInstanceOfConfig addChange = new CreateInstanceOfConfig((SubConfigurationImpl)sameConfig, ReasonForChange.REASON_WAS_REQUESTED);
+				subCfg.makeUpdate(addChange);
+			}
+
+		} catch(Exception e) {
+
+		}
+	}
+	@Override
+	public void setConfiguration(SubConfigurationImpl subConfig) {
+		// TODO Auto-generated method stub
+		this.subConfig = subConfig;
+	}
+
+	@Override
+	public void initializeCustomControlsOnSection(SectionType sectionType,
+			InstanceChoices instanceChoices, ModelInstance modelInstance)
+					throws EngineException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public boolean agentControlsChoiceUpdate(Choice choice,
+			InstanceChoices instanceChoices, boolean firstTime) {
+		// TODO Auto-generated method stub
+		return true;
+	}
+
+	@Override
+	public boolean agentControlsChoiceUpdatePass2(Choice choice,
+			InstanceChoices instanceChoices, boolean firstTime) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void updateChoice(Choice choice, ModelInstance modelInstance,
+			InstanceChoices instanceChoices, boolean firstTime)
+					throws EngineException {
+		// TODO Auto-generated method stub
+		instanceChoices.resumeUpdateFromDelegate(choice, modelInstance);
+
+	}
+
+	@Override
+	public void updateChoicePass2(Choice choice, ModelInstance modelInstance,
+			InstanceChoices instanceChoices, boolean firstTime)
+					throws EngineException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public boolean agentControlsAvailableQuantitiesForItem(Choice choice,
+			InstanceChoices instanceChoices, boolean firstTime) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void updateAvailableQuantitiesForItem(
+			AvailableQuantities availableQuantities, IChoiceItem iItem,
+			Choice choice, InstanceChoices instanceChoices)
+					throws EngineException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public String getUpdateDelegateAgentName() {
+		// TODO Auto-generated method stub
+		return "com.hp.ngc.plugins.agents.update.delegate.Alletra5000.Alletra5000WizardAgent";
+	}
+
+	@Override
+	public void init() throws EngineException {
+		// TODO Auto-generated method stub
+
+	}
+
+}

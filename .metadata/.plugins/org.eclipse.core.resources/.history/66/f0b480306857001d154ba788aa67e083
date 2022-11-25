@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>e614eacc-c2d9-4f25-9c1e-55dc5b62d9d8</name>
+	<comment></comment>
+	<projects>
+		<project>Engine</project>
+		<project>KBAgents</project>
+		<project>KBAgentsExtended</project>
+		<project>MauiFramework</project>
+		<project>MenuImportData</project>
+		<project>NgcCompiler</project>
+		<project>NgcRdal</project>
+		<project>RemoteSystemsTempFiles</project>
+		<project>ToolsOCA</project>
+		<project>ToolsOCC</project>
+		<project>ToolsSCE</project>
+		<project>TryProject</project>
+	</projects>
+	<buildSpec>
+	</buildSpec>
+	<natures>
+	</natures>
+</projectDescription>

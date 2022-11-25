@@ -1,0 +1,1096 @@
+package essn.storage.online.msa.msa2060 {
+	import common.agentutility.*;
+	import essn.storage.online.msa.common.msacommon.*;
+	import common.productcategories.*;
+	import common.coremodel.*;
+	import essn.storage.network.hpnetworkingcommon.*;
+	import essn.rack.tenk_g2_series_rack.BottomUpRackReference;
+	import essn.storage.network.nimblestorage.hpefilecontroller.*;
+	import essn.common.software.*;
+	import essn.storage.online.threepar.hp3parsoftware.*;
+	import common.localizations.*;
+	import essn.server.proliantservers.common.proliantproductoption.*;
+	import essn.storage.common.storagecommon.*;
+	import essn.storage.online.d2000.d2700.*;
+	import essn.storage.nas.se3850.*;
+	import essn.storage.network.sn2000mswitch.*;
+	import essn.server.common.servercommon.*;
+	class MSA206X extends MSACommon {
+		description: "SWD MSA 206X";
+		platformName: "msa206x";
+		configurationEntryPoint;
+		boolean uniqueSolutionIDONTopLevel: false;
+		string quickSpecMap:"msa206x";
+		string softwarePlatformName: "msa206x";
+		token tFormFactor: sff;
+		int iHalfEiaUnitsRequired: 4;
+		int iNumTransceivers: 2;
+		int iNumHarddiskBays: 24;
+		int iPowerBays: 2;
+		int iNumDriveEnclosures: 9;
+		int iNumFileController: 4;
+		int iNumSwitches: 10;
+		int iNumPowerCords: 99;
+		int iNumSwitchCable: 99;
+		int iNumSwitchSASCable: 8;
+		boolean show_in_system_overview: true;
+		boolean ocaCompatible: true;
+		string uniqueSvgName: "";
+		string overrideRackDataId: "";
+		int iNumMaxSecurityHardware: 1;
+		boolean enableBomManagedSKUs: true; //TD ENABLE MSA CLONING
+		string[] validRackList: "P9K04A", "P9K06A", "P9K38A", "P9K08A", "P9K40A", "P9K10A", "P9K50A", "P9K52A", "H7C27A", "Q2T97A";
+		string[] virtualRackList: "rackOnSite42u", "rackOnSite42u1200", "ZU715A";
+		boolean overrideIntegrationOption: true;
+		boolean isGLSC : true;//PM 15-sep-22 PERT-26289
+		class[] baseProductClasses: MSA2060SFF,MSA2060LFF,MSA2062SFF,MSA2062LFF;
+		def getTier1Default (): string[] = {
+			if thisConfig.getProperty("region") = "EU" then "AG466A" else "";
+		}
+		
+		def excludeForAppliance (): boolean = {
+			if(thisInst.id >= "R9G41A" || thisInst.id >= "R9G41B" || thisInst.id >= "R0Q77A" || thisInst.id >= "R0Q77B" || thisInst.id >= "R0Q78A" || thisInst.id >= "R0Q78B" || thisInst.id >= "R0Q83A" || thisInst.id >= "R0Q84A" || thisInst.id >= "R0Q84B") then true else false;
+		}
+		def excludeDriveLocArray (): boolean = thisConfig.getProperty("targetEnvironment") = "oca" || thisConfig.getProperty("targetEnvironment") = "ezc" || thisConfig.getProperty("targetEnvironment") = "ipcs";
+		def excludeDriveGroup (): boolean = thisConfig.getProperty("targetEnvironment") = "sce" || thisConfig.getProperty("targetEnvironment") = "eocs" || 
+											thisConfig.getProperty("targetEnvironment") = "ezc" || thisConfig.getProperty("targetEnvironment") = "ipcs";
+											
+		def max_hardDriveBaysFunction: int =
+		{
+			if(thisInst.id >= "R0Q79A" || thisInst.id >= "R0Q81A" || thisInst.id >= "R0Q83A" || thisInst.id >= "R7J70A") then 10 
+			else if(thisInst.id >= "R0Q80A" || thisInst.id >= "R0Q80B" || thisInst.id >= "R0Q82A" || thisInst.id >= "R0Q82B" || thisInst.id >= "R0Q84A" || thisInst.id >= "R0Q84B" || thisInst.id >= "R7J71A" || thisInst.id >= "R7J71B") then 22
+			else 24;
+		}
+		def max_HCCfcCable: int = 99;
+		def max_HCCminiSAShdtoMiniSAS: int = 8;
+
+		string defaultShipmentOption: "FactIntCTO";
+		def defaultShipmentOption (): string = {
+			defaultShipmentOption;
+		}
+		def overrideIntegrationOptionAgentFunc (): string = {
+//			val factOptionSelected = thisInst.selected(FactIntCTO);
+//			if(factOptionSelected.count = 0 and ancestors (thisInst, "TenKG2SeriesRack").count = 0) then "BTO" else "0D1"; //SK 22-Jan-2021 updated the logic for an issue reported by Jitka.(dragging the storage model into Rack) 
+			
+			val rack = ancestors (thisInst, "RackModel").filter(x => (x.subTypes * "BTO").count = 0 && x.doNotQuote = 'false' && x.isProductClass);
+			val factfieldOptionSelected = thisInst.selected(FieldFactoryChoiceItemFlag).filter(x => x.id <= "FldIntBTO").count;
+			if ((rack.count > 0 and factfieldOptionSelected > 0) or (rack.count = 0 and factfieldOptionSelected > 0)) then "BTO" else "";
+			
+
+		}
+		def getDefaultsProducts (): string[] = {
+			if(thisInst.id >= "R0Q73A" || thisInst.id >= "R0Q73B" || thisInst.id >= "R9G39A"  || thisInst.id >= "R9G39B"  || thisInst.id >= "R9G38A" || thisInst.id >= "R9G38B" || thisInst.id >= "R0Q74A" || thisInst.id >= "R0Q74B" || thisInst.id >= "R0Q75A" || thisInst.id >= "R0Q75B" || 
+			   thisInst.id >= "R0Q76A" || thisInst.id >= "R0Q76B" || thisInst.id >= "R9G40A" || thisInst.id >= "R9G40B" || thisInst.id >= "R0Q77A" || thisInst.id >= "R0Q77B" || thisInst.id >= "R9G41A" || thisInst.id >= "R9G41B" || thisInst.id >= "R0Q78A" || thisInst.id >= "R0Q78B") then expanderString ("R2C33AAE", 1);
+		}
+		def DCPSDisplayNotes: string = {
+		" <p>All MSA base models and drive enclosures come standard with 2 AC Power Supplies installed. If DC Power Supplies are selected,  <br>
+				 they will replace the AC power supplies and the AC power supplies will not be shipped with the order.  <br>
+			  <p>";
+		}
+		def TAADisplayNotes: string = {
+			if(thisInst.id >= "R9G38A" || thisInst.id >= "R9G38B" || thisInst.id >= "R9G39A" || thisInst.id >= "R9G39B" || thisInst.id >= "R9G40A" || thisInst.id >= "R9G40B" || thisInst.id >= "R9G41A" || thisInst.id >= "R9G41B") then " <p>All TAA compliant 2060 Drive Enclosures must ship with at least 6 TAA compliant drives installed.  Additional drives can be added but must be TAA compliant drives to support SED functionality.   <br>
+					If non-SED drives are required, they must be added through Ad-Hoc selection.  <br>
+					 Adding non-SED drives to either the Array or Drive Enclosure will remove SED functionality from the entire array configuration.
+			  <p>" else "";
+		}
+		def ArxMandatoryMessage: string = {
+			if(thisInst.selected(HP3Par7000ArxscanarView).count) > 0 then "The following end user (entity that will own/utilize the licenses) information is REQUIRED to deliver the electronic licenses/services:</br>
+					  <p> 1) End User Company Name </br>
+						  2) End User Company Address (please include the full address: street name, number, city, state, and zip code) </br>
+						  3) End User Customer contact name </br>
+						  4) End User Email address</br>
+						  5) Reseller Name and Address </br>
+						  6) Distributor Name and Address.<p>" else "";
+		}
+		def getDefaultTransC8R24B (): string[] = {
+			if(thisInst.id >= "R0Q73A" || thisInst.id >= "R0Q73B" || thisInst.id >= "R9G39A" || thisInst.id >= "R9G39B" || thisInst.id >= "R9G38A" || thisInst.id >= "R9G38B" || thisInst.id >= "R0Q74A" || thisInst.id >= "R0Q74B" || thisInst.id >= "R0Q79A" || thisInst.id >= "R0Q80A" || thisInst.id >= "R0Q80B") then expanderString ("C8R24B", 1);
+		}
+		def getDefaultTransC8R25B (): string[] = {
+			if(thisInst.id >= "R0Q75A" || thisInst.id >= "R0Q75B" || thisInst.id >= "R0Q76A" || thisInst.id >= "R0Q76B" || thisInst.id >= "R9G40A" || thisInst.id >= "R9G40B" || thisInst.id >= "R0Q81A" || thisInst.id >= "R0Q82A" || thisInst.id >= "R0Q82B") then expanderString ("C8R25B", 1);
+		}
+		
+		def RackNotSelected (): boolean = {
+			if(thisConfig.getProperty("targetEnvironment") = "ezc" || thisConfig.getProperty("targetEnvironment") = "ipcs") then true else (if ancestors (thisInst, "TenKG2SeriesRack").count > 0 then true else false);
+		}
+		def setintergrateToBase (): boolean = callout("MSAUtils", "setintergrateToBase", thisInst);
+		
+		//PM 23-june-22 PERT-26184
+		def getDefaultSwitches (): string[] = {
+			if(thisInst.id >= "R0Q73A" || thisInst.id >= "R0Q73B" || thisInst.id >= "R0Q74A" || thisInst.id >= "R0Q74B"
+				|| thisInst.id >= "R0Q79A" || thisInst.id >= "R0Q79B" || thisInst.id >= "R0Q80A" || thisInst.id >= "R0Q80B" || thisInst.id >= "R9G38A"
+				|| thisInst.id >= "R9G38B" || thisInst.id >= "R9G39A" || thisInst.id >= "R9G39B") then expanderString ("R4G55B", 1);
+			}
+
+		subsystem factFieldIntSubsystem {
+			locationArray factFieldIntLocArray {
+				rows: 1;
+				fillerClasses: FieldFactoryChoiceItemFlag;
+			}
+			part getDefaultsShipmentTrigger: triggerConsequentialSelection {
+				string consequentialSelectionFunc: "defaultShipmentOption";
+			}
+			constraint setintergrateToBaseValue {
+				message: "set intergrateToBaseID";
+				body: setintergrateToBase ();
+			}
+		}
+		/**
+		 * unsupported Transceiver products are handled through SUPPORTEDON_EXCLUSIONSBYBASEPRODUCT.txt
+		 */
+		subsystem transceiverSubsystem {
+			locationArray transceiverLocArray {
+				rows: iNumTransceivers;
+				columns: 1;
+				fillerClasses: SFPPlusTransceivers;
+			}
+			part addDefTransC8R24BTrigger: triggerInternalDefaults {
+				string modelDefaultsFunc: "getDefaultTransC8R24B";
+			}
+			part addDefTransC8R25BTrigger: sceDefaultsTrigger {
+				string modelDefaultsFunc: "getDefaultTransC8R25B";
+			}
+			constraint transcNotRequiredwith10gbeDACcables {
+				message: "If any 10GbE Direct Attached Copper Cable is configured/quoted then NO transceivers are required to be selected. The Copper Cable comes with transceivers.";
+				body:
+				{
+					if(thisInst.id >= "R0Q73A" or thisInst.id >= "R0Q73B" or thisInst.id >= "R9G39A" or thisInst.id >= "R9G39B" or thisInst.id >= "R9G38A" or thisInst.id >= "R9G38B" or thisInst.id >= "R0Q74A" or thisInst.id >= "R0Q74B" or thisInst.id >= "R0Q79A" or thisInst.id >= "R0Q80A" or thisInst.id >= "R0Q80B") then 
+						if(thisInst.selected(SFPPlusTransceivers).filter(p => p.id >= "J9281D" || p.id >= "J9283D" || p.id >= "J9285D").count +
+					       thisInst.selected(DirectAttachCable).filter(p => p.id >= "487655-B21" || p.id >= "537963-B21" || p.id >= "JD095C" || p.id >= "JD096C" 
+					       	|| p.id >= "JD097C" || p.id >= "JG081C" || p.id >= "JC784C" || p.id >= "JH693A" || p.id >= "JH694A" || p.id	>= "JH695A" || p.id >= "JG329A" 
+					       	|| p.id >= "JG330A" || p.id >= "JG331A").count) > 0 then thisInst.selected(SFPPlusTransceivers).filter(p => p.id >= "C8R24B").count = 0;
+				}
+			}
+			constraint min1transcRequired {
+				message: "User must either have 1 Transceiver (C8R25B) or 2 DAC / 10GbE Copper Cables on iSCSI models.";
+				body:
+				{
+					if(thisInst.id >= "R0Q75A" or thisInst.id >= "R0Q75B" or thisInst.id >= "R0Q76A" or thisInst.id >= "R0Q76B" or thisInst.id >= "R9G40A" or thisInst.id >= "R9G40B" or thisInst.id >= "R0Q81A" or thisInst.id >= "R0Q82A" or thisInst.id >= "R0Q82B") then 
+					if(thisInst.selected(SFPPlusTransceivers).filter(p => p.id >= "J9281D" || p.id >= "J9283D" ||
+					p.id >= "J9285D").count + thisInst.selected(DirectAttachCable).filter(p => p.id >= "487655-B21" || p.id >= "537963-B21" || p.id >= "JD095C" || p.id >= "JD096C" 
+						|| p.id >= "JD097C" || p.id >= "JG081C" || p.id >= "JC784C" || p.id >= "JG329A" || p.id >= "JG330A" || p.id >= "JG331A").count) < 2 
+						then thisInst.selected(SFPPlusTransceivers).filter(p => p.id >= "C8R25B").count >= 1;
+				}
+			}
+			constraint transceiversMinReq {
+				message: "Min 1 C8R24B required for FC Systems(R0Q73A,R0Q73B,R9G39A,R9G39B,R0Q74A,R0Q74B,R9G38A,R9G38B, R0Q79A, R0Q80A, R0Q80B).";
+				body: if(thisInst.id >= "R0Q73A" || thisInst.id >= "R0Q73B" || thisInst.id >= "R9G39A" || thisInst.id >= "R9G39B" || thisInst.id >= "R9G38A"  || thisInst.id >= "R9G38B" || thisInst.id >= "R0Q74A" || thisInst.id >= "R0Q74B" || thisInst.id >= "R0Q79A" || thisInst.id >= "R0Q80A" || thisInst.id >= "R0Q80B") then thisInst.selected(SFPPlusTransceivers).filter(p => p.id >= "C8R24B").count >= 1;
+			}
+		}
+		subsystem driveEnclosureSubsystem {
+			locationArray driveEnclosureLocArray {
+				rows: iNumDriveEnclosures;
+				columns: 1;
+				fillerClasses: MSA2060DE;
+			}
+			group driveEnclosureGroup {
+				groupPartType: driveEnclosureGroup;
+				memberClasses: MSA2060DE;
+				groupMax: iNumDriveEnclosures;
+			}
+			constraint max9DriveEnclosures {
+				message: "Max 9 enclosures with MSA 206x.";
+				body: restriction (MSA2060DE <= 9);
+			}
+			part postInstallDelegateTrigger: triggerPostInstallDelgateAgent {
+				string agentClass: "com.hp.ngc.plugins.agents.update.delegate.MSACommonUpdateAgent";
+			}
+			constraint DCPSreqinboth {
+				message: "If DC Power Supplies are selected, then the DC Power Supplies must be selected on the Base Array and every Drive Enclosure.";
+				body:
+				{
+					val DEcount = thisInst.selected(MSA2060DE).count;
+					val PScount = thisInst.selected(PowerSupply).filter(x => x.id >= "R0Q90A").count;
+					if(PScount > 0 && DEcount > 0) then thisInst.selected(PowerSupply).filter(x => x.id >= "R0Q90A").count >= (2 + (DEcount * 2)) else true;
+				}
+			}
+		}
+		subsystem hardDriveSubsystem {
+			constraint edrivesnotChinaRule5 {
+				message: "Encryption and TAA Compliant Drives CANNOT be configured/ordered by customers in China.";
+				body:
+				{
+					if(thisConfig.getProperty("country") = "CN") then thisInst.selected(HardDrive).filter(p => p.id >= "R0R44AA" || p.id >= "R0R47A" || p.id >= "R0R50A" || p.id >= "R0Q50A" || p.id >= "R0Q51A" || p.id >= "R0R52A" || p.id >= "R0R53A" || p.id >=
+					"R0R55A").count = 0;
+				}
+			}
+			//Overriding rule inherited from common file to avoid issues
+			constraint driveEnclosuresMessage {
+				message: "Drive enclosures do not have to be completely filled with disk drives.";
+				body: if thisInst.selected(HardDrive).count > 0 then true;
+			}
+			constraint min2HardDriveMSA2060 {
+				message: "A minimum quantity of 2 drives must be selected of the same type;  SSDs, Enterprise-Class SAS hard drives (10K or 15K RPM), or Midline SAS hard drives (7.2K RPM).";
+				body:
+				if(thisInst.id >= "R0Q73A" || thisInst.id >= "R0Q73B" || thisInst.id >= "R9G39A" || thisInst.id >= "R9G39B" || thisInst.id >= "R0Q74A"  || thisInst.id >= "R0Q74B"  || thisInst.id >= "R9G38A" || thisInst.id >= "R9G38B" || thisInst.id >= "R0Q75A" || thisInst.id >= "R0Q75B" || thisInst.id >= "R0Q76A" || thisInst.id >= "R0Q76B" || thisInst.id >= "R9G40A" || thisInst.id >= "R9G40B" || thisInst.id >= "R0Q77A" || thisInst.id >= "R0Q77B" || thisInst.id >= "R0Q78A" || thisInst.id >= "R0Q78B" || thisInst.id >= "R9G41A" || thisInst.id >= "R9G41B" || thisInst.id >= "R7J72A" || thisInst.id >= "R7J72B" || thisInst.id >= "R7J73A" || thisInst.id >= "R7J73B") then
+				if(hardDriveLocArray.contents.filterByAttribute(iNumOfHardDrives, 1).count + (hardDriveLocArray.contents.filterByAttribute(iNumOfHardDrives, 6).count * 6) > 0) then (hardDriveLocArray.contents.filterByAttribute(iNumOfHardDrives,
+				1).count + (hardDriveLocArray.contents.filterByAttribute(iNumOfHardDrives, 6).count * 6) >= 2) else true;
+			}
+		}
+		subsystem switchCableSubsystem {
+			locationArray switchSASCableSlots {
+				rows: iNumSwitchSASCable;
+				fillerClasses: SASHDCable, SASHDSASHDCable;
+			}
+			locationArray switchCableSlots {
+				rows: iNumSwitchCable;
+				fillerClasses: OM3LCLCCable, OM4LCLCCable, DirectAttachSFPPlusCable, DirectAttachQSFPPlusToSFPPlusCable, SFPPlusTransceivers;
+			}
+			constraint switchCableMax99 {
+				message: "Host Connect Cables MAX is 99.";
+				body: restriction (LCLCCable <= 99);
+			}
+			constraint switchCablesfpMax99 {
+				message: "MAX 99 for 10Gbe Direct Attach copper cable";
+				body:
+				thisInst.selected(DirectAttachSFPPlusCable).count + thisInst.selected(SFPPlusTransceivers).filter(p => p.id >= "J9281D " || p.id >= "J9283D " || p.id >= "J9285D ").count <= 99;
+			}
+		}
+		subsystem powerCordSubsystem {
+			locationArray powerCordLocArray {
+				rows: iNumPowerCords;
+				fillerClasses: C13ProliantPowerCord, ProliantPowerCord;
+			}
+			constraint powerCordRemarks1 {
+				message: "If any of these ''Optional'' Power Cords are ordered, then quantity should be equal to the total number of power supplies in the solution.
+							  The base array and enclosures come standard with 2 power supplies.";
+				body: if((thisInst.selected(C13ProliantPowerCord).count + thisInst.selected(ProliantPowerCord).count) > 0) then false;
+			}
+			constraint powerCordBlueNote1 {
+				message: "These cords may be used by customers that desire to plug their enclosure into a wall outlet.";
+				body: true;
+
+			}
+			constraint powerCordBlueNote2 {
+				message: "If the customer desires power cords then they should get 2 since each enclosure has 2 power supplies.";
+				body: true;
+
+			}
+		}
+		subsystem switchesSubsystem {
+			group switchesGroup {
+				groupPartType: switchesGroup;
+				memberClasses: HPSwitch;
+				groupMax: iNumSwitches;
+			}
+			constraint max10Switches {
+				message: "Max 10 Switches with MSA 206x.";
+				body: restriction (HPSwitch <= 10);
+			}
+			constraint MSeriesnotSupportedwithFCbase {
+				message: "These FC Base Models R0Q73A,R0Q73B,R9G39A, R9G39B, R0Q74A,R0Q74B, R9G38A, R9G38B, R0Q79A, R0Q80A, R0Q80B supports only B-Series & C-Series Switches";
+				body: dependency (MSA206X [ R0Q73A || R0Q73B || R9G39A || R9G39B || R0Q74A || R0Q74B || R9G38A || R9G38B || R0Q79A || R0Q80A || R0Q80B ], HPSwitch [ msaSwitch = 'MSeries' ] = 0);
+			}
+			constraint BCSeriesnotSupportedwithiSCSIbase {
+				message: "These iSCSI Base Models R0Q75A, R0Q75B, R0Q76A, R0Q76B, R9G40A, R9G40B, R0Q81A, R0Q82A, R0Q82B supports only M-Series Switches";
+				body: dependency (MSA206X [ R0Q75A || R0Q75B || R0Q76A || R0Q76B || R9G40A || R9G40B || R0Q81A || R0Q82A || R0Q82B ], HPSwitch [ msaSwitch = 'CSeries' || msaSwitch = 'BSeries' || JL805A] = 0);
+			}
+			constraint BCMSeriesnotSupportedwithTiSCSIbase {
+				message: "Option for 10G Base-T iSCSI Base Model  R7J70A, R7J71A, R7J71B, R7J72A, R7J72B, R7J73A,R7J73B";
+				body: dependency (MSA206X [ R7J70A || R7J71A || R7J71B || R7J72A || R7J72B || R7J73A || R7J73B ], HPSwitch [ msaSwitch = 'CSeries' || msaSwitch = 'BSeries' || Q9E63A || Q2F23A] = 0);
+			}
+			constraint DisplayNoteBSeries {
+				message: "Pre-configured Starter kit: dual path & lowest price per port: SAN Networking Kit for MSA Gen6 16Gb FC Array kit available for 2 ProLiants. SEARCH OCA>Product Catalog>Reference Build>Networking> SAN Networking Kit for MSA Gen6 16Gb FC Array";
+				body: restriction(!(HPSwitch [ msaSwitch = 'BSeries' || K2Q16A] > 0 ));
+			}
+			constraint DisplayNoteCSeries {
+				message: "Pre-configured Starter Kit: dual path & lowest price per port: SAN Networking Kit for MSA Gen6 10Gb iSCSI Array kit available for 2 ProLiants. SEARCH OCA>Product Catalog>Reference Build>Networking> SAN Networking Kit for 10Gb MSA Gen6 iSCSI Array";
+				body: restriction(!(HPSwitch [ Q9E63A || Q2F23A] > 0));
+			}
+			constraint DisplayNoteMSeries {
+				message: "Pre-configured Starter Kit: dual path & lowest price per port: SAN Networking Kit for MSA Gen6 10GBase-T iSCSI Array kit available for 2 ProLiants. SEARCH OCA>Product Catalog>Reference Build>Networking> SAN Networking Kit for 10GBase-T iSCSI Array";
+				body: restriction(!(HPSwitch [ msaSwitch = 'MSeries'] > 0));
+			}
+			//PM 23-june-22 PERT-26184
+			part switchAddr ConfigAgentTrigger {
+				string agentClass: "com.hp.ngc.plugins.agents.update.install.impl.InternalGroupDefaultsAgent";
+				string modelDefaultsFunc: "getDefaultSwitches";
+				string groupDefaultTo: "switchesGroup";
+				string[] targetEnvs: "oca";
+				part[] agentTiming: preInstall;
+			}
+		}
+		subsystem powerSubsystem {
+			locationArray powerSupplyBays {
+				rows: iPowerBays;
+				rowsConsumed: iPowerSupplyBaysTaken;
+				fillerClasses: PowerSupply;
+			}
+			constraint powerSupplyinPairs {
+				message: "Power Supplies must be selected in pairs";
+				body: restriction (PowerSupply.pairs);
+			}
+			constraint noPSinIndia {
+				message: "DC Power Supplies should not be selectable in India.";
+				body: if thisConfig.getProperty("country") = "IN" then thisInst.selected(PowerSupply).filter(x => x.id = "R0Q90A" or x.id = "R0Q90A#0D1").count = 0;
+			}
+		}
+		subsystem MSASoftwareSubsystem {
+			part addDefaultSoftwareTrigger1: ocaDefaultsTrigger {
+				string modelDefaultsFunc: "getDefaultsProducts";
+			}
+			choice ArxscanArxviewChoice {
+				optional: true;
+				targetClass: HP3Par7000ArxscanarView;
+				choiceType: multi_select;
+			}
+			constraint ArxSW_max_selection {
+				message: "Max 1 can be offered for the below selected";
+				body: dependency (HP3Par7000ArxscanarView [ R7T46AAE ], HP3Par7000ArxscanarView [ R7T46AAE ] <= 1);
+			}
+			choice MSASoftwareChoice {
+				optional: true;
+				targetClass: MSASoftware;
+				choiceType: single_select;
+			}
+			constraint maxLimitsforArxSw {
+				message: "Max limit for R3K89A LTU is 1 and P9D37A LTU is 5.";
+				body: restriction (HP3Par7000ArxscanarView [ R3K89A ] <= 1);
+				restriction (HP3Par7000ArxscanarView [ P9D37A ] <= 5);
+			}
+			constraint MinR3K89Areq {
+				message: "If this sku(P9D37A) is selected, Then Min 1 R3K89A is required.";
+				body:
+				{
+					val P9D37Acount = thisInst.selected(HP3Par7000ArxscanarView).filter(x => x.id >= "P9D37A").count;
+					val R3K89Acount = thisInst.selected(HP3Par7000ArxscanarView).filter(x => x.id >= "R3K89A").count;
+					if(P9D37Acount > 0) then (R3K89Acount > 0) else true;
+				}
+			}
+			part addDefaultsTrigger: triggerInternalDefaults {
+				string[] modelDefaults: "R7T46AAE";
+			}
+		}
+		subsystem bottomUpPlacementSubsystem {
+			choice rackChoice {
+				targetClass: BottomUpRackReference;
+				optional: true;
+			}
+		}
+		subsystem securityHardwareSubsystem {
+			choice securityHardwareOptionChoice {
+				optional: true;
+				targetClass: SecurityHardware;
+				choiceType: single_select;
+				title: "Security Hardware";
+			}
+		}
+		subsystem driveEnclosureCablesSubsystem {
+			constraint DriveEnclosureCableRule2Blue {
+				message: "Each Disk Enclosure comes with two 0.5m Mini SAS HD to Mini SAS HD Cables. Additional Mini SAS HD to Mini SAS HD cables can be selected to connect a Disk Enclosure to an Array Controller, or to another Disk Enclosure.";
+				body: true;
+			}
+		}
+	}
+	class MSA2060 extends MSA206X {
+		description: "SWD MSA 2060";
+		ifEffective GKK_24948_206x{
+			productCategories: msa2060, msa2060Ace;
+		}otherwise{
+			productCategories: msa2060;		
+		}
+		string shortLabel: "MSA 2060";
+		string softwarePlatformName: "MSA2060";
+		string logisticServicesPlatform: "HPE Modular Smart Array 1060";
+		def containsMsg: string = {
+			if thisInst.id >= "R0Q73A" then "Base Array Contains:
+			 <p>(1) HPE MSA 2060 LFF Chassis <br>
+				(2) HPE MSA 2060 16Gb FC Controllers <br>
+				(12)  3.5'' empty drive bays <br>
+				(10) Air Management Sleds (Blanks) <br>
+				(2)  1.5m PDU cords(IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2)  Power Supply 580W AC
+			<p>" else if thisInst.id >= "R0Q73B" then "Base Array Contains:
+			(1) HPE MSA 2060 LFF Chassis <br>
+			(2) HPE MSA 2060 16Gb FC Controllers <br>
+			(12)  3.5'' empty drive bays <br>
+			(10) Air Management Sleds (Blanks) <br> 
+			(2)  1.5m PDU cords (IEC C14) <br>
+			(1) HPE mini-USB CLI Cable <br>
+			(1) Rack-Mount Kit <br>
+			(2)  Power Supply 580W AC
+			<p>"
+			else if thisInst.id >= "R9G39A" then "Base Array Contains:
+			 <p>
+				(1) HPE MSA 2060 LFF Chassis   <br>
+				(2) HPE MSA 2060 16Gb FC Controllers <br>
+				(1) HPE MSA 72TB SAS 12G Midline 7.2K LFF (3.5in) M2 1yr Wty FE 6-pack TAA-compliant HDD Bundle <br>
+				(6) 3.5'' empty drive bays <br>
+				(6) Air Management Sleds (Blanks) <br>
+				(2) 1.5m PDU cords (IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2) Power Supply 580W AC
+			<p>" else if thisInst.id >= "R9G39B" then "Base Array Contains:
+			 <p>
+				(1) HPE MSA 2060 LFF Chassis   <br>
+				(2) HPE MSA 2060 16Gb FC Controllers <br>
+				(1) HPE MSA 72TB SAS 12G Midline 7.2K LFF (3.5in) M2 1yr Wty FE 6-pack TAA-compliant HDD Bundle <br>
+				(6) 3.5'' empty drive bays <br>
+				(6) Air Management Sleds (Blanks) <br>
+				(2) 1.5m PDU cords (IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2) Power Supply 580W AC
+			<p>" else if thisInst.id >= "R0Q74A" then "Base Array Contains:
+			 <p>(1) HPE MSA 2060 SFF Chassis <br>
+				(2) HPE MSA 2060 16Gb FC Controllers <br>
+				(24)  2.5'' empty drive bays <br>
+				(22) Air Management Sleds (Blanks) <br>
+				(2)  1.5m PDU cords(IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2)  Power Supply 580W AC
+			<p>"else if thisInst.id >= "R0Q74B" then "Base Array Contains:
+			 <p>(1) HPE MSA 2060 SFF Chassis <br>
+				(2) HPE MSA 2060 16Gb FC Controllers <br>
+				(24)  2.5'' empty drive bays <br>
+				(22) Air Management Sleds (Blanks) <br>
+				(2)  1.5m PDU cords(IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2)  Power Supply 580W AC
+			<p>"else if thisInst.id >= "R9G38A" then "Base Array Contains:
+			 <p>
+				(1) HPE MSA 2060 SFF Chassis   <br>
+				(2) HPE MSA 2060 16Gb FC Controllers <br>
+				(1) HPE MSA 14.4TB SAS 12G Enterprise 10K SFF (2.5in) M2 3yr Wty FE 6-pack TAA-compliant HDD Bundle <br>
+				(18) 2.5'' empty drive bays <br>
+				(18) Air Management Sleds (Blanks) <br>
+				(2) 1.5m PDU cords (IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2) Power Supply 580W AC
+			<p>"else if thisInst.id >= "R9G38B" then "Base Array Contains:
+			 <p>
+				(1) HPE MSA 2060 SFF Chassis   <br>
+				(2) HPE MSA 2060 16Gb FC Controllers <br>
+				(1) HPE MSA 14.4TB SAS 12G Enterprise 10K SFF (2.5in) M2 3yr Wty FE 6-pack TAA-compliant HDD Bundle <br>
+				(18) 2.5'' empty drive bays <br>
+				(18) Air Management Sleds (Blanks) <br>
+				(2) 1.5m PDU cords (IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2) Power Supply 580W AC
+			<p>" else if thisInst.id >= "R0Q75A" then "Base Array Contains:
+			 <p>(1) HPE MSA 2060 LFF Chassis <br>
+				(2) HPE MSA 2060 10GbE iSCSI Controllers <br>
+				(12)  3.5'' empty drive bays <br>
+				(10) Air Management Sleds (Blanks) <br> 
+				(2)  1.5m PDU cords(IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2)  Power Supply 580W AC
+			<p>" else if thisInst.id >= "R0Q75B" then "Base Array Contains:
+			 <p>(1) HPE MSA 2060 LFF Chassis <br>
+				(2) HPE MSA 2060 10GbE iSCSI Controllers <br>
+				(12)  3.5'' empty drive bays <br>
+				(10) Air Management Sleds (Blanks) <br> 
+				(2)  1.5m PDU cords(IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2)  Power Supply 580W AC
+			<p>" else if thisInst.id >= "R0Q76A" then "Base Array Contains:
+			 <p>(1) HPE MSA 2060  SFF Chassis <br>
+				(2) HPE MSA 2060 10GbE iSCSI Controllers <br>
+				(24)  2.5'' empty drive bays <br>
+				(22) Air Management Sleds (Blanks) <br>
+				(2)  1.5m PDU cords(IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2)  Power Supply 580W AC
+			<p>" else if thisInst.id >= "R0Q76B" then "Base Array Contains:
+			 <p>(1) HPE MSA 2060  SFF Chassis <br>
+				(2) HPE MSA 2060 10GbE iSCSI Controllers <br>
+				(24)  2.5'' empty drive bays <br>
+				(22) Air Management Sleds (Blanks) <br>
+				(2)  1.5m PDU cords(IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2)  Power Supply 580W AC
+			<p>"else if thisInst.id >= "R9G40A" then "Base Array Contains:
+			 <p>
+				(1) HPE MSA 2060 SFF Chassis   <br>
+				(2) HPE MSA 2060 10GbE iSCSI Controllers <br>
+				(1) HPE MSA 14.4TB SAS 12G Enterprise 10K SFF (2.5in) M2 3yr Wty FE 6-pack TAA-compliant HDD Bundle(18) 2.5'' empty drive bays <br>
+				(18) 2.5'' empty drive bays <br>
+				(18) Air Management Sleds (Blanks) <br>
+				(2) 1.5m PDU cords (IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2) Power Supply 580W AC
+			<p>" else if thisInst.id >= "R9G40B" then "Base Array Contains:
+			 <p>
+				(1) HPE MSA 2060 SFF Chassis   <br>
+				(2) HPE MSA 2060 10GbE iSCSI Controllers <br>
+				(1) HPE MSA 14.4TB SAS 12G Enterprise 10K SFF (2.5in) M2 3yr Wty FE 6-pack TAA-compliant HDD Bundle(18) 2.5'' empty drive bays <br>
+				(18) 2.5'' empty drive bays <br>
+				(18) Air Management Sleds (Blanks) <br>
+				(2) 1.5m PDU cords (IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2) Power Supply 580W AC
+			<p>"else if thisInst.id >= "R7J72A" then "Base Array Contains:
+			 <p>(1) HPE MSA 2060 LFF Chassis <br>
+				(2) HPE MSA 2060 10GBase-T iSCSI Controllers <br>
+				(12)  3.5'' empty drive bays <br>
+				(10) Air Management Sleds (Blanks) <br>
+				(2)  1.5m PDU cords(IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2)  Power Supply 580W AC
+			<p>" else if thisInst.id >= "R7J72B" then "Base Array Contains:
+			 <p>(1) HPE MSA 2060 LFF Chassis <br>
+				(2) HPE MSA 2060 10GBase-T iSCSI Controllers <br>
+				(12)  3.5'' empty drive bays <br>
+				(10) Air Management Sleds (Blanks) <br>
+				(2)  1.5m PDU cords(IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2)  Power Supply 580W AC
+			<p>" else if thisInst.id >= "R7J73A" then "Base Array Contains:
+			 <p>(1) HPE MSA 2060  SFF Chassis <br>
+				(2) HPE MSA 2060 10GBase-T iSCSI Controllers <br>
+				(24)  2.5'' empty drive bays <br>
+				(22) Air Management Sleds (Blanks) <br>
+				(2)  1.5m PDU cords(IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2)  Power Supply 580W AC
+			<p>"else if thisInst.id >= "R7J73B" then "Base Array Contains:
+			 <p>(1) HPE MSA 2060  SFF Chassis <br>
+				(2) HPE MSA 2060 10GBase-T iSCSI Controllers <br>
+				(24)  2.5'' empty drive bays <br>
+				(22) Air Management Sleds (Blanks) <br>
+				(2)  1.5m PDU cords(IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2)  Power Supply 580W AC
+			<p>" else if thisInst.id >= "R0Q77A" then "Base Array Contains:
+			 <p>(1) HPE MSA 2060 LFF Chassis <br>
+				(2) HPE MSA 2060 12Gb SAS Controllers <br>
+				(12)  3.5'' empty drive bays <br>
+				(10) Air Management Sleds (Blanks) <br> 
+				(2)  1.5m PDU cords(IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2)  Power Supply 580W AC
+			<p>"else if thisInst.id >= "R0Q77B" then "Base Array Contains:
+			 <p>(1) HPE MSA 2060 LFF Chassis <br>
+				(2) HPE MSA 2060 12Gb SAS Controllers <br>
+				(12)  3.5'' empty drive bays <br>
+				(10) Air Management Sleds (Blanks) <br> 
+				(2)  1.5m PDU cords(IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2)  Power Supply 580W AC
+			<p>" else if thisInst.id >= "R0Q78A" then "Base Array Contains:
+			 <p>(1) HPE MSA 2060 SFF Chassis <br>
+				(2) HPE MSA 2060 12Gb SAS Controllers <br>
+				(24)  2.5'' empty drive bays <br>
+				(22) Air Management Sleds (Blanks) <br> 
+				(2)  1.5m PDU cords(IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2)  Power Supply 580W AC
+			<p>"else if thisInst.id >= "R0Q78B" then "Base Array Contains:
+			 <p>(1) HPE MSA 2060 SFF Chassis <br>
+				(2) HPE MSA 2060 12Gb SAS Controllers <br>
+				(24)  2.5'' empty drive bays <br>
+				(22) Air Management Sleds (Blanks) <br> 
+				(2)  1.5m PDU cords(IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2)  Power Supply 580W AC
+			<p>" else if thisInst.id >= "R9G41A" then "Base Array Contains:
+			 <p>
+				(1) HPE MSA 2060 SFF Chassis   <br>
+				(2) HPE MSA 2060 12Gb SAS Controllers <br>
+				(1) HPE MSA 14.4TB SAS 12G Enterprise 10K SFF (2.5in) M2 3yr Wty FE 6-pack TAA-compliant HDD Bundle <br>
+				(18) 2.5'' empty drive bays <br>
+				(18) Air Management Sleds (Blanks) <br>
+				(2) 1.5m PDU cords (IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2) Power Supply 580W AC
+			<p>"else if thisInst.id >= "R9G41B" then "Base Array Contains:
+			 <p>
+				(1) HPE MSA 2060 SFF Chassis   <br>
+				(2) HPE MSA 2060 12Gb SAS Controllers <br>
+				(1) HPE MSA 14.4TB SAS 12G Enterprise 10K SFF (2.5in) M2 3yr Wty FE 6-pack TAA-compliant HDD Bundle <br>
+				(18) 2.5'' empty drive bays <br>
+				(18) Air Management Sleds (Blanks) <br>
+				(2) 1.5m PDU cords (IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2) Power Supply 580W AC
+			<p>";
+		}
+		def HDDisplayNotes: string = {
+		" <p> Array configurations which have a mixture of both SSDs and HDDs within the same configuration where performance tiering is being utilized will require the Advanced Data Service (ADS) Suite LTU <br>
+				  The ADS license will be selected by default.  Array configurations which contain all SSDs or an SSD Read Cache extensions do not require an ADS license on the MSA2060 array and will require the user to deselect the ADS license if it is not desired <br>
+				 
+			  <p>";
+		}
+		def SoftwareDisplayNotes: string = {
+		" <p> Array configurations which have a mixture of both SSDs and HDDs within the same configuration where performance tiering is being utilized will require the Advanced Data Service (ADS) Suite LTU <br>
+				  The ADS license will be selected by default.  Array configurations which contain all SSDs or an SSD Read Cache extensions do not require an ADS license on the MSA2060 array and will require the user to deselect the ADS license if it is not desired  <br>
+				
+			  <p>";
+		}
+
+		subsystem servicesSubsystem {
+			part addLSDefaultsTrigger: triggerInternalDefaults {
+				string[] modelDefaultsFunc: "getTier1Default";
+			}
+			choice tier1BasicDeliveryChoice {
+				optional: true;
+				targetClass: Tier1BasicDelivery;
+				choiceType: multi_select;
+				title: "Tier 1 - Basic Delivery";
+			}
+			choice tier2ValueAddonServicesChoice {
+				optional: true;
+				targetClass: Tier2ValueAddServices;
+				choiceType: multi_select;
+				title: "Tier 2 - Value Add Services";
+			}
+			choice tier3ValueAddonServicesChoice {
+				optional: true;
+				targetClass: Tier3ValueAddServices;
+				choiceType: multi_select;
+				title: "Tier 3 - Value Add Services - Flexible Quotation";
+			}
+			constraint restrictTierServicesByRegion {
+				message: "Tier Services are only offered in EMEA.";
+				body: dependency (DeliveryLogistics > 0, region (EU));
+			}
+			constraint tier2RequiresTier1 {
+				message: "If a Tier 2 Service is selected, then a Tier 1 Service must also be selected.";
+				body:
+				if selected(Tier2ValueAddServices).count > 0 then selected(Tier1BasicDelivery).count > 0;
+			}
+			constraint thisTier3requiresTier1 {
+				message: "If this Tier 3 Service is selected, then a Tier 1 Service must also be selected.";
+				body: if selected(Tier3ValueAddServices).count > 0 then selected(Tier1BasicDelivery).count > 0;
+			}
+			constraint tier3ServicesMax999PerServer {
+				message: "Max of 999 is allowed per server.";
+				body: restriction (Tier3ValueAddServices <= 999);
+			}
+			constraint maxTier2Services {
+				message: "Max of 11 per server are allowed in Tier 2 Value Added Services";
+				body: restriction (Tier2ValueAddServices < 12);
+			}
+			constraint P1F69ACANNOTbeTier1 {
+				message: "P1F69A CANNOT be ordered with Tier 1 Door/Dock Services";
+				body: dependency (Tier1BasicDelivery [ AG465A || AG466A || AG467A || AG468A || AG469A ], Tier2ValueAddServices [ P1F69A ] = 0);
+			}
+			constraint tier2requiresac131a {
+				message: "P1F74A can be ordered only with Door/Dock Service";
+				body:
+				if selected(Tier2ValueAddServices).filter(p => p.id >= "P1F74A").count > 0 then thisInst.selected(Tier1BasicDelivery).filter(p => p.id >= "AG465A").count + thisInst.selected(Tier1BasicDelivery).filter(p => p.id >= "AG466A").count +
+				thisInst.selected(Tier1BasicDelivery).filter(p => p.id >= "AG467A").count + thisInst.selected(Tier1BasicDelivery).filter(p => p.id >= "AG468A").count > 0;
+			}
+			constraint rule3_Tier2DLS {
+				message: "Min Max not applicable, however Maximum one of the below option can be selected, <br />
+						  P1F78A HPE Delivery Any Day at 0800 Hours SVC <br />
+						  P1F79A HPE Delivery Any Day at 1300 Hours SVC <br />
+						  P1F80A HPE Delivery Any Day at 1000 Hours SVC <br />
+						  P1F81A HPE Delivery Any Day at 0900 Hours SVC <br />
+						  P1F82A HPE Delivery Any Day at 1500 Hours SVC";
+				body:
+				{
+					thisInst.selected(Tier2ValueAddServices).filter(p => p.id >= "P1F78A" || p.id >= "P1F79A" || p.id >= "P1F80A" || p.id >= "P1F81A" || p.id >= "P1F82A").count < 2;
+				}
+			}
+		}
+	}
+	
+	class MSA2060SFF extends MSA2060 {
+		subsystem hardDriveSubsystem {
+			constraint taaDrivesSelection {
+				message: "TAA Drives Not Supported";
+				body: dependency ( MSA2060SFF[ taaProduct = 'taaYES' ] > 0 , HardDrive [ taaProduct = 'taaNO' ] = 0);
+			}
+		}
+	}
+	class MSA2060LFF extends MSA2060 {
+		subsystem hardDriveSubsystem {
+			constraint taaDrivesSelection {
+				message: "TAA Drives Not Supported";
+				body: dependency ( MSA2060LFF[ taaProduct = 'taaYES' ] > 0 , HardDrive [ taaProduct = 'taaNO' ] = 0);
+			}
+		}
+	}
+	
+	class MSA2062 extends MSA206X {
+		description: "SWD MSA 2062";
+		ifEffective GKK_24948_206x{
+			productCategories: msa2062,msa2062Ace;			
+		}otherwise{
+			productCategories: msa2062;			
+		}
+		string shortLabel: "MSA 2062";
+		string quickSpecMap:"msa2062";
+		string softwarePlatformName: "MSA2062";
+		def containsMsg: string = {
+			if thisInst.id >= "R0Q79A" then "Base Array Contains:
+			 <p>(1) HPE MSA 2060 LFF Chassis <br>
+				(2) HPE MSA 2060 16Gb FC Controllers <br>
+				(1) HPE MSA Advanced Data Services LTU (R2C33A) <br>
+				(2) HPE MSA 1.92TB SAS  RI LFF M2 SSD (R0Q49A) <br>
+				(12)  3.5'' drive bays <br>
+				(8) Air Management Sleds (Blanks) <br> 
+				(2)  1.5m PDU cords(IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2)  Power Supply 580W AC
+			<p>" else if thisInst.id >= "R0Q80A" then "Base Array Contains:
+			 <p>(1) HPE MSA 2060 SFF Chassis <br>
+				(2) HPE MSA 2060 16Gb FC Controllers <br>
+				(1) HPE MSA Advanced Data Services LTU (R2C33A) <br>
+				(2) HPE MSA 1.92TB SAS RI SFF M2 SSD (R0Q47A) <br>
+				(24)  2.5'' drive bays <br>
+				(20) Air Management Sleds (Blanks) <br>
+				(2)  1.5m PDU cords(IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2)  Power Supply 580W AC
+			<p>"else if thisInst.id >= "R0Q80B" then "Base Array Contains:
+			 <p>(1) HPE MSA 2060 SFF Chassis <br>
+				(2) HPE MSA 2060 16Gb FC Controllers <br>
+				(1) HPE MSA Advanced Data Services LTU (R2C33A) <br>
+				(2) HPE MSA 1.92TB SAS RI SFF M2 SSD (R0Q47A) <br>
+				(24)  2.5'' drive bays <br>
+				(20) Air Management Sleds (Blanks) <br>
+				(2)  1.5m PDU cords(IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2)  Power Supply 580W AC
+			<p>" else if thisInst.id >= "R0Q81A" then "Base Array Contains:
+			 <p>(1) HPE MSA 2060 LFF Chassis <br>
+				(2) HPE MSA 2060 10GbE iSCSI Controllers <br>
+				(1) HPE MSA Advanced Data Services LTU (R2C33A) <br>
+				(2) HPE MSA 1.92TB SAS  RI LFF M2 SSD (R0Q49A) <br>
+				(12)  3.5'' drive bays <br>
+				(8) Air Management Sleds (Blanks) <br>
+				(2)  1.5m PDU cords(IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2)  Power Supply 580W AC
+			<p>" else if thisInst.id >= "R0Q82A" then "Base Array Contains:
+			 <p>(1) HPE MSA 2060 SFF Chassis <br>
+				(2) HPE MSA 2060 10GbE iSCSI Controllers <br>
+				(1) HPE MSA Advanced Data Services LTU (R2C33A) <br>
+				(2) HPE MSA 1.92TB SAS RI SFF M2 SSD (R0Q47A) <br>
+				(24)  2.5'' drive bays <br>
+				(8) Air Management Sleds (Blanks) <br> 
+				(2)  1.5m PDU cords(IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2)  Power Supply 580W AC
+			<p>"else if thisInst.id >= "R0Q82B" then "Base Array Contains:
+			 <p>(1) HPE MSA 2060 SFF Chassis <br>
+				(2) HPE MSA 2060 10GbE iSCSI Controllers <br>
+				(1) HPE MSA Advanced Data Services LTU (R2C33A) <br>
+				(2) HPE MSA 1.92TB SAS RI SFF M2 SSD (R0Q47A) <br>
+				(24)  2.5'' drive bays <br>
+				(8) Air Management Sleds (Blanks) <br> 
+				(2)  1.5m PDU cords(IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2)  Power Supply 580W AC
+			<p>" else if thisInst.id >= "R7J70A" then "Base Array Contains:
+			 <p>(1) HPE MSA 2060 LFF Chassis <br>
+				(2) HPE MSA 2060 10Gbase-T iSCSI Controllers <br>
+				(1) HPE MSA Advanced Data Services LTU (R2C33A) <br>
+				(2) HPE MSA 1.92TB SAS  RI LFF M2 SSD (R0Q49A) <br>
+				(12)  3.5 ''  drive bays <br>
+				(8) Air Management Sleds (Blanks) <br> 
+				(2)  1.5m PDU cords(IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2)  Power Supply 580W AC
+			<p>" else if thisInst.id >= "R7J71A" then "Base Array Contains:
+			 <p>(1) HPE MSA 2060 SFF Chassis <br>
+				(2) HPE MSA 2060 10Gbase-T iSCSI Controllers <br>
+				(1) HPE MSA Advanced Data Services LTU (R2C33A) <br>
+				(2) HPE MSA 1.92TB SAS RI SFF M2 SSD (R0Q47A) <br>
+				(24)  2.5 '' drive bays <br>
+				(20) (22) Air Management Sleds (Blanks) <br> 
+				(2)  1.5m PDU cords(IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2)  Power Supply 580W AC
+			<p>"else if thisInst.id >= "R7J71B" then "Base Array Contains:
+			 <p>(1) HPE MSA 2060 SFF Chassis <br>
+				(2) HPE MSA 2060 10Gbase-T iSCSI Controllers <br>
+				(1) HPE MSA Advanced Data Services LTU (R2C33A) <br>
+				(2) HPE MSA 1.92TB SAS RI SFF M2 SSD (R0Q47A) <br>
+				(24)  2.5 '' drive bays <br>
+				(20) (22) Air Management Sleds (Blanks) <br> 
+				(2)  1.5m PDU cords(IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2)  Power Supply 580W AC
+			<p>" else if thisInst.id >= "R0Q83A" then "Base Array Contains:
+			 <p>(1) HPE MSA 2060 LFF Chassis <br>
+				(2) HPE MSA 2060 12Gb SAS Controllers <br>
+				(1) HPE MSA Advanced Data Services LTU (R2C33A) <br>
+				(2) HPE MSA 1.92TB SAS  RI LFF M2 SSD (R0Q49A) <br>
+				(12)  3.5'' drive bays <br>
+				(8) Air Management Sleds (Blanks) <br> 
+				(2)  1.5m PDU cords(IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2)  Power Supply 764W AC
+			<p>" else if thisInst.id >= "R0Q84A" then "Base Array Contains:
+			 <p>(1) HPE MSA 2060 SFF Chassis <br>
+				(2) HPE MSA 2060 12Gb SAS Controllers <br>
+				(1) HPE MSA Advanced Data Services LTU (R2C33A) <br>
+				(2) HPE MSA 1.92TB SAS RI SFF M2 SSD (R0Q47A) <br>
+				(24)  2.5'' drive bays <br>
+				(20) Air Management Sleds (Blanks) <br>
+				(2)  1.5m PDU cords(IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2)  Power Supply 764W AC
+			<p>"else if thisInst.id >= "R0Q84B" then "Base Array Contains:
+			 <p>(1) HPE MSA 2060 SFF Chassis <br>
+				(2) HPE MSA 2060 12Gb SAS Controllers <br>
+				(1) HPE MSA Advanced Data Services LTU (R2C33A) <br>
+				(2) HPE MSA 1.92TB SAS RI SFF M2 SSD (R0Q47A) <br>
+				(24)  2.5'' drive bays <br>
+				(20) Air Management Sleds (Blanks) <br>
+				(2)  1.5m PDU cords(IEC C14) <br>
+				(1) HPE mini-USB CLI Cable <br>
+				(1) Rack-Mount Kit <br>
+				(2)  Power Supply 764W AC
+			<p>";
+		}
+		def HDDisplayNotes: string = {
+			" <p>The MSA 2062 Models come standard with 2 included drives., these drives will not be on the BOM/Quote. <p>";
+		}
+	}
+	
+	class MSA2062SFF extends MSA2062 {
+		subsystem hardDriveSubsystem {
+			constraint taaDrivesSelection {
+				message: "TAA Drives Not Supported";
+				body: dependency ( MSA2062SFF[ taaProduct = 'taaYES' ] > 0 , HardDrive [ taaProduct = 'taaNO' ] = 0);
+			}
+		}
+	}
+	class MSA2062LFF extends MSA2062 {
+		subsystem hardDriveSubsystem {
+			constraint taaDrivesSelection {
+				message: "TAA Drives Not Supported";
+				body: dependency ( MSA2062LFF[ taaProduct = 'taaYES' ] > 0 , HardDrive [ taaProduct = 'taaNO' ] = 0);
+			}
+		}
+	}
+	
+	class MSA2060DE extends DriveEnclosure {
+		description: "HPE MSA 2060 Disk Enclosure";
+		boolean ocaCompatible: true;
+		boolean show_in_system_overview: true;
+		token tFormFactor: sff;
+		string shortLabel: "Disk Enclosure.";
+		platformName: "msa2060de";
+		int iNumHarddiskBays: 24;
+		int iNumHardDriveRows: 0
+		int iNumDriveEnclosureCables: 99;
+		int iNumPowerCords: 99;
+		int iPowerBays: 2;
+		string[] inheritSupportedOnDataFrom: "MSA206X";
+		string alternatePlatformName: "msa206x";
+		int sequenceNumber: 450;
+		int childSequenceNumber: 450;
+		string intergrateTo: "";
+		string overrideRackDataId: "";
+		boolean enableBomManagedSKUs: true; //TD ENABLE MSA CLONING
+		int iHalfEiaUnitsRequired: 4;
+		string[] validRackList: "P9K04A", "P9K06A", "P9K38A", "P9K08A", "P9K40A", "P9K10A", "P9K50A", "P9K52A";
+		string[] virtualRackList: "rackOnSite42u", "rackOnSite42u1200", "ZU715A";
+		def containsMsg: string = {
+			if thisInst.id >= "R0Q39A" then "R0Q39A - HPE MSA 2060 2U 12d LFF Drv Enclosure
+			 Contains: <br>
+				(12) 3.5'' empty drive bays <br>
+				(2) .5 Meter mini-SAS HD cables <br>
+				(2) 1.5m PDU cords(IEC C14) <br>
+				(1) Rack Mount Kit <br>
+				(2) Power Supply 764W AC
+			"else if thisInst.id >= "R0Q39B" then "R0Q39B - HPE MSA 2060 2U 12d LFF Drv Enclosure
+			 Contains: <br>
+				(12) 3.5'' empty drive bays <br>
+				(2) .5 Meter mini-SAS HD cables <br>
+				(2) 1.5m PDU cords(IEC C14) <br>
+				(1) Rack Mount Kit <br>
+				(2) Power Supply 764W AC
+			" else if thisInst.id >= "R0Q40A" then "R0Q40A - HPE MSA 2060 2U 24d SFF Drv Enclosure
+			 Contains: <br>
+				(24) 2.5'' empty drive bays <br>
+				(2) .5 Meter mini-SAS HD cables <br>
+				(2) 1.5m PDU cords(IEC C14) <br>
+				(1) Rack Mount Kit <br>
+				(2) Power Supply 764W AC
+			"else if thisInst.id >= "R0Q40B" then "R0Q40B - HPE MSA 2060 2U 24d SFF Drv Enclosure
+			 Contains: <br>
+				(24) 2.5'' empty drive bays <br>
+				(2) .5 Meter mini-SAS HD cables <br>
+				(2) 1.5m PDU cords(IEC C14) <br>
+				(1) Rack Mount Kit <br>
+				(2) Power Supply 764W AC
+			";
+		}
+	def getHardDiveContainsInfo: string = {
+		val R0R44A = if(thisInst.selected(HardDrive).filter(x => x.id >= 'R0R44A').count > 0) then "<br> R0R44A Contains: (6) MSA 900GB  SAS 15K SFF M2 FE TAA HDDs " else "";
+	    val R0R47A = if(thisInst.selected(HardDrive).filter(x => x.id >= 'R0R47A').count > 0) then "<br> R0R47A Contains: (6) MSA 2.4TB  SAS 10K SFF M2 FE TAA HDDs " else "";
+	    val R0R50A = if(thisInst.selected(HardDrive).filter(x => x.id >= 'R0R50A').count > 0) then "<br> R0R50A Contains: (6) MSA 12TB SAS 7.2K LFF ME FE TAA HDDs " else "";
+	    val R0Q64A = if(thisInst.selected(HardDrive).filter(x => x.id >= 'R0Q64A').count > 0) then "<br> R0Q64A Contains: (6) MSA 900GB  SAS 15K SFF M2 HDD (R0Q53A) " else "";
+	    val R0Q65A = if(thisInst.selected(HardDrive).filter(x => x.id >= 'R0Q65A').count > 0) then "<br> R0Q65A Contains: (6) MSA 1.2TB  SAS 10K SFF M2 HDD (R0Q55A) " else "";
+	    val R0Q66A = if(thisInst.selected(HardDrive).filter(x => x.id >= 'R0Q66A').count > 0) then "<br> R0Q66A Contains: (6) MSA 1.8TB  SAS 10K SFF M2 HDD (R0Q56A) " else "";
+	    val R0Q67A = if(thisInst.selected(HardDrive).filter(x => x.id >= 'R0Q67A').count > 0) then "<br> R0Q67A Contains: (6) MSA 2.4TB  SAS 10K SFF M2 HDD (R0Q57A) " else "";
+		val R0Q69A = if(thisInst.selected(HardDrive).filter(x => x.id >= 'R0Q69A').count > 0) then "<br> R0Q69A Contains: (6) MSA 8TB  SAS 7.2K LFF HDD (R0Q59A) " else "";
+		val R0Q70A = if(thisInst.selected(HardDrive).filter(x => x.id >= 'R0Q70A').count > 0) then "<br> R0Q70A Contains: (6) MSA 10TB SAS 7.2K LFF HDD (R0Q60A) " else "";
+		val R0Q71A = if(thisInst.selected(HardDrive).filter(x => x.id >= 'R0Q71A').count > 0) then "<br> R0Q71A Contains: (6) MSA 12TB SAS 7.2K LFF HDD (R0Q61A) " else "";
+		val R0Q72A = if(thisInst.selected(HardDrive).filter(x => x.id >= 'R0Q72A').count > 0) then "<br> R0Q72A Contains: (6) HPE MSA 14TB SAS 7.2K LFF M2 HDD (R0Q62A) " else "";
+		val R7L71A = if(thisInst.selected(HardDrive).filter(x => x.id >= 'R7L71A').count > 0) then "<br> R7L71A Contains: (6) HPE MSA 18TB SAS 7.2K LFF M2 HDD (R7L70A)" else "";
+		val R3U73A = if(thisInst.selected(HardDrive).filter(x => x.id >= 'R3U73A').count > 0) then "<br> R3U73A Contains: (6) HPE MSA 16TB SAS 7.2K LFF M2 HDD (R3U72A)" else "";
+			
+	      R0R44A + R0R47A + R0R50A + R0Q64A + R0Q65A + R0Q66A + R0Q67A + R0Q69A + R0Q70A + R0Q71A + R0Q72A + R7L71A + R3U73A;
+	}
+		def excludeFor2062 (): boolean = if(ancestors (thisInst, "MSA2062").count > 0) then true else false;
+
+		def max_hardDriveBaysFunction: int =
+		{
+			if MSA2060DE.tFormFactor = "sff" then 24 else if MSA2060DE.tFormFactor = "lff" then 12;
+		}
+		def getTAADriveDefault (): string[] = {
+			if (MSA2060DE.intergrateToBaseID = "R9G38A" or MSA2060DE.intergrateToBaseID = "R9G38B" or MSA2060DE.intergrateToBaseID = "R9G39A" or MSA2060DE.intergrateToBaseID = "R9G39B" or MSA2060DE.intergrateToBaseID = "R9G40A" or MSA2060DE.intergrateToBaseID = "R9G40B" or MSA2060DE.intergrateToBaseID = "R9G41A" or MSA2060DE.intergrateToBaseID = "R9G41B") and
+			(thisInst.id >= "R0Q39A" or thisInst.id >= "R0Q39B") then expanderString ("R0R50A", 1)
+			else if (MSA2060DE.intergrateToBaseID = "R9G38A" or MSA2060DE.intergrateToBaseID = "R9G38B" or MSA2060DE.intergrateToBaseID = "R9G39A" or MSA2060DE.intergrateToBaseID = "R9G39B" or MSA2060DE.intergrateToBaseID = "R9G40A" or MSA2060DE.intergrateToBaseID = "R9G40B" or MSA2060DE.intergrateToBaseID = "R9G41A" or MSA2060DE.intergrateToBaseID = "R9G41B") and
+			(thisInst.id >= "R0Q40A" or thisInst.id >= "R0Q40B") then expanderString ("R0R47A", 1)
+			else "";
+		}
+		subsystem hardDriveSubsystem {
+			locationArray hardDriveLocArray {
+				rows: iNumHarddiskBays;
+				columns: 1;
+				fillerClasses: HardDrive;
+				rowsConsumed: iNumOfHardDrives;
+			}
+			part getgetTAADriveDefault: triggerConsequentialSelection {
+				string consequentialSelectionFunc: "getTAADriveDefault";
+			}
+			constraint Rule_12_TAADrives {
+				message: "If a MSA2060 TAA base models, R9G38A, R9G38B, R9G39A, R9G39B, R9G40A, R9G40B, R9G41A,R9G41B is selected Then only TAA Drives are supported on the drive enclosures (R0Q39A or R0Q39B and R0Q40A or R0Q40B )";
+				body:
+				if(MSA2060DE.intergrateToBaseID = "R9G38A" or MSA2060DE.intergrateToBaseID = "R9G38B" or MSA2060DE.intergrateToBaseID = "R9G39A" or MSA2060DE.intergrateToBaseID = "R9G39B" or MSA2060DE.intergrateToBaseID = "R9G40A" or MSA2060DE.intergrateToBaseID = "R9G40B" or MSA2060DE.intergrateToBaseID = "R9G41A" or MSA2060DE.intergrateToBaseID = "R9G41B") then
+				 thisInst.selected(HardDrive).filter(x => x.subCategory != "SSDHDDBdlTaa").count = 0 else true;
+			}
+			constraint taaDrivesSelection {
+				message: "TAA Drives Not Supported";
+				enabled : (MSA2060DE.intergrateToBaseID = "R9G38A" or MSA2060DE.intergrateToBaseID = "R9G38B" or MSA2060DE.intergrateToBaseID = "R9G39A" or MSA2060DE.intergrateToBaseID = "R9G39B" or MSA2060DE.intergrateToBaseID = "R9G40A" or MSA2060DE.intergrateToBaseID = "R9G40B" or MSA2060DE.intergrateToBaseID = "R9G41A" or MSA2060DE.intergrateToBaseID = "R9G41B");
+				body:  restriction (HardDrive [ taaProduct = 'taaNO' ] = 0);
+			}
+			constraint TaaDrive_BlueNote {
+				message: "MSA Gen6 TAA array models ship with integrated TAA compliant drives that support self-encryption (SED). 
+								  Therefore, only TAA compliant/SED options will be available for selection so that encryption will be supported across the entire array.  
+								  If non-SED drives are required, they can be added via Ad-Hoc selection; however, the SED feature on the integrated drives will be unavailable.";
+				body: if(MSA2060DE.intergrateToBaseID = "R9G38A" or MSA2060DE.intergrateToBaseID = "R9G38B" or MSA2060DE.intergrateToBaseID = "R9G39A" or MSA2060DE.intergrateToBaseID = "R9G39B" or MSA2060DE.intergrateToBaseID = "R9G40A" or MSA2060DE.intergrateToBaseID = "R9G40B" or MSA2060DE.intergrateToBaseID = "R9G41A" or MSA2060DE.intergrateToBaseID = "R9G41B") then false else true;
+			}
+			constraint minHardDrivesRequiredFor0D1Enclosures {
+				message: "Minimum Drives are required for factory integrated enclosures.";
+				body:
+				if MSA2060DE.tFormFactor = "sff" and ((ancestor(Rack) != null) && (ancestor(RackOnSite) = null)) then (hardDriveLocArray.contents.filterByAttribute(tDriveType, "SAS_SFF").count +
+				hardDriveLocArray.contents.filterByAttribute(tDriveType, "SSD_SFF").count > 0) else if MSA2060DE.tFormFactor = "lff" and ((ancestor(Rack) != null) && (ancestor(RackOnSite) = null)) then
+				(hardDriveLocArray.contents.filterByAttribute(tDriveType, "SAS_LFF").count + hardDriveLocArray.contents.filterByAttribute(tDriveType, "SSD_LFF").count > 0) else true;
+			}
+			constraint hardDriveSupport {
+				message: "UnSupport Drives";
+				body: dependency (MSA2060DE.tFormFactor = "sff", HardDrive [ tDriveFormFactor = 'lff' ] = 0);
+				dependency (MSA2060DE.tFormFactor = "lff", HardDrive [ tDriveFormFactor = 'sff' ] = 0);
+			}
+			constraint hardDriveMinMax {
+				message: "Min/Max";
+				body: dependency (MSA2060DE.tFormFactor = "lff", HardDrive <= 12);
+				dependency (MSA2060DE.tFormFactor = "sff", HardDrive <= 24);
+			}
+			constraint MinHDDReqwithEnclosureFIO {
+				message: "User can order disk enclosures with no disk drives unless factory integration is desired.";
+				body:
+				{
+					val getRackoption1 = ancestors (thisInst, "Rack");
+					val getRackoption2 = ancestors (thisInst, "RackOnSite");
+					val getMSA206X = ancestors (thisInst, "MSA206X");
+					val getMSA1060 = ancestors (thisInst, "MSA1060");
+					val baseModel = ancestors (thisInst, "MSACommon");
+					val HardDrives_count_Single = hardDriveLocArray.contents.filterByAttribute(iNumOfHardDrives, 1).count;
+					val HardDrives_count_Six = hardDriveLocArray.contents.filterByAttribute(iNumOfHardDrives, 6).count * 6;
+					if(getRackoption1.count = 0 && getRackoption2.count = 0) then if((getMSA206X.count > 0 || getMSA1060.count > 0) && (MSA2060DE.tFormFactor = "sff" || MSA2060DE.tFormFactor = "lff")) then
+					if(baseModel.get(0).selected(FieldFactoryChoiceItemFlag).filter(x => x.id >= "FactIntCTO").count > 0) and (HardDrives_count_Single + HardDrives_count_Six) = 0 then false else true;
+				}
+			}			
+				 
+			constraint min2HardDriveMSA2060DE {
+				message: "A minimum quantity of 2 drives must be selected of the same type;  SSDs, Enterprise-Class SAS hard drives (10K or 15K RPM), or Midline SAS hard drives (7.2K RPM).";
+				body:
+				if(hardDriveLocArray.contents.filterByAttribute(iNumOfHardDrives, 1).count + (hardDriveLocArray.contents.filterByAttribute(iNumOfHardDrives, 6).count * 6) > 0) then (hardDriveLocArray.contents.filterByAttribute(iNumOfHardDrives,
+				1).count + (hardDriveLocArray.contents.filterByAttribute(iNumOfHardDrives, 6).count * 6) >= 2) else true;
+			}
+			constraint BundlesNotSuppOn2062 {
+				message: "If MSA2062 is selected, Then 'Encrypted/TAA SSDs and HDD Bundles' should not be offered on Disk Enclsoures (R0Q39A or R0Q39B or R0Q40A or R0Q40B).";
+				body:
+				if(ancestors (thisInst, "MSA2062").count > 0) then thisInst.selected(HardDrive).filter(subCategory = "SSDHDDBdlTaa").count <= 0 else true;
+			}
+		}
+		subsystem powerSubsystem {
+			locationArray powerSupplyBays {
+				rows: iPowerBays;
+				rowsConsumed: iPowerSupplyBaysTaken;
+				fillerClasses: PowerSupply;
+			}
+			constraint powerSupplyinPairs {
+				message: "Power Supplies must be selected in pairs";
+				body: restriction (PowerSupply.pairs);
+			}
+			constraint noPSinIndia {
+				message: "DC Power Supplies should not be selectable in India.";
+				body: if thisConfig.getProperty("country") = "IN" then thisInst.selected(PowerSupply).filter(x => x.id = "R0Q90A" or x.id = "R0Q90A#0D1").count = 0;
+			}
+		}
+		subsystem driveEnclosureCablesSubsystem {
+			locationArray driveEnclosureCablesLocArray {
+				rows: iNumDriveEnclosureCables;
+				fillerClasses: SASHDSASHDCable;
+			}
+			constraint DriveEnclosureCableRule2Blue {
+				message: "Each Disk Enclosure comes with two 0.5m Mini SAS HD to Mini SAS HD Cables. Additional Mini SAS HD to Mini SAS HD cables can be selected to connect a Disk Enclosure to an Array Controller, or to another Disk Enclosure.";
+				body: true;
+			}
+		}
+		subsystem securityHardwareDESubsystem {
+			choice securityHardwareDEOptionChoice {
+				optional: true;
+				targetClass: SecurityHardware;
+				choiceType: single_select;
+				title: "Security Hardware";
+			}
+		}
+	}
+	
+	class MSADummyChoiceItemFlag extends ChoiceItemFlag {}
+	class FieldFactoryChoiceItemFlag extends MSADummyChoiceItemFlag {
+		boolean isProductClass: false;
+	}
+	class TaaNonTaaChoiceItemFlag extends MSADummyChoiceItemFlag {
+		boolean isTAAsupported: false;
+	}
+	product TAA_Product TaaNonTaaChoiceItemFlag {
+		boolean isTAAsupported: true;
+	}
+	product nonTAA_Product TaaNonTaaChoiceItemFlag {}
+}

@@ -1,0 +1,14 @@
+
+public class tester {
+	
+	public static void main(String[] args) {
+		System.out.println("abb".matches("abb?b"));  // Greedy     -> true
+		System.out.println("abb".matches("abb??b")); // Reluctant  -> true
+		System.out.println("abb".matches("abb?+"));
+		System.out.println("Geeks@portal20".matches("^(?=.*[0-9])"
+                + "(?=.*[a-z])(?=.*[A-Z])"
+                + "(?=.*[@#$%^&+=])"
+                + "(?=\\S+$).{8,20}$"));
+	}
+
+}

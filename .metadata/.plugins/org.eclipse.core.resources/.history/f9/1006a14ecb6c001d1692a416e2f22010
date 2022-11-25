@@ -1,0 +1,44 @@
+// Java code to implement the approach
+
+import java.io.*;
+import java.lang.*;
+import java.util.*;
+
+// Class to define the tree node
+class Node {
+	int key;
+	Node left;
+	Node right;
+	Node(int k)
+	{
+		key = k;
+		left = right = null;
+	}
+}
+
+class GFG {
+
+	// Driver code
+	public static void main(String args[])
+	{
+		Node root = new Node(10);
+		root.left = new Node(5);
+		root.right = new Node(30);
+		root.right.left = new Node(15);
+		root.right.right = new Node(20);
+		int height = isBalanced(root);
+		if (height > 0)
+			System.out.print("Balanced with height:" + height);
+		else
+			System.out.print("Not Balanced");
+	}
+
+	public static int isBalanced(Node root)
+	{
+		if (root == null)
+			return 0;
+		int lh = isBalanced(root.left);
+		int rh = isBalanced(root.right);
+		return Math.max(lh, rh) + 1;
+	}
+}

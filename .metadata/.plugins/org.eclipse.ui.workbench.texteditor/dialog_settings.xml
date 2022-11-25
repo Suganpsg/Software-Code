@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="org.eclipse.ui.texteditor.GotoLineAction$GotoLineDialog_dialogBounds">
+		<item value="460" key="DIALOG_Y_ORIGIN"/>
+		<item value="953" key="DIALOG_X_ORIGIN"/>
+	</section>
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
+		<item value="false" key="isRegEx"/>
+		<item value="javaVersion" key="selection"/>
+		<item value="false" key="casesensitive"/>
+		<item value="false" key="incremental"/>
+		<item value="true" key="wrap"/>
+		<item value="false" key="wholeword"/>
+		<list key="findhistory">
+			<item value="javaVersion"/>
+			<item value="kbProperties"/>
+			<item value="KBProperties"/>
+			<item value="WSC"/>
+			<item value="1.7"/>
+			<item value="TargetRelease"/>
+			<item value="target release"/>
+			<item value="target"/>
+		</list>
+		<list key="replacehistory">
+			<item value=",&quot;T&quot;"/>
+			<item value="PM205"/>
+			<item value="GKK54"/>
+			<item value=",&quot;0D1&quot;,&quot;&quot;,&quot;&quot;,&quot;1900-01-01&quot;,&quot;2099-01-01&quot;"/>
+			<item value="."/>
+			<item value="trasceiverslocationarray"/>
+			<item value="&quot;T&quot;"/>
+			<item value="impo"/>
+		</list>
+	</section>
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
+		<item value="362" key="DIALOG_WIDTH"/>
+		<item value="1|Segoe UI|9.0|0|WINDOWS|1|-15|0|0|0|400|0|0|0|1|0|0|0|0|Segoe UI" key="DIALOG_FONT_NAME"/>
+		<item value="470" key="DIALOG_HEIGHT"/>
+		<item value="289" key="DIALOG_Y_ORIGIN"/>
+		<item value="28" key="DIALOG_X_ORIGIN"/>
+	</section>
+</section>

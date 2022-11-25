@@ -1,0 +1,292 @@
+package essn.networking.wirelessdevices.arubaseries.aruba6200fswitchseries {
+	import common.agentutility.*;
+	import common.coremodel.*;
+	import common.localizations.*;
+	import common.productcategories.*;
+	import essn.common.software.*;
+	import essn.storage.network.hpnetworkingcommon.*;
+	import essn.storage.common.storagecommon.*;
+	import essn.networking.wirelessdevices.arubaseries.common.arubaproductoption.*;
+	import essn.networking.wirelessdevices.arubaseries.common.arubaseriescommon.*;
+	import essn.server.proliantservers.common.proliantproductoption.*;
+	import essn.networking.wirelessdevices.arubaseries.arubacentralonprem.*;
+	import essn.networking.wirelessdevices.arubaseries.centralcloudservices.*;
+	class Aruba6200FSwitchSeries extends ArubaSeriesCommon {
+		description: "Aruba 6200F Switch Series";
+		configurationEntryPoint;
+		productCategories: Aruba6200Series, Aruba6200SeriesAce;
+		platformName: "Aruba6200FSwitchSeries";
+		string BTOType: "";
+		boolean ocaCompatible: true;
+		string shortLabel: "Aruba 6200F Switch Series";
+		string softwarePlatformName: "6200F Switch Series";
+		int iHalfEiaUnitsRequired: 2;
+		int iNumSFPTransceivers: 4;
+		int iNumSpareItemsSlots: 99;
+		string quickSpecMap:"Aruba6200FSwitchSeries";
+		def containsMsg: string = {
+			if(thisInst.id <= "JL724A") then " Contains:
+			<p> Aruba 6200F 24G 4SFP+ Switch <br>
+			   Includes Non-Pluggable, Internal PSU behind sheetmetal Chassis Frame <br>
+               Includes Non-Pluggable, Internal Fans behind sheetmetal Chassis Frame <br>
+               Min=0 and Max = 4 SFP/SFP+ 1/10G Transceiver <br>
+               1U - Height <br>  
+                
+       
+			<p>" else if(thisInst.id <= "JL725A") then " Contains:
+			<p>Aruba 6200F 24G Class4 PoE 4SFP+ 370W Switch <br>
+			   Includes Non-Pluggable, Internal PSU behind sheetmetal Chassis Frame <br>
+               Includes Non-Pluggable, Internal Fans behind sheetmetal Chassis Frame <br>
+               Min=0 and Max = 4 SFP/SFP+ 1/10G Transceiver  <br>
+               1U - Height <br> 
+			<p>" else if(thisInst.id <= "JL726A") then " Contains:
+			<p>Aruba 6200F 48G 4SFP+ Switch <br>
+			   Includes Non-Pluggable, Internal PSU behind sheetmetal Chassis Frame <br>
+               Includes Non-Pluggable, Internal Fans behind sheetmetal Chassis Frame <br>
+               Min=0 and Max = 4 SFP/SFP+ 1/10G Transceive  <br>
+               1U - Height <br> 
+			<p>" else if(thisInst.id <= "JL727A") then " Contains:
+			<p>Aruba 6200F 48G Class4 PoE 4SFP+ 370W Switch <br>
+			   Includes Non-Pluggable, Internal PSU behind sheetmetal Chassis Frame <br>
+               Includes Non-Pluggable, Internal Fans behind sheetmetal Chassis Frame <br>
+               Min=0 and Max = 4 SFP/SFP+ 1/10G Transceiver <br>
+               1U - Height <br> 
+			<p>" else if(thisInst.id <= "JL728A") then " Contains:
+			<p>Aruba 6200F 48G Class4 PoE 4SFP+ 740W Switch <br>
+			   Includes Non-Pluggable, Internal PSU behind sheetmetal Chassis Frame <br>
+               Includes Non-Pluggable, Internal Fans behind sheetmetal Chassis Frame <br>
+               Min=0 and Max = 4 SFP/SFP+ 1/10G Transceiver  <br>
+               1U - Height <br>
+			<p>";
+		}
+		def RackmountkityDefault (): string[] = {
+			if ancestors (thisInst, "RackModel").count != 0 then expanderString ("J9583B", 1) else "";
+		}
+//		def LRMDefault (): string[] = {
+//			val transCount = thisInst.selected(SFPPlusTransceivers).filter(x => x.id = "J9152D").count;
+//			val expander = (transCount + 1) / 2; 
+//			expanderString ("JL831A", expander);
+//		}
+//		def JL724A#B2Bdefault (): string[] = {
+//			if thisConfig.getInstancesOfModel("JL724A").count > 0 && thisInst.selected(PDUPowerCord).filter(x => x.id >= "JL724A#B2B").count > 0 then expanderString ("JL724A#B2B", 1);
+//		}
+		def defaultPDUPowerFunc (): string = {
+			val pduPowermodel = thisInst.id;
+			val baseModelwithPDUPowerCord = "JL724A";
+			val myAncestorRacks = ancestors (thisInst, "Rack").filter(x => (x.subTypes * "BTO").count = 0 && x.doNotQuote = 'false' && x.isProductClass);
+			
+			if(pduPowermodel <= baseModelwithPDUPowerCord) and (myAncestorRacks.count > 0) then 
+				if  (thisConfig.getProperty("region") = "NA" or thisConfig.getProperty("country") = "MX" or	thisConfig.getProperty("country") = "TW" or thisConfig.getProperty("country") = "JP") then pduPowermodel + "#B2B"
+				else if (! (thisConfig.getProperty("region") = "NA" or thisConfig.getProperty("country") = "MX" or thisConfig.getProperty("country") = "TW" or thisConfig.getProperty("country") = "JP"))then pduPowermodel + "#B2C" 
+				else ""
+			else "";
+		}
+		boolean overrideLocalizationOption: true;
+		def overrideLocalizationOptionAgentFunc (): string = {
+			if thisInst.selected(PDUPowerCord).count > 0 || thisInst.selected(SwitchPSCord).count > 0 then "DEL" else "";
+		}
+		string[] inheritSupportedOnDataFrom: "AceSupportPlatform", "locsForServer";
+		string localizationType: "LOCL";
+		subsystem systemLocalizationSubsystem {
+			choice systemLocalizationChoice {
+				choiceType: single_select;
+				optional: true;
+				targetClass: SystemLocalizationClass;
+			}
+			constraint ezcipcsRequireSysLoc {
+				message: "ACE requires System Localization";
+				body: dependency (targetEnv ("ezc", "ipcs"), SystemLocalizationClass);
+			}
+			constraint systemLocRestrictsBaseProdLoc {
+				message: "Model Localization must match System Localization.";
+				body: restriction (Aruba6200FSwitchSeries.loc = SystemLocalizationClass.loc);
+			}
+		}
+		string[] castToList;
+		boolean addDefaultSysLoc: true;
+		def defaultSystemLocFunction (): string[] = {
+			val locProduct: string = if(addDefaultSysLoc) then getDefaultLocalization (thisInst, "systemLocalizationSubsystem.systemLocalizationChoice") else "";
+			castToList + locProduct;
+		}
+		def defaultLocalizationsFunction (): string[] = {
+			val sysLoc: string[] = defaultSystemLocFunction ();
+			sysLoc;
+		}
+		def getDefaultLocalization (instance: RootProductClass, choiceId: string): string = callout("GetDefaultLocalization", instance, choiceId);
+		string countryUsedForLocDefaults: "";
+		subsystem modelLocDefaults {
+			part triggerLocalizationRestoreDefaults ConfigAgentTrigger {
+				string agentClass: "InternalLocOverrideDefaultsAgent";
+				part[] agentTiming: postRestore;
+				string modelDefaultsFunc: "defaultLocalizationsFunction";
+			}
+			part triggerLocalizationUpdateDefaults ConfigAgentTrigger {
+				string agentClass: "InternalLocOverrideDefaultsAgent";
+				part[] agentTiming: finishUpdate;
+				string modelDefaultsFunc: "defaultLocalizationsFunction";
+				int priority: 10;
+			}
+		}
+		subsystem conflictResolution {
+			part conflictRes_Localization ConflictResolver {
+				string[] targetConflictingClasses: "LocalizationClass", "Aruba6200FSwitchSeries";
+				string agentName: "com.hp.ngc.plugins.agents.update.delegate.LocalizedChoiceAgent";
+			}
+		}
+		subsystem TransceiversSubsystem {
+			locationArray SFPTransceiversLocArray {
+				rows: iNumSFPTransceivers;
+				fillerClasses: SFPTransceivers;
+			}
+			locationArray SFPPlusTransceiversLocArray {
+				rows: iNumSFPTransceivers;
+				fillerClasses: SFPPlusTransceivers;
+			}
+			choice SFPLRMTransceiversLocArray {
+				choiceType: multi_select;
+				targetClass: SFPPlusTransceivers;
+			}
+			constraint LRMSupport {
+				message: "Min 0 // max 2 (J9152D) per adapter of JL831A is allowed.";
+				body: {
+				val LRMcount = thisInst.selected(LRMAdapter).filter(x => x.id = "JL831A").count;
+				if thisInst.selected(SFPPlusTransceivers).filter(x => x.id = "J9152D").count <= LRMcount * 2 then true else false;
+				}
+			}
+			constraint LRMSupportability {
+				message: "The following Transceiver is compatible with the LRM Adapter:
+							J9152D - Aruba 10G SFP+ LC LRM 220m MMF XCVR";
+				body: 
+				dependency (LRMAdapter[JL831A] = 0 , SFPPlusTransceivers [J9152D] = 0);
+			}
+			constraint NetworkRule2 {
+				message: "A maximum qty of 4 transceivers can be ordered";
+				body: if thisInst.id = "JL724A" || thisInst.id = "JL725A" || thisInst.id = "JL726A" || thisInst.id = "JL727A" || thisInst.id = "JL728A" then thisInst.selected(SFPTransceivers).filter(x => x.id >= "J4858D" or x.id >= "J4859D" or x.id
+				>= "J4860D" or x.id >= "J8177D" or x.id >= "JL745A" or x.id >= "JL746A" or x.id >= "JL747A").count + 
+				thisInst.selected(SFPPlusTransceivers).filter(x => x.id >= "JL748A" or x.id >= "JL749A" or x.id >= "JL563A" or x.id >= "J9150D" or x.id >= "J9151E" or x.id >= "J9153D" or x.id >= "J9281D" or x.id >= "J9283D").count <= 4;
+			}
+		}
+		
+		subsystem SwitchOptionSubsystem {
+			locationArray RackMountKitLocArray {
+				rows: 1;
+				fillerClasses: SwitchEnclOptRackMountKit;
+			}
+			locationArray localizationLocArray {
+				rows: 1;
+				fillerClasses: PDUPowerCord;
+			}
+			locationArray SpareItemsLocArray {
+				rows: iNumSpareItemsSlots;
+				fillerClasses: ConsoleCable;
+			}
+			locationArray FantrayLocArray {
+				rows: iNumSpareItemsSlots;
+				fillerClasses: SwitchFanTray;
+			}
+			locationArray LRMAdapterLocArray {
+				rows: iNumSpareItemsSlots;
+				fillerClasses: LRMAdapter;
+			}
+			locationArray LRMAdapterSparesLocArray {
+				rows: iNumSpareItemsSlots;
+				fillerClasses: LRMAdapterSpares;
+			}
+			part setPowerSupplyDefault: triggerConsequentialSelection {
+				string consequentialSelectionFunc: "RackmountkityDefault";
+			}
+//			part setLRMDefault: triggerConsequentialSelection {
+//				string consequentialSelectionFunc: "LRMDefault";
+//			}
+//			part JL724A#B2Bdefault: triggerConsequentialSelection {
+//				string consequentialSelectionFunc: "JL724A#B2Bdefault"; // 2860
+//			}
+			part addPDUPowerTrigger1: triggerConsequentialSelectionNoRestore{
+				string consequentialSelectionFunc: "defaultPDUPowerFunc";
+			}
+			
+			constraint mandatorymessagepowercord {
+				message: "Locking Power Cord (J9955A) L6-20P is available through the OCA Accessories tab</br>";
+				body: false;
+			}
+			constraint noMixLocalization {
+				message: "Just one localization allow";
+				body: dependency (Aruba6200FSwitchSeries [ JL724A ], PDUPowerCord [ ~ (JL724A#AC3 || JL724A#B2B || JL724A#B2C || JL724A#B2E) ] = 0);
+				dependency (Aruba6200FSwitchSeries [ JL725A ], PDUPowerCord [ ~ (JL725A#AC3 || JL725A#B2B || JL725A#B2C || JL725A#B2E) ] = 0);
+				dependency (Aruba6200FSwitchSeries [ JL726A ], PDUPowerCord [ ~ (JL726A#AC3 || JL726A#B2B || JL726A#B2C || JL726A#B2E) ] = 0);
+				dependency (Aruba6200FSwitchSeries [ JL727A ], PDUPowerCord [ ~ (JL727A#AC3 || JL727A#B2B || JL727A#B2C || JL727A#B2E) ] = 0);
+				dependency (Aruba6200FSwitchSeries [ JL728A ], PDUPowerCord [ ~ (JL728A#AC3 || JL728A#B2B || JL728A#B2C || JL728A#B2E) ] = 0);
+			}
+			constraint B2BRegionRestriction {
+				message: "B2B option is available only in North America, Mexico, Taiwan and Japan.";
+				body: thisConfig.getProperty("region") = "NA" or thisConfig.getProperty("country") = "MX" or thisConfig.getProperty("country") = "TW" or thisConfig.getProperty("country") = "JP" or (for(selected(PDUPowerCord)) pscord =>
+				split(pscord.id, "#").get(1) != "B2B");
+			}
+			constraint B2CRegionRestriction {
+				message: "B2C option is not available in North America, Mexico, Taiwan and Japan.";
+				body: not (thisConfig.getProperty("region") = "NA" or thisConfig.getProperty("country") = "MX" or thisConfig.getProperty("country") = "TW" or thisConfig.getProperty("country") = "JP") or (for(selected(PDUPowerCord)) pscord =>
+				split(pscord.id, "#").get(1) != "B2C");
+			}
+			constraint B2ERegionRestriction {
+				message: "B2E option is available only in North America, Mexico, Taiwan and Japan.";
+				body: thisConfig.getProperty("region") = "NA" or thisConfig.getProperty("country") = "MX" or thisConfig.getProperty("country") = "TW" or thisConfig.getProperty("country") = "JP" or (for(selected(PDUPowerCord)) pscord =>
+				split(pscord.id, "#").get(1) != "B2E");
+			}
+			constraint RackmpuntKitRequired {
+				message: "If the switch will be factory racked into an HPE Universal Rack, then (Min 1) of the 4 Post Rack Mount kit is required and should nest to Rack.";
+				body: if ancestors (thisInst, "RackModel").count > 0 then thisInst.selected(SwitchEnclOptRackMountKit).filter(x => x.id >= "J9583A" || x.id >= "J9583B").count > 0;
+			}
+			constraint LRMAdapterRule1 {
+				message: "This LRM Bundle can support up to 2 LRM XCVRs (J9152D)";
+				body: if thisInst.selected(LRMAdapter).filter(x => x.id = "JL831A").count > 0 then false else true;
+			}
+			constraint LRMSparesDisplayNote {
+				message: "This is a spare part for use with the JL831A";
+				body: false;
+			}
+			constraint LRMAdapterRule2 {
+				message: "JL831A includes Adapter, 2 DAC Cable and 1 Mounting Bracket which consumes 1U height in the Rack.";
+				body: if thisInst.selected(LRMAdapter).filter(x => x.id = "JL831A").count > 0 then false else true;
+			}
+			constraint LRMAdapterRule3 {
+				message: "Spans full width of 19 inch rack";
+				body: if thisInst.selected(LRMAdapter).filter(x => x.id = "JL833A").count > 0 then false else true;
+			}
+			constraint LRMAdapterRule4 {
+				message: "Available in North America Only";
+				body: dependency (!region ("NA"), LRMAdapter [JL835A] = 0);
+			}
+		}
+		subsystem HPNSoftwareSubsystem {
+			choice HPNSoftwareChoice {
+				optional: true;
+				choiceType: multi_select;
+				targetClass: SINGLENODE;
+			}
+			//SK 09-Nov-2020 Added for PERT[20144]
+			choice APSoftwareChoice {
+				optional: true;
+				choiceType: multi_select;
+				targetClass: ArubaCentralOnprem;
+			}
+			choice wLANGFSoftwareChoice {
+				optional: true;
+				choiceType: multi_select;
+				targetClass: CentralCloudServices;
+			}
+			//SK 09-Nov-2020 Added for PERT[20144]
+			choice CentralDataColServiceChoice {
+				optional: true;
+				choiceType: multi_select;
+				targetClass: CentralDataColService;
+			}
+			choice ArubafedrampChoice {
+				optional: true;
+				choiceType: multi_select;
+				targetClass: Arubafedramp;
+			}
+		}
+		string[] validRackList: "P9K08A", "P9K12A", "P9K04A", "P9K06A", "P9K48A", "P9K42A", "P9K18A", "P9K10A", "P9K16A", "P9K46A", "P9K38A", "P9K40A", "P9K50A", "P9K52A", "P9K54A", "P9K58A", "P9K60A";
+		string[] virtualRackList: "ZU715A";
+	}
+} //End of package

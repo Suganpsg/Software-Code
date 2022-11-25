@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<uispecs xsi:schemaLocation="http://uispecs.engine.ngc.hp.com/xmlbean ./Schema/uispecs.xsd"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://uispecs.engine.ngc.hp.com/xmlbean">
+	    <uispec ngcClass="DL380G10PlusSDS">
+		<sections>
+			<section id="NodeSection" subsystem="trackingSubsystem" sequence="50" exclude="true">
+				<title>Node</title>
+				<shortText>Select your options</shortText>
+				<choice id="configurationTypeOptionChoice" type="single_select" sequence="10"  filtering_precedence="50">
+					<title>What is this configuration for</title>
+					<choice_population>
+						<choiceRef name="trackingSkuChoice" />
+					</choice_population>
+					<item_sequence>
+						<sequence_by type="attribute" attribute="choiceSort"/> 
+					</item_sequence>
+				</choice>
+			</section>
+			<section id="productInformation" exclude="false" sequence="50">
+				<title>Product Information</title>
+				<explanatoryMessages>
+					<explanatoryMessage>
+						The  HPE ProLiant DL380 Gen10 Plus 12LFF CTO Server for SDS (R8S35A) is intended to be configured 
+						and quoted in conjunction with select HPE Complete partner software.
+						Configuring from this menu will result in an unbuildable error for which an override will only be 
+						approved in exceptional circumstances. Instead, it should be configured from the qualifying 
+						HPE Complete offering menu. The easiest way to get to those SKUs is to enter the SDS partner name 
+						into the Select Product search box in OCA, which will provide a list of SKUs to choose from.					</explanatoryMessage>
+				</explanatoryMessages>
+			</section>	
+			<section id="storage" subsystem="deviceSubsystem" imageId="storage" sequence="250">
+				<title>Storage Devices</title>
+				
+				<choice id="SmartArrayControllerChoice" type="multi_select" sequence="10" exclude="true"/>
+				</choice>
+				<!-- <choice id="SmartStorageBatteryChoice" type="multi_select" sequence="15" exclude="contains_available_content"> -->
+				 <choice id="SmartStorageBatteryChoice" type="multi_select" sequence="15" exclude="contains_available_content"> 
+				<title>Optional Controller Upgrade</title>
+					<choice_population>
+						<choiceRef name="smartStorageBatteryChoice"
+							filter="SAP420iControllerCacheUpgrade[P02377-B21] or ControllerUpgrade[P01366-B21]"/>
+					</choice_population>
+					<item_sequence>
+						<sequence_by type="productNumber" />
+					</item_sequence>
+				</choice> 
+				<!-- <choice id="SmartStorageBatteryChoice1" type="multi_select" sequence="18" exclude="contains_available_content">
+				<title>Cable Kits</title>
+					<choice_population>
+						<choiceRef name="smartStorageBatteryChoice"
+							filter="SAP420iControllerCacheUpgrade[P02377-B21] or ControllerUpgrade[P01366-B21]" />
+					</choice_population>
+					<item_sequence>
+						<sequence_by type="productNumber" />
+					</item_sequence>
+				</choice> -->
+				<choice id="DriveCageChoice" type="multi_select" sequence="20" exclude="contains_available_content">
+					<title>Drive Cage</title>
+					<choice_population>
+						<locationArrayRef name="driveCageSlots"
+							filter="ProliantDriveCage[subCategory = 'DriveCage']" />
+					</choice_population>
+					<item_sequence>
+						<sequence_by type="productNumber" />
+					</item_sequence>
+				</choice>
+				<choice id="InternalSCCablesChoice" type="single_select" sequence="25" exclude="contains_available_content">
+					<title>Cable Kit</title>
+					<max_value_function>max_internalstoragecontrollerCablesFunction</max_value_function>
+					<choice_population>
+						<locationArrayRef subsystem="pciSubsystem" name="pciSlots" filter="ProliantStorageContSASSA[P14602-B21]"/>
+						<locationArrayRef subsystem="pciSubsystem" name="riserSlots/ProliantPciRiser.riserKitSubsystem.pciSlots" filter="ProliantStorageContSASSA[P14602-B21]"/>
+					</choice_population>
+					<item_sequence>
+						<sequence_by type="productNumber" />
+					</item_sequence>
+				</choice>
+				<choice id="PCIeAcceleratorsChoice" type="multi_select" sequence="110" exclude="true"></choice>
+				<choice id="OSBootDeviceChoice" type="single_select" sequence="40" exclude="contains_available_content">
+				<title>OS Boot Device</title>
+					<max_value_function>max_boot_Function</max_value_function>
+					<choice_population>
+						<locationArrayRef subsystem="pciSubsystem" name="pciSlots" filter="OSPciBootDevice"/>
+						<locationArrayRef subsystem="pciSubsystem" name="riserSlots/ProliantPciRiser.riserKitSubsystem.pciSlots" filter="OSPciBootDevice"/>
+					</choice_population>
+					<item_sequence>
+						<sequence_by type="productNumber"/>
+					</item_sequence>
+				</choice>
+				<choice id="PCIAdaptersOptionChoice" type="multi_select" sequence="45" exclude="contains_available_content">
+					<title>PCI Adapters</title>
+					<choice_population>
+					<locationArrayRef name="PCIAdaptersChoice" filter="ProliantStorageContSASSA [P26325-B21 || P06367-B21 || P26279-B21 || P26324-B21 || 804338-B21 || 804398-B21 || 804405-B21 || P04220-B21 ]"/>
+					</choice_population>
+					<item_sequence>
+						<sequence_by type="productNumber" />
+					</item_sequence>
+				</choice>
+				<choice id="SSDReadIntensiveChoice" type="multi_select" sequence="55" exclude="contains_available_content">
+				<title>Hot Plug SFF</title>
+				 <max_value_function>nMaxSFFHardDrives</max_value_function>
+					<choice_population>
+						<locationArrayRef subsystem="deviceSubsystem" name="hardDriveBays" filter="ProliantHardDrive[subCategory = 'SSDRI' || subCategory = 'SSDWI' || subCategory = 'SSDMU']" />
+					</choice_population>
+					<item_sequence>
+						<sequence_by type="productNumber" />
+					</item_sequence>
+					<explanatoryMessages>
+		                <explanatoryMessage>HPE has secured surplus SSD supply in the near term to ensure immediate availability, and these are displayed with a green star.</explanatoryMessage>
+		            </explanatoryMessages>
+				</choice>
+				<choice id="SSDWriteIntensiveChoice" type="multi_select" sequence="60" exclude="true"></choice>
+				<choice id="SSDMixedUseChoice" type="multi_select" sequence="65" exclude="true"></choice>
+				<choice id="HDDMidline72KChoice" type="multi_select" sequence="75" exclude="contains_available_content">
+				<title>Hot Plug LFF</title>
+					<max_value_function>nMaxBandingHardDrives</max_value_function>
+					<choice_population>
+						<locationArrayRef subsystem="deviceSubsystem" name="hardDriveBays" filter="ProliantHardDrive[subCategory = 'HDDM72K']" />
+					</choice_population>
+					<item_sequence>
+						<sequence_by type="productNumber" />
+					</item_sequence>
+				</choice>
+				<choice id="M2SSDMixedUseChoice" type="multi_select" sequence="68" exclude="true"></choice>
+				<choice id="NVMeReadIntensiveChoice" type="multi_select" sequence="75" exclude="contains_available_content">
+					<title>SFF NVMe SSD</title>
+					<max_value_function>nMaxNvmeHardDrives</max_value_function>
+					<choice_population>
+						<locationArrayRef subsystem="deviceSubsystem" name="hardDriveBays" filter="ProliantHardDrive[subCategory = 'NVMeSSDAICRI' || subCategory = 'NVMeSSDAICMU']" />
+					</choice_population>
+					<item_sequence>
+						<sequence_by type="productNumber" />
+					</item_sequence>
+				</choice>
+			</section>	
+			<section id="networkController" subsystem="pciSubsystem" imageId="pc_cards" sequence="350" exclude="contains_available_content">
+				<title>Networking</title>
+				<shortText>Select your options</shortText>
+				<choice id="upgradeChoice" type="multi_select" sequence="15" exclude="true">
+				</choice>
+				<choice id="EthernetPCIeChoice" type="multi_select" sequence="35" exclude="contains_available_content">
+					<title>PCI Adapters</title>
+					<max_value_function>max_Networking_BandingFunction</max_value_function>
+					<choice_population>
+						<locationArrayRef name="pciSlots" subsystem="pciSubsystem" filter="PciCard[subCategory = 'EthernetPCIe']"/>
+						<locationArrayRef name="riserSlots/ProliantPciRiser.riserKitSubsystem.pciSlots" subsystem="pciSubsystem" filter="NetworkingPci[subCategory = 'EthernetPCIe'] or NetworkAdapterPci[subCategory = 'EthernetPCIe']" />
+					</choice_population>
+					<item_sequence>
+						<sequence_by type="productNumber" />
+					</item_sequence>
+				</choice>
+				
+				<choice id="FibreChannelHBAChoice" type="multi_select" sequence="45" exclude="contains_available_content">
+					<title>Fibre Channel</title>
+					<max_value_function>max_Fibrechannel_BandingFunction</max_value_function>
+					<choice_population>
+						<locationArrayRef name="pciSlots" subsystem="pciSubsystem" filter="PciCard[subCategory = 'FibreHBA']"/>
+						<locationArrayRef
+							name="riserSlots/ProliantPciRiser.riserKitSubsystem.pciSlots"
+							filter="ProliantStorageControllerFC[subCategory = 'FibreHBA'] or MezzanineFibreHBABoard[subCategory = 'FibreHBA']" />
+					</choice_population>
+					<item_sequence>
+						<sequence_by type="productNumber" />
+					</item_sequence>
+				</choice>
+				<choice id="EthernetOCPChoice" type="multi_select" sequence="35"
+					exclude="contains_available_content">
+					<title>OCP Adapter</title>
+					<max_value_function>max_ocpSlotsBandingFunction</max_value_function>
+					<choice_population>
+						<locationArrayRef name="pciSlots" subsystem="pciSubsystem" filter="PciCard[subCategory = 'EthernetOCP'] or PciCard[subCategory = 'OcpNic'] "/>
+						<locationArrayRef
+							name="riserSlots/ProliantPciRiser.riserKitSubsystem.pciSlots"
+							subsystem="pciSubsystem"
+							filter="NetworkingPci[subCategory = 'EthernetOCP'] or NetworkAdapterPci[subCategory = 'EthernetOCP']" />
+					</choice_population>
+					<item_sequence>
+						<sequence_by type="productNumber" />
+					</item_sequence>
+				</choice>
+			</section>
+			<section id="AcceleratorOptions" subsystem="acceleratorSubsystem" imageId="security" sequence="460" exclude="contains_available_content">
+				<title>PCIe Accelerators</title>
+				<shortText>Select your options</shortText>
+				<choice id="AcceleratorChoice" type="multi_select" sequence="10" exclude="contains_available_content">
+					<title>Server Options</title>
+					<choice_population>
+						<locationArrayRef name="AcceleratorLocArray"
+							filter="IOAccelerator" />
+					</choice_population>
+					<item_sequence>
+						<sequence_by type="productNumber" />
+					</item_sequence>
+				</choice>
+			</section>
+			<section id="ConvergedInfrastructureManagementSoftwareSection" subsystem="ConvergedInfrastructureManagementSoftwareSubsystem" sequence="1000" imageId="software"> 
+         	  <title>Software</title> 
+              <shortText>Select the OneView Management Options</shortText>
+              <choice id="OneViewManagementSoftwareLocationArrayChoice" type="single_select" exclude="contains_available_content">
+              	<title>OpenView</title>
+               <choice_population>	                	                
+                	<locationArrayRef name="OneViewManagementSoftwareLocationArray"/>       
+               </choice_population>                 	               
+              </choice> 
+			 <choice id="iLOAdvancedChoice" type="single_select" exclude="contains_available_content">
+					<title>iLO Advanced</title>
+					<choice_population>
+							  <locationArrayRef name="iLOAdvancedLocArray" filter="IntegratedLightsOut[subCategory = 'ILOAd']"/>
+					</choice_population>
+					<item_sequence>
+						<sequence_by type="productNumber"/>
+					</item_sequence>
+				</choice>
+			</section>
+			<section id="InsightSoftwareSection" subsystem="InsightSoftwareSubsystem" sequence="1001" imageId="software">
+				<choice id="IntegratedLightsOut" type="multi_select" exclude="true" sequence="30" targets="sce">
+	                 <title>Integrated Lights Out Software</title>
+	                <choice_population>
+	                 	<choiceRef name="IntegratedLightsOutChoice"/>
+	                </choice_population>                 	               
+                </choice>
+              </section>  
+			<section id="RackingSection" subsystem="RackingSubsystem" imageId="racking" sequence="650" exclude="true">
+			</section>
+		</sections>
+		<constraints>	
+			<constraint name="PCI_Adapters_Flexible_Modular_Controller" severity="error" incidentType="other_allow_override">
+			<map_to_choice choice= "PCIAdaptersOptionChoice"/>
+			</constraint>	
+			<constraint name="memory_Warning" severity="warning" incidentType="other_allow_override"/>
+			<constraint name="graphics_warning" severity="warning" incidentType="other_allow_override"/>
+			<constraint name="graphics_r1" severity="error" incidentType="other_allow_override">
+			<map_to_choice choice= "graphicsChoice"/>
+			</constraint>
+			<constraint name="SecurityHardware_r6" severity="warning" incidentType="other_allow_override"/>
+			
+			<constraint name="SecurityHardware_bluenote" severity="information" incidentType="other_allow_override"/>
+			<constraint name="SecurityHardware_Warning" severity="warning" incidentType="other_allow_override"/>
+			<constraint name="ManufacturingServices_r1" severity="warning" incidentType="other_allow_override"/>
+			<constraint name="ManufacturingServices_r2" severity="information" incidentType="other_allow_override"/>
+			<constraint name="BIOSMode_info" severity="information" incidentType="other_allow_override"/>
+			<constraint name="requiredSku" severity="error" incidentType="other_allow_override">
+			<map_to_choice choice="SecurityHardware"/>
+			</constraint>
+			<constraint name="OCPntwk_r1" severity="information" incidentType="other_allow_override">
+			<map_to_choice choice="EthernetOCPChoice"/>
+			</constraint>
+			<constraint name="OCPntwk_r8" severity="warning" incidentType="other_allow_override">
+			<map_to_choice choice="EthernetOCPChoice"/>
+			</constraint>
+			<constraint name="networking_info" severity="information" incidentType="other_allow_override">
+			<map_to_choice choice="EthernetPCIeChoice"/>
+			</constraint>
+			<constraint name="fibrechannel_r1" severity="warning" incidentType="other_allow_override">
+			<map_to_choice choice="FibreChannelHBAChoice"/>
+			</constraint>
+			<constraint name="OSboot_r3" severity="warning" incidentType="other_allow_override"/>
+			<constraint name="drivecage_bluenote" severity="information" incidentType="other_allow_override"/> <!-- PRS for PERT-23532 21-Jun-2021 -->
+			<constraint name="Controller_r1" severity="warning" incidentType="other_allow_override">
+			<map_to_choice choice="SmartArrayControllerChoice"/>
+			</constraint>
+			<constraint name="RiserallowedRemark" severity="warning" incidentType="other_allow_override">
+			<map_to_choice choice="riserCards"/>
+			</constraint>
+			<constraint name="Controller_r7" severity="error" incidentType="other_allow_override">
+			<map_to_choice choice="SmartArrayControllerChoice"/>
+			</constraint>
+			<constraint name="Controller_r13" severity="error" incidentType="other_allow_override">
+			<map_to_choice choice="SmartArrayControllerChoice"/>
+			<map_to_choice choice="InternalSCCablesChoice"/>
+			</constraint>
+			<constraint name="Controller_r14" severity="error" incidentType="other_allow_override">
+			<map_to_choice choice="SmartArrayControllerChoice"/>
+			<map_to_choice choice="InternalSCCablesChoice"/>
+			</constraint>
+			<constraint name="Controller_info" severity="information" incidentType="other_allow_override">
+			<map_to_choice choice="SmartArrayControllerChoice"/>
+			</constraint>
+			<constraint name="controllerstate_remark1" severity="information" incidentType="other_allow_override">
+			<map_to_choice choice="ControllerModeChoice"/>
+			</constraint>
+			<constraint name="controllerstate_remark2" severity="information" incidentType="other_allow_override">
+			<map_to_choice choice="ControllerModeChoice"/>
+			</constraint>
+			<constraint name="controllerstate_remark3" severity="information" incidentType="other_allow_override">
+			<map_to_choice choice="ControllerModeChoice"/>
+			</constraint>
+			<constraint name="hotSFFKitRequired" severity="error" incidentType="other_allow_override">
+			<map_to_choice choice="SSDReadIntensiveChoice"/>
+			</constraint>
+			<constraint name="risercards_r5b" severity="information" incidentType="other_allow_override"/>
+			<constraint name="iLOCommon_rule2" severity="warning" incidentType="other_allow_override"/>
+			<constraint name="PowerSupplies_r3" severity="warning" incidentType="other_allow_override"/>
+			<constraint name="PowerSupplies_info" severity="information" incidentType="other_allow_override"/>
+			<constraint name="powerCords_r1_japanWarning" severity="warning" incidentType="other_allow_override"/>
+			<constraint name="powerCords_r9Warnning" severity="warning" incidentType="other_allow_override"/>
+			<constraint name="powerCords_bluenote1" severity="information" incidentType="other_allow_override"/>
+			<constraint name="powerCords_bluenote2" severity="information" incidentType="other_allow_override"/>
+			<constraint name="powerCords_bluenote3" severity="information" incidentType="other_allow_override"/>
+			<constraint name="coolingoption_r3" severity="error" incidentType="other_allow_override">
+			<map_to_choice choice="coolingOp"/>
+			</constraint>
+			<constraint name="SFFNVMeSSD_rule2" severity="error" incidentType="other_allow_override">
+				<map_to_choice choice="NVMeReadIntensiveChoice" />
+			</constraint>
+			<constraint name="rackOptions_r4" severity="information" incidentType="other_allow_override">
+			</constraint>
+			
+		</constraints>
+		</uispec>
+</uispecs>

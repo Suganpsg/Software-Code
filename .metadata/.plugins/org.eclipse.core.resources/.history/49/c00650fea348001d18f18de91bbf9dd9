@@ -1,0 +1,724 @@
+package essn.server.proliantservers.slserver.edgelineseries.edgeline8000.edgeline8kblade {
+	import essn.server.proliantservers.slserver.edgelineseries.common.edgelineseriescommon.*;
+	import essn.server.proliantservers.slserver.edgelineseries.edgeline8000.edgeline8kstoragebay.*;
+	import essn.server.proliantservers.slserver.edgelineseries.edgeline8000.e910server.*;
+	import essn.server.proliantservers.common.proliantproductoption.*;
+	import essn.common.software.*;
+	import common.coremodel.*;
+	import common.productcategories.*;
+	import common.agentutility.*;
+	import common.localizations.*;
+	import essn.server.proliantservers.slserver.edgelineseries.common.edgelineproductoption.*;
+	import essn.server.proliantservers.slserver.edgelineseries.edgeline8000.e920server.*;
+	import essn.server.proliantservers.slserver.edgelineseries.edgeline8000.e920baseserver.*;
+	import essn.server.proliantservers.slserver.edgelineseries.edgeline8000.e920dserver.*;
+	class Edgeline8kBlade extends EdgelineSeriesCommon {
+		description: "Edgeline EL8000 Blade Infrastru";
+		string shortLabel: "Edgeline 8000";
+		configurationEntryPoint;
+		productCategories: Edgeline8000, Edgeline8000Ace;
+		platformName: "EDGELINE8000";
+		string softwarePlatformName: "Edgeline EL8000 Blade Infrastr";
+		string[] validRackList: "P9K03A", "P9K04A", "P9K05A", "P9K06A", "P9K07A", "P9K08A", "P9K09A", "P9K10A", "P9K11A", "P9K15A", "P9K19A", "P9K37A", "P9K38A", "P9K39A", "P9K40A", "P9K61A", "P9K41A", "P9K43A", "P9K42A", "P9K45A", "P9K48A",
+		"P9K46A", "P9K50A", "P9K51A", "P9K52A", "P9K54A", "P9K58A";
+		int iNumEthernetSwitches: 2;
+		int iNumModelX: 8;
+		int iHalfEiaUnitsRequired: 10;
+
+		//VM Added for this PERT ID : 21386
+		def IsOCS (): boolean = thisConfig.getProperty("targetEnvironment") >= "sce" || thisConfig.getProperty("targetEnvironment") >= "eocs";
+		def power_cord_default (): string[] = {
+			val P11290Count = thisInst.selected(ELPowerSupply).filter(x => split(x.id, "#").get(0) <= "P11290-B21").count;
+			if(P11290Count > 0) then expanderString ("Q7F42A", P11290Count);
+		}
+		def power_cord_default2 (): string[] = {
+			val P11291Count = thisInst.selected(ELPowerSupply).filter(x => split(x.id, "#").get(0) <= "P11291-B21").count;
+			if(P11291Count > 0) then expanderString ("P27698-B21", P11291Count);
+		}
+		def modifyPromotionLevel (): boolean = callout("PromotionLevelUtils", "modifyPromotionLevel", thisInst, "P12773-B21");
+		//		}otherwise{		
+		//		
+		//		ifEffective GKK_PERT_18957{
+		//		def power_cord_default (): string[] = {
+		////			if thisInst.selected(ELPowerSupply).filter(x => split(x.id, "#").get(0) <= "P11290-B21").count > 0 then expanderString ("Q7F42A", 1)
+		////			else if thisInst.selected(ELPowerSupply).filter(x => split(x.id, "#").get(0) <= "P11291-B21").count > 0 then expanderString ("J6X43A", 1)
+		////			else"";
+		//			val P11290Count = thisInst.selected(ELPowerSupply).filter(x => split(x.id, "#").get(0) <= "P11290-B21").count;
+		//			if (P11290Count > 0) then expanderString ("Q7F42A", P11290Count);
+		//		}			
+		//		def power_cord_default2 (): string[] = {
+		//			val P11291Count = thisInst.selected(ELPowerSupply).filter(x => split(x.id, "#").get(0) <= "P11291-B21").count;
+		//			if (P11291Count > 0) then expanderString ("J6X43A", P11291Count);
+		//		}			
+		//		}otherwise{
+		//		def power_cord_default (): string[] = {
+		//			if thisInst.selected(ELPowerSupply).filter(x => split(x.id, "#").get(0) <= "P11291-B21").count > 0 then expanderString ("J6X43A", 1);
+		//		}
+		//		
+		//		}
+
+		//}
+		//VM Added for this PERT ID : 21386
+		subsystem systemLocalizationSubsystem {
+			choice systemLocalizationChoice {
+				choiceType: single_select;
+				optional: true;
+				targetClass: SystemLocalizationClass;
+			}
+			constraint ezcipcsRequireSysLoc {
+				message: "ACE requires System Localization";
+				body: dependency (targetEnv ("ezc", "ipcs"), SystemLocalizationClass);
+			}
+			constraint systemLocRestrictsBaseProdLoc {
+				message: "Model Localization must match System Localization.";
+				body: restriction (Aruba6300Series.loc = SystemLocalizationClass.loc);
+			}
+		}
+		string[] castToList;
+		boolean addDefaultSysLoc: true;
+		def defaultSystemLocFunction (): string[] = {
+			val locProduct: string = if(addDefaultSysLoc) then getDefaultLocalization (thisInst, "systemLocalizationSubsystem.systemLocalizationChoice") else "";
+			castToList + locProduct;
+		}
+		def defaultLocalizationsFunction (): string[] = {
+			val sysLoc: string[] = defaultSystemLocFunction ();
+			sysLoc;
+		}
+		def getDefaultLocalization (instance: RootProductClass, choiceId: string): string = callout("GetDefaultLocalization", instance, choiceId);
+		string countryUsedForLocDefaults: "";
+		subsystem modelLocDefaults {
+			part triggerLocalizationRestoreDefaults ConfigAgentTrigger {
+				string agentClass: "InternalLocOverrideDefaultsAgent";
+				part[] agentTiming: postRestore;
+				string modelDefaultsFunc: "defaultLocalizationsFunction";
+			}
+			part triggerLocalizationUpdateDefaults ConfigAgentTrigger {
+				string agentClass: "InternalLocOverrideDefaultsAgent";
+				part[] agentTiming: finishUpdate;
+				string modelDefaultsFunc: "defaultLocalizationsFunction";
+				int priority: 10;
+			}
+		}
+		subsystem modelDefaults {
+			part defaultELe910: triggerInternalDefaults {
+				string[] modelDefaultsFunc: "OCADefaultProduct";
+			}
+		}
+		subsystem InterconnectSubsystem {
+			locationArray EthernetSwitchesLocArray {
+				rows: iNumEthernetSwitches;
+				fillerClasses: EthernetSwitch;
+			}
+			//PM 14-jan-22 PERT-24867
+//			constraint ethernet_ruleno1 {
+//				message: "If this Switch option is selected along with HPE e910 1U CTO Blade Svr OR HPE e910 2U CTO Blade Svr, then Min = 1 Qty of P17295-B21 (HPE e910 2p 1GbE RJ45 Mod) OR P17296-B21 (HPE e910 2p 10GbE SFP+ Mod) must be selected Per EL8000 5U Chassis.";
+//				body:{
+//				
+//				if(thisInst.id >= "P12379-B21" && (thisInst.selected(E910server).filter(x => x.id >= "P12381-B21").count + thisInst.selected(E910server).filter(x => x.id >= "P12382-B21").count > 0)
+//					                           && (thisInst.selected(EthernetSwitch).filter(x => x.id >= "P17297-B21").count > 0)) 
+//					then thisInst.selected(FlexLOMCard).filter(x => x.id >= "P17295-B21" or x.id >= "P17296-B21").count > 0;
+//			}
+//			}
+			constraint SwitchNotSuppWith2UChassis {
+				message: "P17297-B21 Cannot be selected with EL8000t 2U Chassis.";
+				body: dependency (Edgeline8ktBlade [ P27063-B21 ], EthernetSwitch [ P17297-B21 ] = 0);
+			}
+			//PM 14-jan-22 PERT-24867
+//			constraint ethernet_ruleno2 {
+//				message: "HPE EL8000 10GbE SFP+ Swch is currently Not supported with below Server Blades.
+//                         - HPE e920 CTO Blade Svr
+//                         - HPE e920d CTO Blade Svr";
+//				body:
+//				if ((thisInst.selected(EthernetSwitch).filter(x => x.id >= "P17297-B21").count > 0)) then (thisInst.selected(E920baseserver).filter(x => x.id >= "P40891-B21").count + thisInst.selected(E920dServer).filter(x => x.id >= "P40892-B21").count <= 0);
+//			}
+            //PM 17-feb-22 PERT-24938
+            constraint ethernet_ruleno2 {
+				message: "If this Switch option is selected with HPE e920 CTO Blade Svr OR HPE e920d CTO Blade Svr, 
+                          then Min = 1 Qty of HPE e920 10GbE 2p Network Mezzanine Kit Must be selected Per EL8000 5U Chassis.";
+				body:{
+				
+				if(thisInst.id >= "P12379-B21" && (thisInst.selected(E920baseserver).filter(x => x.id >= "P40891-B21").count + thisInst.selected(E920dServer).filter(x => x.id >= "P40892-B21").count > 0)
+					                           && (thisInst.selected(EthernetSwitch).filter(x => x.id >= "P17297-B21").count > 0)) 
+					then thisInst.selected(NetworkMezzKit).filter(x => x.id >= "P40899-B21").count > 0;
+				
+     
+			}
+			}
+		}
+		subsystem FacConfigSubsystem {
+			locationArray FacConfigLocArray {
+				rows: 1;
+				fillerClasses: ProliantBIOSMode;
+			}
+			constraint NotSuppWith5UChassis {
+				message: "P27137-B21 Cannot be selected with EL8000 5U Chassis.";
+				body: dependency (Edgeline8kBlade [ P12379-B21 ], ProliantBIOSMode [ P27137-B21 ] = 0);
+			}
+			constraint NotSuppWith2UChassis {
+				message: "P12394-B21 Cannot be selected with EL8000t 2U Chassis.";
+				body: dependency (Edgeline8ktBlade [ P27063-B21 ], ProliantBIOSMode [ P12394-B21 ] = 0);
+			}
+		}
+		subsystem PowerSubsystem {
+			locationArray PowerSuppliesLocArray {
+				rows: 2;
+				fillerClasses: ELPowerSupply;
+			}
+			part addDefaultsTriggerPowerSupply: triggerConsequentialSelection {
+				string consequentialSelectionFunc: "mustSelectMin1PS";
+			}
+			//VM Added for this PERT ID : 21386
+			part addDefaultsTriggerPowerSupply1: triggerConsequentialSelection {
+				string[] targetEnvs: "oca";, string consequentialSelectionFunc: "mustSelectMin1PS1";
+			}
+			//			constraint powersupply_no_mix {
+			//				message: "Power Supply types cannot be mixed.";
+			//				body:
+			//				selected(ELPowerSupply).noMix;
+			//			}
+
+//			//VM Removed for this ALM : 141269
+//			constraint cannotbemixed_powersupply {
+//				message: "HPE EL 900W -48VDC PS Kit cannot be mixed with below power supplies";
+//				body: dependency (ELPowerSupply [ P41590-B21 ], ELPowerSupply [ P11290-B21 || P11291-B21 ] = 0);
+//			}
+			ifEffective SP_PERT_26316 {
+				constraint cannotbemixed_powersupply {
+				message: "HPE EL 900W -48VDC PS Kit cannot be mixed with below 1500W power supplies -\n
+                        - HPE EL8000 1500W 264VAC PS Kit \n
+                        - HPE EL8000 1500W -48VDC PS Kit \n
+					   	- HPE EL 1500W 264VAC Ti PS Kit \n
+
+                          However, Mixing of 1500W AC and 1500W DC Power Supplies is allowed.";
+				body: dependency (ELPowerSupply [ P41590-B21 ], ELPowerSupply [ P11290-B21 || P11291-B21 || P42206-B21 ] = 0);
+			}
+			} otherwise{
+				constraint cannotbemixed_powersupply {
+				message: "HPE EL 900W -48VDC PS Kit cannot be mixed with below 1500W power supplies -\n
+                          - HPE EL8000 1500W 264VAC PS Kit (P11290-B21) \n
+                          - HPE EL8000 1500W -48VDC PS Kit (P11291-B21)\n
+
+                          However, Mixing of AC and DC 1500W Power Supplies is allowed.";
+				body: dependency (ELPowerSupply [ P41590-B21 ], ELPowerSupply [ P11290-B21 || P11291-B21 || P42206-B21 ] = 0);
+			}
+			}
+			
+			constraint powerRequired {
+				message: "At least one Power Supply must be selected.";
+				body: if thisInst.selected(ELPowerSupply).count = 0 then false;
+			}
+			constraint powersupplyinformation {
+				message: "The 1500W AC power supply supports C15 power cord OR C15 jumper cord only. ";
+				body:
+				if thisInst.selected(ELPowerSupply).filter(x => x.id >= "P11290-B21" or x.id >= "P42206-B21").count > 0 then false;
+			}
+			constraint powerSupplyWarning {
+				message:
+				"NEW HPE ProLiant Servers offer Flex Slot Power Supplies that come in multiple power ratings to allow you to pick the Right Size to fit your configuration.  This provides you with the advantage of reducing and reclaiming lost power.  By selecting the right sized power supply you will be providing facilities with a nameplate rating that is much closer to actual power your server uses.  In order to select the right size power supply for your ProLiant Server it is 'highly recommended' that you use the 'HPE Power Advisor' located at 'https://poweradvisorext.it.hpe.com/?Page=Index' to determine the right size power supply for your server needs.";
+				body: if thisInst.selected(ELPowerSupply).count >= 0 then false;
+			}
+			//PM 1-sep-22 PERT-26293
+			constraint powerSupplyIndiaError {
+				message:
+				"This Power Supply is not compliant with India BIS Certification for selected Model -X  and SHOULD NOT BE SELECTED.\n
+                 This is a regulatory compliance and hence the user cannot select this combination(Power Supply+ Model-X) if order is shipping to India.\n 
+                 Please Select alternate PSU";
+				body: if((thisInst.id >= "P41382-B21") && (thisConfig.getProperty("country") = "IN") && 
+				      (thisInst.selected(ELPowerSupply).filter(x => x.id >= "P11291-B21").count > 0)) then false else true ;
+			}
+			constraint powerSupplyNotIndiaWarning {
+				message:
+				"This Power Supply is not compliant with India BIS Certification for selected Model -X  and SHOULD NOT BE SELECTED.\n
+                 This is a regulatory compliance and hence the user cannot select this combination(Power Supply+ Model-X) if order is shipping to India.\n 
+                 Please Select alternate PSU";
+				body: if((thisInst.id >= "P41382-B21") && (thisConfig.getProperty("country") != "IN") && 
+				      (thisInst.selected(ELPowerSupply).filter(x => x.id >= "P11291-B21").count > 0)) then false else true ;
+			}
+			
+			
+		}
+		subsystem PowerCordsSubsystem {
+			locationArray PowerCordsLocArray {
+				rows: 2;
+				fillerClasses: ProliantPowerCord;
+			}
+			constraint PowerCordsRule_forjapan1 {
+				message: "If any of these 'Optional' Power Cords are ordered, then quantity must be equal to total number of Power Supplies on the order.";
+				body:
+				{
+					val powercords = thisInst.selected(ProliantPowerCord).count;
+					val powersupply = thisInst.selected(ELPowerSupply).count;
+					if(powercords > 0 && thisConfig.getProperty("country") = "JP" && powercords != powersupply) then false;
+				}
+			}
+			constraint PowerCordsRule_forother2 {
+				message: "If any of these 'Optional' Power Cords are ordered, then quantity must be equal to total number of Power Supplies on the order.";
+				body:
+				{
+					val powercords = thisInst.selected(ProliantPowerCord).count;
+					val powersupply = thisInst.selected(ELPowerSupply).count;
+					if(powercords > 0 && thisConfig.getProperty("country") != "JP" && powercords != powersupply) then false;
+				}
+			}
+			constraint Regioninformationmessage {
+				message: "R1C67A and R1C68A is available in all regions and for final destination India only.</br>
+                              If final destination is India, you must order BIS India power cord(s) equal to quantity of power supplies and 469774-409 under Manufacturing Services  to remove all standard world wide power cords from shipment";
+				body: if selected(ProliantPowerCord).filter(x => x.id >= "R1C67A" or x.id >= "R1C68A").count > 0 then false;
+			}
+			constraint powerCordInfo {
+				message: "Standard Power cords are Not included by default in EL8000 5U Chassis.";
+				body: if selected(ProliantPowerCord).count > 0 then false;
+			}
+			constraint PowerCord_ruleno_3 {
+				message: "This DC power cord is supported only with P11291-B21 (HPE EL8000 1500W -48VDC FB Pwr Sply Kit) OR HPE EL 900W -48VDC PS Kit.";
+				body:
+				if thisInst.selected(ProliantPowerCord).filter(x => x.id >= "P27698-B21").count > 0 then thisInst.selected(ELPowerSupply).filter(x => x.id >= "P11291-B21" or x.id >= "P41590-B21").count > 0;
+			}
+		}
+		subsystem ManufacturingServicesSubsystem {
+			locationArray powerCordsRemoval {
+				rows: 1;
+				fillerClasses: PowerCordsRemoval;
+			}
+			constraint powerCordsRemovalWarning {
+				message:
+				"By selecting this option, you will not receive standard power cords with this server.  Please verify that no power cords are needed for this server prior to proceeding with your order.  If 'Remove Standard Power Cords' is selected by mistake, then please make sure to de-select it.";
+				body:
+				if selected(PowerCordsRemoval).count > 0 then false;
+			}
+		}
+		subsystem accessoriesServicesSubsystem {
+			locationArray accessoriesLocArr {
+				rows: 1;
+				fillerClasses: ELMountKit;
+			}
+			constraint NotSupportedWith2UChassis {
+				message: "P22510-B21 Cannot be selected with EL8000t  2U Chassis.";
+				body: dependency (Edgeline8ktBlade [ P27063-B21 ], ELMountKit [ P22510-B21 ] = 0);
+			}
+			//			constraint NotSupportedWith1UE910 {
+			//				message: "If P22510-B21 option is selected, then Max qty = 1 for e910 2U CTO Blade Svr.";
+			//				body: if thisInst.selected(ELMountKit).count > 0 then thisInst.selected(E910server).filter(x => x.id >= "P12382-B21").count = 1;
+			//			}
+//			constraint SupportedWith2UE910 {
+//				message: "P22510-B21 cannot be selected with e910 1U CTO Blade Svr.";
+//				body: dependency (ELMountKit [ P22510-B21 ] > 0, E910server [ P12381-B21 ] = 0);
+//			}
+			//			constraint accessoriesRuleViceVersa1 {
+			//				message: "This option requires the selection of P17293-B21 (EL8000 8SFF SAS/SATA Drive Bay) and Vice versa.";
+			//				body: if thisInst.selected(ELMountKit).count > 0 then thisInst.selected(Edgeline8kStorageBay).count > 0;
+			//				if thisInst.selected(Edgeline8kStorageBay).count > 0 then thisInst.selected(ELMountKit).count > 0;
+			//			}
+			constraint accessoriesRule2 {
+				message: "If P22510-B21 option is selected, Then HPE e920 CTO Blade Svr cannot be selected	";
+				body: if thisInst.selected(ELMountKit).count > 0 then (thisInst.selected(E920baseserver).count) <= 0;
+			}
+		}
+		subsystem RackOptionSubsystem {
+			locationArray RackOptionLocArray {
+				rows: 4;
+				fillerClasses: ProliantRackOption, ELRackMountKit;
+			}
+			constraint changingPromotionLevel {
+				message: "Modify the PromotionLevel Attribute";
+				body: thisInst.modifyPromotionLevel ();
+			}
+
+			//VM Added for this PERT ID : 21386
+			constraint E8kRackOptionwithRackSelected1 {
+				message: "If EL8000t 2U CTO Front Cabling Chassis is to be integrated into a Rack, then Min=1 rail kit (P27068-B21 HPE EL8000t 4-post Rack Mount Kit)  MUST be selected.<br>
+						  The de-selection of rail kits is only allowed with stand-alone orders and the Chassis will ship with no rails.";
+				body: if thisInst.id = "P27063-B21" and ancestors (thisInst, "RackModel").count > 0 then thisInst.selected(ELRackMountKit).filter(x => x.id >= "P27068-B21").count > 0;
+			}
+			//VM Added for this PERT ID : 21386
+			//			constraint Rackrule {
+			//				message: "For EL8000t 2U CTO 2.0 Front Cbl Chassis (P41382-B21), <br>
+			//                          If P41383-B21 is selected then P27068-B21 must be selected and Vice Versa.";
+			//				body:
+			//				if thisInst.selected(Edgeline8ktBlade).filter(x => x.id = "P41382-B21").count > 0 then thisInst.selected(ELRackMountKit).filter(x => x.id = "P41383-B21" 
+			//					and  x.id = "P27068-B21").count >0;	
+			//			}
+			constraint Rackrule {
+				message: "For EL8000t 2U CTO 2.0 Front Cbl Chassis (P41382-B21), If P41383-B21 is selected then P27068-B21 must be selected.";
+				body:
+				if thisInst.selected(ELRackMountKit).filter(x => x.id >= "P41383-B21").count > 0 then thisInst.selected(ELRackMountKit).filter(x => x.id >= "P27068-B21").count > 0;
+			}
+			constraint Rackrule1 {
+				message: "For EL8000t 2U CTO 2.0 Front Cbl Chassis (P41382-B21), If P27068-B21 is selected then P41383-B21 must be selected.";
+				body:
+				if thisInst.selected(ELRackMountKit).filter(x => x.id >= "P27068-B21").count > 0 then thisInst.selected(ELRackMountKit).filter(x => x.id >= "P41383-B21").count > 0;
+			}
+			constraint Edgeline8kRackOptionwithRack {
+				message: "If EL8000 5U CTO front cabling chassis is to be integrated into a rack, then Min=1 rail kit(P12773-B21-HPE EL8000 4-post Rack Rail and Tray Kit) MUST be selected.<br>
+                          The de-selection of rail kits is only allowed with stand-alone orders and the Chassis will ship with no rails..<br>
+						  One Rail kit can accommodate up to two EL8000 Chassis.";
+				body: if thisInst.id = "P12379-B21" and (ancestors (thisInst, "RackModel").count > 0) then thisInst.selected(ELRackMountKit).filter(x => x.id >= "P12773-B21").count > 0;
+			}
+			constraint rackopton_rule4 {
+				message: "Max = 1";
+				body: restriction (ELRackMountKit [ P41383-B21 ] < 2);
+			}
+			constraint rackopton_rule5 {
+				message: "Max = 1";
+				body: restriction (ELRackMountKit [ P41584-B21 ] < 2);
+			}
+			constraint NotSupportedWith5UChassis {
+				message: "Cannot be selected with EL8000 5U Chassis";
+				body: dependency (Edgeline8kBlade [ P12379-B21 ], ProliantRackOption [ P27067-B21 ] = 0);
+			}
+			constraint NotSupportedWith2UChassis {
+				message: "Cannot be selected with EL8000 5U Chassis";
+				body: dependency (Edgeline8ktBlade [ P27063-B21 ], ProliantRackOption [ P12408-B21 || P12773-B21 ] = 0);
+			}
+			constraint rackOption_remark {
+				message: "Rack option P27068-B21 is BTO to EL8000t 2U Front Cabling Chassis. It is OD1 to Racks ONLY if Rack is included in the order.";
+				body: false;
+			}
+			constraint E8KtRackrule {
+				message: "If EL8000t 2U CTO 2.0 Front Cbl Chassis (P41382-B21) is to be integrated into a Rack, then Min=1 of rail kit (P27068-B21 - HPE EL8000t 4-post Rack Mount Kit) and HPE EL8000t 4-post Rack Mount FIO Kit (P41383-B21) MUST be selected.<br>
+						  The de-selection of rail kits is only allowed with stand-alone orders and the Chassis will ship with no rails.";
+				body: if thisInst.id = "P41382-B21" and ancestors (thisInst, "RackModel").count > 0 then thisInst.selected(ELRackMountKit).filter(x => x.id >= "P27068-B21").count > 0;
+			}
+		}
+		subsystem InsightSoftwareSubsystem {
+			constraint iLoEssentialsRule1_Rule7_Rule15 {
+				message: "Insight Control includes iLO Advanced license, make sure you want to order both.";
+				body: true;
+			}
+			constraint iLOCommonInformation {
+				message: "Learn more on selecting the right iLO License for your business http://www.hpe.com/support/iLO-LicenseMatrix-en";
+				body: true;
+			}
+			constraint iLOCommonInfoMsg {
+				message: "If you are ordering more than five (5) iLO licenses, HPE recommends that you review our Flexible Quanity or Tracking/Activation Key Agreement Licenses.
+						  See our Selecting the Right iLO License Guide to assist with your decision making. http://www.hpe.com/support/iLOLicenseOverview.";
+				body: true;
+			}
+			constraint iLoAdvanceRule14Blue {
+				message: "Factory integration via #0D1 is not available with electronic SKUs. </br>
+						  If you need factory integration via #0D1 option please order the physical equivalent SKU.";
+				body: true;
+			}
+		}
+		def selectedModelX (): int = {
+			val maxServer = thisInst.selected(E910server).sum(iHalfEiaUnitsRequired);
+			if maxServer > 0 then (maxServer / 2) else 0;
+		}
+
+		//VM Added for this PERT ID : 21386
+		def e920tselectedModelX (): int = {
+			val maxServer = thisInst.selected(E920tserver).sum(iHalfEiaUnitsRequired);
+			if maxServer > 0 then (maxServer / 2) else 0;
+		}
+		def selectedModelXControl (): int = 4;
+		def e920tselectedModelXControl (): int = 4;
+		subsystem ServerSubsystem {
+			locationArray ServerLocArray {
+				rows: iNumModelX;
+				rowsConsumed: iHalfEiaUnitsRequired;
+				columns: 1;
+				fillerClasses: E910server, Edgeline8kStorageBay, E910tserver, E920tserver, E920baseserver, E920dServer;
+			}
+			constraint modelxRule1 {
+				message: "If EL8000 5U CTO Front Cabling Chassis   is selected, then Min = 1 Server blade (HPE e920 CTO Blade Svr OR HPE e920d CTO Blade Svr) must be selected.</br>
+									Mixing of 1U and 2U server blades is allowed in the Chassis. Below combinations are allowed in the Chassis - </br>
+									Min = 1 and Max = 4 of 1U server blade. </br>
+									OR </br>
+									Min = 1 and Max = 2 of 2U server blade. </br>
+									OR  </br>
+									Max = 2 of 1U  and  Max = 1 of 2U";
+				body:
+				if ServerLocArray.contents.count > 0 then iNumModelX >= selectedModelX () else true;
+				//if thisInst.selected(E910server).filter(x => x.id >= "P12381-B21" or x.id >= "P12382-B21").count = 0 then false;
+				if(thisInst.id >= "P12379-B21" && ((thisInst.selected(E920baseserver).filter(x => x.id >= "P40891-B21").count = 0) and
+				(thisInst.selected(E920dServer).filter(x => x.id >= "P40892-B21").count = 0) and (thisInst.selected(E920baseserver).filter(x => x.id >= "P40891-B21").count = 0))) then false;
+			}
+			//PM Removing as per PERT-24741
+			//PM Adding it back as per PERT-24741 UAT Ticket
+			constraint modelxRule2 {
+				message: "If HPE EL8000 8SFF SAS/SATA Drive Bay is selected along with HPE EL8000 5U CTO Front Cabling Chassis, then minimum and maximum = 1 of HPE e920d CTO Blade Svr must be selected.";
+				body:
+				if thisInst.selected(Edgeline8kStorageBay).count > 0 then (thisInst.selected(E920dServer).filter(x => split(x.id, "#").get(0) <=
+				"P40892-B21").count) > 0 else true;
+				//restriction (Edgeline8kStorageBay <= 1);
+
+			}
+
+			///////// // VM Added for PDC issue
+			constraint modelxRule {
+				message: "If EL8000t 2U CTO 2.0 Front Cbl Chassis (P41382-B21) is selected, then Min =0 and Max = 2 of HPE e920t CTO Blade Svr (P40893-B21) can be selected.";
+				body: if(thisConfig.getProperty("targetEnvironment") = "oca") then if ServerLocArray.contents.count > 0 then iNumModelX >= e920tselectedModelX () else true;
+				if(thisInst.id >= "P41382-B21" && thisInst.selected(E920tserver).filter(x => x.id >= "P40893-B21").count > 2) then false;
+			}
+
+			//		
+			constraint modelxRule4 {
+				message: " If HPE EL8000 8SFF SAS/SATA Drive Bay selected. then HPE e920 CTO Blade Svr cannot be selected together.";
+				body: dependency (Edgeline8kStorageBay > 0, E910server [ P27064-B21 ] = 0);
+				dependency (Edgeline8kStorageBay > 0, E920baseserver [ P40891-B21 ] = 0);
+			}
+			constraint modelxRule5 {
+				message: "If EL8000t 2U Chassis is selected(P27063-B21), then Min = 1 and Max = 2 of e910t 2U CTO Blade Server (P27064-B21) must be selected. </br>
+							  HPE e910 1U CTO Blade Server OR HPE e910 2U CTO Blade Server cannot be selected with EL8000t 2U Chassis.";
+				body:
+				if ServerLocArray.contents.count > 0 then iNumModelX >= selectedModelX () else true;
+				if(thisInst.id >= "P27063-B21" && thisInst.selected(E910tserver).filter(x => x.id >= "P27064-B21").count = 0) then false;
+			}
+			constraint modelxRule5notsupportede910 {
+				message: "HPE HPE e910 2U CTO Blade Server cannot be selected with EL8000t 2U Chassis.";
+				body: dependency (Edgeline8ktBlade [ P27063-B21 ], E910server [ P12382-B21 ] = 0);
+				dependency (Edgeline8ktBlade [ P27063-B21 ], Edgeline8kStorageBay [ P17293-B21 ] = 0);
+			}
+			constraint modelxRule5Unotsupported910t {
+				message: "HPE e910t 2U CTO Blade Servercannot be selected with EL8000 5U Chassis.";
+				body: dependency (Edgeline8kBlade [ P12379-B21 ], E910tserver [ P27064-B21 ] = 0);
+			}
+			constraint modelxRule5a {
+				message: "If HPE EL8000 8SFF SAS/SATA Drive Bay selected,Then HPE EL8000 Storage FIO Enable Kit must be selected ";
+				body:
+				if thisInst.selected(Edgeline8kStorageBay).count > 0 then (thisInst.selected(ELMountKit).filter(x => x.id >= "P22510-B21").count) > 0;
+				//restriction (Edgeline8kStorageBay <= 1);ELMountKit P22510
+
+			}
+
+			//PM 25-oct-21 Venkat mail fix
+			constraint modelXRule_2a {
+				message: "Max = 1, if this option is selected along with HPE EL8000 5U CTO Front Cabling Chassis.";
+				body: restriction (Edgeline8kStorageBay [ P17293-B21 ] < 2);
+			}
+		}
+		def mustSelectMin1PS (): string[] = {
+			if(thisInst.id >= "P12379-B21" || thisInst.id >= "P27063-B21") then expanderString ("P11290-B21", 1);
+		}
+		def min1Managementhw (): string[] = {
+			if(thisInst.id >= "P27063-B21") then expanderString ("P27143-B21", 1);
+		}
+		ifEffective KS_PERT_25068{
+			def OCADefaultProduct (): string[] = { //P12381-B21
+			if thisInst.id >= "P12379-B21" then expanderString ("P40891-B21", 1) else if thisInst.id >= "P27063-B21" then expanderString ("P27064-B21", 1);
+		}
+		}
+		otherwise{
+		def OCADefaultProduct (): string[] = {
+			if thisInst.id >= "P12379-B21" then expanderString ("P12381-B21", 1) else if thisInst.id >= "P27063-B21" then expanderString ("P27064-B21", 1);
+		}
+		}
+		subsystem ELManagementHardwareSubsystem {
+			locationArray ELManagementHardware {
+				rows: 2;
+				fillerClasses: ProliantManagementHardware;
+			}
+			part addDefaultsTriggerManagementhw: triggerConsequentialSelection {
+				string consequentialSelectionFunc: "min1Managementhw";
+			}
+			constraint NotSupportedWith5UChassis {
+				message: "Cannot be selected with EL8000 5U Chassis";
+				body: dependency (Edgeline8kBlade [ P12379-B21 ], ProliantManagementHardware = 0);
+			}
+//			constraint MinReqwith2UChassis {
+//				message: "Minimum 1 Chassis Controller is required with EL8000 2U Chassis";
+//				body: dependency (Edgeline8ktBlade [ P27063-B21 || P41382-B21 ], ProliantManagementHardware > 0);
+//			}
+//			constraint Min2Reqfor910t2uBlade {
+//				message: "If two quantity of e910t 2U Blade servers are ordered, then 2 quantity of EL8000t Chassis controllers must be selected. ";
+//				body: dependency (E910tserver [ P27064-B21 ] = 2, ProliantManagementHardware = 2);
+//			}
+//			constraint Min2Reqfor920t2uBlade {
+//				message: "If two quantity of e920t 2U Blade servers are ordered, then 2 quantity of EL8000t Chassis controllers must be selected. ";
+//				body: dependency (E920tserver [ P40893-B21 ] = 2, ProliantManagementHardware = 2);
+//			}
+			constraint ManagementHardware_Warn_1 {
+				message: "Warning Message - One HPE EL8000t Chassis Controller is required for each e920t Blade Server.";
+				body:
+				if thisInst.selected(E920tserver).filter(x => x.id >= "P40893-B21").count > 0 then thisInst.selected(ProliantManagementHardware).count > 0;
+			}
+		}
+		def mustSelectMin1PS1 (): string[] = {
+			if(thisInst.id >= "P41382-B21") then expanderString ("P41590-B21", 1);
+		}
+	}
+
+	//	product P12773-B21 ProliantRackOption {
+	//		boolean overrideIntegrationOption: true;
+	//		def overrideIntegrationOptionAgentFunc (): string = {
+	//			val myAncestorRack = ancestor(Rack);
+	//			val myAncestorModel = ancestor(Edgeline8kBlade);
+	//			if(myAncestorModel != null && ! (myAncestorRack = null || not (myAncestorRack.isFactoryRackable))) then "0D1" else "";
+	//		}
+	//	}
+	class Edgeline8ktBlade extends Edgeline8kBlade {
+		productCategories: Edgeline8000tchassis, Edgeline8000tchassisAce;
+		string softwarePlatformName: ""; //"Edgeline EL8000t 2U Blade Infr"; //RV 08-May-2020 PERT 19027 SMR obsidian
+		subsystem PowerSubsystem {
+		//PM 3-oct-21 PERT-24751
+		//PM 16-mar-22 PERT-24975 Removing the below constraints
+//			constraint powerSupply_rule3 {
+//				message: "This Power Supply is not compliant with India BIS Certification for selected Model -X  and SHOULD NOT BE SELECTED. <br>
+//						This is a regulatory compliance and hence the user cannot select this combination(Power Supply+ Model-X) if order is shipping to India. <br> 
+//						Please Select alternate PSU.";
+//				body:
+//				if((thisConfig.getProperty("country") = "IN") and (thisInst.selected(ELPowerSupply).filter(x => x.id >= "P11291-B21").count > 0)) then false else true;
+//			}
+//			constraint powerSupply_rule6 {
+//				message: "This Power Supply is not compliant with India BIS Certification for selected Model -X  and SHOULD NOT BE SELECTED. <br>
+//						This is a regulatory compliance and hence the user cannot select this combination(Power Supply+ Model-X) if order is shipping to India. <br> 
+//						Please Select alternate PSU.";
+//				body:
+//				if((thisConfig.getProperty("country") != "IN") and (thisInst.selected(ELPowerSupply).filter(x => x.id >= "P11291-B21").count > 0)) then false else true;
+//			}
+		}
+
+		//RV 21-May-2020 KA-Gaby requested to remove all SW since the SW is not supported in chassis
+		//The software are picked up from base class even after softwarePlatformName as null. So overriding all choices with rows=0
+		subsystem HPCSoftwareSystemSubsystem {
+			locationArray OEMSoftwareArray {
+				rows: 0;
+			}
+		}
+		subsystem VMWareSubsystem {
+			locationArray VMWareVCenterSrmProductsChoice {
+				fillerClasses: VMWareVCenterSrmProducts;
+				rows: 0;
+			}
+			locationArray VMWareVCloudProductsChoice {
+				fillerClasses: VMWareVCloudProducts;
+				rows: 0;
+			}
+			locationArray VMWareVCenterProductsChoice {
+				fillerClasses: VMWareVCenterProducts;
+				rows: 0;
+			}
+			locationArray VMWareClientVirtualizationProductsChoice {
+				fillerClasses: VMWareClientVirtualizationProducts;
+				rows: 0;
+			}
+			locationArray VMWareVSphereEditionsChoice {
+				fillerClasses: VMWareVSphereEditions;
+				rows: 0;
+			}
+			locationArray VMwareVSANChoice {
+				fillerClasses: VMwareVSAN;
+				rows: 0;
+			}
+			locationArray VMWareVSphereKitsChoice {
+				fillerClasses: VMWareVSphereKits;
+				rows: 0;
+			}
+		}
+	}
+}
+
+/**
+  	import essn.common.software.*;
+	import essn.server.common.servercommon.*;
+	import essn.storage.network.hpnetworkingcommon.*;
+	import essn.SoftwareStandAlone.common.SoftwareSAProductOpt.*;
+	
+		string localizationType: "BDDE";					
+		
+		string[] virtualRackList: "any";
+		
+			
+				
+		ifEffective DAS_PERT_15793{
+		
+		}otherwise{
+				string[] validRackList: "";
+				string rackRole: "CannotBeRacked";
+		}
+
+		
+		def defaultRackkitBTOModel(): string[] = {
+				val myAncestorRack  = ancestor(RackModel);
+				val myModels = ancestor(Edgeline8kBlade);
+				if (myAncestorRack = null || !(myAncestorRack.isFactoryRackable)) then  expanderString ("P12773-B21", 1);
+		}		
+		
+		
+		
+		
+		//SE - PERT 15599  10-Apr-2019
+		subsystem modelDefaults {
+                 
+			
+//			part defaultPower: triggerInternalDefaults {
+//				string[] modelDefaults: "P11291-B21";
+//			} 
+//			part addDefaultsTriggerforELe9101u: triggerConsequentialSelection {			//ELe9101u node
+//				string consequentialSelectionFunc: "defaultELe9101u";
+//			}
+//			part addDefaultsTriggerPowerSupply: triggerConsequentialSelection {			//Power Supply
+//				string consequentialSelectionFunc: "defaultPowerSupply";
+//			}
+		}
+		
+		subsystem ServerSubsystem {
+			
+		//SE - For PERT 15599		5-Apr-2019
+		constraint chassisrule1 {
+				message: "If EL8000 5U Blade Infrastructure Chassis is selected, then Min = 1 Server blade (HPE EL e910 1u Server Blade OR HPE EL e910 2u Server Blade) must be selected.";
+				body:
+					if thisInst.selected(E910server).filter(x => x.id >= "P12381-B21" or x.id >= "P12382-B21" ).count = 0 then false;
+						
+		}
+					
+		}	
+		//SM 08-AUG-2019 FOR ALM # 131819
+				
+
+		subsystem WirelessSubsystem {
+			locationArray WirelessLocArray {
+				rows: 1;
+				fillerClasses: Wireless;
+			}
+		}	
+		//SE - Added for PERT 17848  07-Oct-2019
+		
+							
+		subsystem PowerSubsystem {
+			locationArray PowerSuppliesLocArray {
+				rows: 2;
+				fillerClasses: ELPowerSupply;	//SM 30-OCT-2019 FOR PDC Failure	//PowerSupply;	//SM 08-AUG-2019 FOR ALM # 129925	ELPowerSupply;
+			}	
+			
+			part addDefaultsTriggerPowerSupply: triggerConsequentialSelection {			//Power Supply	SM 14-AUG-2019 FOR ALM # 131481
+				string consequentialSelectionFunc: "mustSelectMin1PS";
+			}	
+			
+			
+					
+		//SE - For PERT 15599		5-Apr-2019
+		constraint powerRequired {
+				message: "At least one Power Supply must be selected.";
+				body: if thisInst.selected(ELPowerSupply).count = 0 then false;	//SM 08-AUG-2019 FOR ALM # 131906		if thisInst.selected(ELPowerSupply).count = 0 then false;
+			}
+		
+			
+		ifEffective	SE_PERT_17822{			//SE - Changing constraint for PERT 17822  30-Aug-2019
+	
+		}otherwise{	
+		ifEffective  VM_PERT_15599 {
+			
+			constraint powersupplyinformation {
+ 		message: //"HPE EL8000 1500W FB Pwr Sply Kit (P11290-B21) AC power supply  supports C15 power cord OR C15 jumper cord only.";
+ 				 "HPE EL8000 1500W FB Pwr Sply Kit (P11290-B21) and HPE EL8000 1500W 264VAC Rear Cbl PS Kit (P11292-B21) AC power supply  supports C15 power cord OR C15 jumper cord only.";	//SM 21-JULY-2019 FOR PERT 15785
+
+				body:
+					//if thisInst.selected(PowerSupply).filter(x => x.id >= "P11290-B21"  or x.id >= "P11292-B21").count > 0 then false;   //SM 08-AUG-2019 FOR ALM # 131906
+					if thisInst.selected(ELPowerSupply).filter(x => x.id >= "P11290-B21"  or x.id >= "P11292-B21").count > 0 then false; 
+			 }	
+			 
+			constraint unsupported_ps {//SM22-JULY-2019 FOR PERT 15785
+				message: "Cannot be selected with HPE EL8000 5U CTO Front Cabling Chassis";
+				body: dependency (Edgeline8kBlade [ P12379-B21 ], ELPowerSupply  [ (P11292-B21 || P11293-B21) ] = 0);
+			}			
+
+			constraint unsupported_ps1 {//SM22-JULY-2019 FOR PERT 15785
+				message: "Cannot be selected with HPE EL8000 5U CTO Rear Cabling Chassis";
+				body: dependency (Edgeline8kBlade [ P12380-B21 ], ELPowerSupply [ (P11290-B21 || P11291-B21) ] = 0);
+			}							
+			}}
+
+		
+		}
+ */

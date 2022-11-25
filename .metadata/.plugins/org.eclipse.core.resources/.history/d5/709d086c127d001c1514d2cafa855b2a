@@ -1,0 +1,1234 @@
+				
+;
+var apollo_2000_g10_plus_wizard_wizard_plugin = function($) {
+    'use strict';
+
+    var dataTag = 'apollo_2000_g10_plus_wizard_wizard',        
+        updateFlag = false,
+        namespace,
+        diagramLeftMargin = 0,
+        l10n_solutionwizard;
+    
+    var pert_24666;
+    var pert_24817;
+    
+    function load(self, widgetData) {
+    	
+    	pert_24666 = widgetData.attributeData["PERT_24666"] == 'true' ? true : false;
+    	
+    	if(!pert_24666) $('#node1_processorqty').hide();
+    	if(!pert_24666) $('#node2_processorqty').hide();
+    	
+        updateFlag = false;
+        baseline_wizard_specs.init(widgetData);
+
+        // apply html template to create elements
+        self.append(maui.template.apply('apollo_2000_g10_plus_wizard_wizard', {}));
+        
+        var expandList = '#tab_configuration h3.ui-accordion-header:visible, .config-section h3';
+			
+		var collapseList = '#tab_configuration h3.ui-accordion-header, .config-section h3';	
+         
+        wizard_utils.loadControlsDefault(baseline_wizard_specs,updateUi);        
+        
+		var tableData = baseline_wizard_specs.tableData();
+		
+		for ( var id in tableData) {
+			var tbody = $('#' + id + '>tbody');
+			tableData[id].items.forEach(function(item) {				
+				$('<tr/>', {}).append($('<td/>', {
+					'class' : 'table_qty'
+				}).append($('<input/>', {
+					'id' : item.id,
+					'class' : 'tableQty'					
+				}))).append(
+						$('<td/>', {
+							'class' : 'table_des',
+							text : baseline_wizard_specs
+									.getProductDescription(item.id)
+						})).appendTo(tbody);
+			});
+		}
+        ;		
+        
+        
+		if(widgetData.isNewUIEnabled){
+		
+			$( "#extended_overview_solutionWizard" ).addClass( 'size_r2');
+
+		
+		}
+
+        $('.tableQty').spinner({
+			
+		});       
+       
+        
+        wizard_utils.selectPresetsDefault(baseline_wizard_specs,'medium');        
+        wizard_utils.addUpdatesDefault(updateUi);
+        
+        
+        for ( var id in tableData) {
+			var tbody = $('#' + id + '>tbody');			
+			tbody.on('change', ':text', updateUi);
+			tbody.on('input', ':text', controlTableNum);
+		}
+        ;
+        
+        $('.tableQty').spinner({
+			min : 0,
+			value : 0,
+			max : 99,
+			change : function(e) {
+				$(this).change();
+			}
+		});    
+		
+        $('#buildSolution').click(function(event){
+            var disabled = $(this).attr('disabled');
+            if(disabled != undefined && disabled){
+                return;
+            }
+            updateConfig("buildSolution")
+        });
+        
+        var actionData = baseline_wizard_specs.actionData();
+        if(!actionData.buildSolutionAction){
+            $('#buildSolution').attr("disabled","true");
+        }   				
+		
+		updateAttributes(baseline_wizard_specs);
+        
+ 		checkConstraints(baseline_wizard_specs);
+ 		
+ 		wizard_utils.bswAccordionFunctionality(expandList, collapseList); 		
+
+        //Convert page to tabs
+        $("#tabs_apollo_2000_g10_plus_wizard_wizard").tabs();
+        
+		$('.next-button').click(function(){
+
+        	scrollToTop();
+        	console.log('this: ', $(this)[0].dataset.tab);
+        	$( "#tabs_apollo_2000_g10_plus_wizard_wizard" ).tabs( "option", "active", $("#tabs_apollo_2000_g10_plus_wizard_wizard").tabs("option", "active")+1 );
+
+        })
+        
+        function scrollToTop() {
+        	var pos = $('#tabs_apollo_2000_g10_plus_wizard_wizard').position();
+        	var posx = pos.top;
+        	$('#tabContainer').scrollTop(posx);
+        	$('#wizard_wrap').scrollTop(0);
+        } 
+		var actionData = baseline_wizard_specs.actionData()
+        wizard_utils.checkRequiredChoices(baseline_wizard_specs, actionData.buildSolutionAction, "Build Solution Required", widgetData.isNewUIEnabled);
+//        wizard_utils.checkRequiredChoices(baseline_wizard_specs);
+        
+		wizard_utils.bswDropdownFunctionality();
+		if(!pert_24666) $('#node1_processorqty').hide();
+    	if(!pert_24666) $('#node2_processorqty').hide();
+    	
+		var SelectedChassis = $('#chassis').val();
+    	if (SelectedChassis == 'none_item') {
+        	$('#chassisqty').hide();
+        	$('#coolingOption').hide();
+        	$('#powerSupply').hide();
+        } else {
+        	$('#chassisqty').hide();
+        	$('#coolingOption').show();
+        	$('#powerSupply').show();
+        }
+    	
+        if (SelectedChassis == 'N2600Gen10Plus') {
+            $('#storagebackplane').show();
+        } else {
+        	$('#storagebackplane').hide();
+        }
+        
+        if (SelectedChassis == 'N2400Gen10Plus' || SelectedChassis == 'none_item') {
+            $('#node1raidcontroller').hide();
+            $('#node1drivetype').hide();
+            $('#node1cable').hide();
+            $('#node2raidcontroller').hide();
+            $('#node2drivetype').hide();
+            $('#node2cable').hide();
+            
+        } else {
+        	$('#node1raidcontroller').show();
+            $('#node1drivetype').show();
+            $('#node1cable').show();
+            $('#node2raidcontroller').show();
+            $('#node2drivetype').show();
+            $('#node2cable').show();
+        }
+
+    	var NodeConfiguration = $('#node_configuration').val();
+    	var Node1 = '';
+    	var Node2 = 'XL290n Gen10 Plus';
+    	
+    	if (NodeConfiguration == 'XL220Gen10Plus')
+    		Node1 = 'XL220n Gen10 Plus';
+    	if (NodeConfiguration == 'XL225Gen10Plus')
+    		Node1 = 'XL225n Gen10 Plus';
+    	if (NodeConfiguration == 'XL290Gen10Plus')
+    		Node1 = 'XL290n Gen10 Plus';
+    	if (NodeConfiguration == 'XL220Gen10PlusXL290Gen10Plus')
+    		Node1 = 'XL220n Gen10 Plus';
+    	
+		if (NodeConfiguration == 'none_item') {
+			$('#accordion1').hide();
+			$('#accordion2').hide();
+		}
+		if (NodeConfiguration == 'XL220Gen10Plus' || NodeConfiguration == 'XL225Gen10Plus' || NodeConfiguration == 'XL290Gen10Plus') {
+			$('#accordion1').show();
+			$('#accordion2').hide();
+		}
+		if (NodeConfiguration == 'XL220Gen10PlusXL290Gen10Plus') {
+			$('#accordion1').show();
+			$('#accordion2').show();
+		}
+		
+		var ChevronCode1 = '<span class="chevron-down"> <?xml version="1.0" encoding="UTF-8"?><svg width="14px" height="9px" viewBox="0 0 14 9" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g id="Cray---Sprint-2" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><g id="9-/-Catalog---Wizard---Full-Solution-1---Slingshot" transform="translate(-229.000000, -1148.000000)"><g id="Icon/Functional/Light/Down" transform="translate(224.000000, 1140.000000)"><rect id="viewBox" x="0" y="0" width="24" height="24"></rect><polyline id="Path" stroke="#666666" stroke-width="2"points="18 9 12 15 6 9"></polyline></g></g></g></svg></span>' + Node1;
+		var ChevronCode2 = '<span class="chevron-down"> <?xml version="1.0" encoding="UTF-8"?><svg width="14px" height="9px" viewBox="0 0 14 9" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g id="Cray---Sprint-2" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><g id="9-/-Catalog---Wizard---Full-Solution-1---Slingshot" transform="translate(-229.000000, -1148.000000)"><g id="Icon/Functional/Light/Down" transform="translate(224.000000, 1140.000000)"><rect id="viewBox" x="0" y="0" width="24" height="24"></rect><polyline id="Path" stroke="#666666" stroke-width="2"points="18 9 12 15 6 9"></polyline></g></g></g></svg></span>' + Node2;
+		
+		$('#node1_header').html(ChevronCode1);
+		$('#node2_header').html(ChevronCode2);
+
+        var CoolingOption = $('#cooling_option').val();
+        if (CoolingOption == 'AirCoolingChoiceItem' || CoolingOption == 'none_item') {
+			$('#node1dlc').hide();
+			$('#node2dlc').hide();
+			$('#node1leftriser').show();
+			$('#node2leftriser').show();
+		} else {
+			$('#node1dlc').show();
+			$('#node2dlc').show();
+			$('#node1leftriser').hide();
+			$('#node2leftriser').hide();
+			$('#node1_processorqty').hide();
+			$('#node2_processorqty').hide();
+		}
+        
+        if (CoolingOption == 'AirCoolingChoiceItem') {
+        	if (NodeConfiguration == 'XL225Gen10Plus') {
+        		$('#buildSolutionWarning_message').html("Warning: There is high thermal risk and potential damage to the system if the correct configuration is not selected. User is required to go through the thermal requirement given in the following link to make sure the selected configuration is valid for the 5-Fan Configuration or the 7-Fan configuration. * 5-Fan (standard): System will support only few configurations and only certain qualified options. * 7-Fan (with optional Fan Module): still some configurations are not supported even with 7 fans. https://www.hpe.com/support/xl225ngen10plus-thermal");
+        	} else {
+        		$('#buildSolutionWarning_message').html("Warning: There is high thermal risk and potential damage to the system if the correct configuration is not selected. User is required to go through the thermal requirement given in the following link to make sure the selected configuration is valid for the 5-Fan Configuration or the 7-Fan configuration. * 5-Fan (standard): System will support only few configurations and only certain qualified options. * 7-Fan (with optional Fan Module): still some configurations are not supported even with 7 fans.");
+        	}
+        	$('#buildSolutionWarning_message').show();
+		} else {
+			$('#buildSolutionWarning_message').hide();
+		}
+        
+        updateWithChassisSelection();
+    }
+
+    function updateConfig(type) {     
+        serverTransaction({
+            method: 'update_page', widget_id: namespace, updateType: type
+        });
+        unsaveDirtyFlag(true);
+    } 
+    
+    function controlTableNum() {
+		$('td :text').each(function() {
+			var val = $(this).val();
+			if (val === '') {
+
+			} else if (isNaN(val) || parseInt(val) < 0) {
+				$(this).val(0);
+			} else {
+				$(this).val(parseInt($(this).val()));
+			}
+		});
+	}       
+ 
+    
+    function formInteraction() {
+    
+    			
+		$('#chassis_error_message').hide();
+    	$('#chassis_error_message').html('');
+    	$('#chassis_info_message').hide();
+    	$('#chassis_info_message').html('');
+    				
+    	$('#chassis_qty_error_message').hide();
+    	$('#chassis_qty_error_message').html('');
+    	$('#chassis_qty_info_message').hide();
+    	$('#chassis_qty_info_message').html('');
+    	
+		$('#cooling_option_error_message').hide();
+    	$('#cooling_option_error_message').html('');
+    	$('#cooling_option_info_message').hide();
+    	$('#cooling_option_info_message').html('');
+    							
+		$('#storage_backplane_error_message').hide();
+    	$('#storage_backplane_error_message').html('');
+    	$('#storage_backplane_info_message').hide();
+    	$('#storage_backplane_info_message').html('');
+    							
+		$('#power_supply_error_message').hide();
+    	$('#power_supply_error_message').html('');
+    	$('#power_supply_info_message').hide();
+    	$('#power_supply_info_message').html('');
+    							
+		$('#node_configuration_error_message').hide();
+    	$('#node_configuration_error_message').html('');
+    	$('#node_configuration_info_message').hide();
+    	$('#node_configuration_info_message').html('');
+    							
+		$('#node_1_qty_error_message').hide();
+    	$('#node_1_qty_error_message').html('');
+    	$('#node_1_qty_info_message').hide();
+    	$('#node_1_qty_info_message').html('');
+    							
+		$('#node_1_dlc_error_message').hide();
+    	$('#node_1_dlc_error_message').html('');
+    	$('#node_1_dlc_info_message').hide();
+    	$('#node_1_dlc_info_message').html('');
+    							
+		$('#node_1_primary_processor_error_message').hide();
+    	$('#node_1_primary_processor_error_message').html('');
+    	$('#node_1_primary_processor_info_message').hide();
+    	$('#node_1_primary_processor_info_message').html('');
+    	
+    	$('#node_1_processor_qty_error_message').hide();
+    	$('#node_1_processor_qty_error_message').html('');
+    	$('#node_1_processor_qty_info_message').hide();
+    	$('#node_1_processor_qty_info_message').html('');
+    							
+		$('#node_1_memory_error_message').hide();
+    	$('#node_1_memory_error_message').html('');
+    	$('#node_1_memory_info_message').hide();
+    	$('#node_1_memory_info_message').html('');
+    							
+		$('#node_1_memory_qty_error_message').hide();
+    	$('#node_1_memory_qty_error_message').html('');
+    	$('#node_1_memory_qty_info_message').hide();
+    	$('#node_1_memory_qty_info_message').html('');
+    							
+		$('#node_1_left_riser_error_message').hide();
+    	$('#node_1_left_riser_error_message').html('');
+    	$('#node_1_left_riser_info_message').hide();
+    	$('#node_1_left_riser_info_message').html('');
+    							
+		$('#node_1_right_riser_error_message').hide();
+    	$('#node_1_right_riser_error_message').html('');
+    	$('#node_1_right_riser_info_message').hide();
+    	$('#node_1_right_riser_info_message').html('');
+    							
+		$('#node_1_raid_controller_error_message').hide();
+    	$('#node_1_raid_controller_error_message').html('');
+    	$('#node_1_raid_controller_info_message').hide();
+    	$('#node_1_raid_controller_info_message').html('');
+    							
+		$('#node_1_drive_type_error_message').hide();
+    	$('#node_1_drive_type_error_message').html('');
+    	$('#node_1_drive_type_info_message').hide();
+    	$('#node_1_drive_type_info_message').html('');
+    							
+		$('#node_1_cable_error_message').hide();
+    	$('#node_1_cable_error_message').html('');
+    	$('#node_1_cable_info_message').hide();
+    	$('#node_1_cable_info_message').html('');
+    							
+		$('#node_2_qty_error_message').hide();
+    	$('#node_2_qty_error_message').html('');
+    	$('#node_2_qty_info_message').hide();
+    	$('#node_2_qty_info_message').html('');
+    							
+		$('#node_2_dlc_error_message').hide();
+    	$('#node_2_dlc_error_message').html('');
+    	$('#node_2_dlc_info_message').hide();
+    	$('#node_2_dlc_info_message').html('');
+    							
+		$('#node_2_primary_processor_error_message').hide();
+    	$('#node_2_primary_processor_error_message').html('');
+    	$('#node_2_primary_processor_info_message').hide();
+    	$('#node_2_primary_processor_info_message').html('');
+    	
+    	$('#node_2_processor_qty_error_message').hide();
+    	$('#node_2_processor_qty_error_message').html('');
+    	$('#node_2_processor_qty_info_message').hide();
+    	$('#node_2_processor_qty_info_message').html('');
+    							
+		$('#node_2_memory_error_message').hide();
+    	$('#node_2_memory_error_message').html('');
+    	$('#node_2_memory_info_message').hide();
+    	$('#node_2_memory_info_message').html('');
+    							
+		$('#node_2_memory_qty_error_message').hide();
+    	$('#node_2_memory_qty_error_message').html('');
+    	$('#node_2_memory_qty_info_message').hide();
+    	$('#node_2_memory_qty_info_message').html('');
+    							
+		$('#node_2_left_riser_error_message').hide();
+    	$('#node_2_left_riser_error_message').html('');
+    	$('#node_2_left_riser_info_message').hide();
+    	$('#node_2_left_riser_info_message').html('');
+    							
+		$('#node_2_right_riser_error_message').hide();
+    	$('#node_2_right_riser_error_message').html('');
+    	$('#node_2_right_riser_info_message').hide();
+    	$('#node_2_right_riser_info_message').html('');
+    							
+		$('#node_2_raid_controller_error_message').hide();
+    	$('#node_2_raid_controller_error_message').html('');
+    	$('#node_2_raid_controller_info_message').hide();
+    	$('#node_2_raid_controller_info_message').html('');
+    							
+		$('#node_2_drive_type_error_message').hide();
+    	$('#node_2_drive_type_error_message').html('');
+    	$('#node_2_drive_type_info_message').hide();
+    	$('#node_2_drive_type_info_message').html('');
+    							
+		$('#node_2_cable_error_message').hide();
+    	$('#node_2_cable_error_message').html('');
+    	$('#node_2_cable_info_message').hide();
+    	$('#node_2_cable_info_message').html('');
+    	
+    	var SelectedChassis = $('#chassis').val();
+    	if (SelectedChassis == 'none_item') {
+        	$('#chassisqty').hide();
+        	$('#coolingOption').hide();
+        	$('#powerSupply').hide();
+        } else {
+        	$('#chassisqty').hide();
+        	$('#coolingOption').show();
+        	$('#powerSupply').show();
+        }
+    	
+        if (SelectedChassis == 'N2600Gen10Plus') {
+            $('#storagebackplane').show();
+        } else {
+        	$('#storagebackplane').hide();
+        }
+        
+        if (SelectedChassis == 'N2400Gen10Plus' || SelectedChassis == 'none_item') {
+            $('#node1raidcontroller').hide();
+            $('#node1drivetype').hide();
+            $('#node1cable').hide();
+            $('#node2raidcontroller').hide();
+            $('#node2drivetype').hide();
+            $('#node2cable').hide();
+            
+        } else {
+        	$('#node1raidcontroller').show();
+            $('#node1drivetype').show();
+            $('#node1cable').show();
+            $('#node2raidcontroller').show();
+            $('#node2drivetype').show();
+            $('#node2cable').show();
+        }
+        
+    	var NodeConfiguration = $('#node_configuration').val();
+    	var Node1 = '';
+    	var Node2 = 'XL290n Gen10 Plus';
+    	
+    	if (NodeConfiguration == 'XL220Gen10Plus')
+    		Node1 = 'XL220n Gen10 Plus';
+    	if (NodeConfiguration == 'XL225Gen10Plus')
+    		Node1 = 'XL225n Gen10 Plus';
+    	if (NodeConfiguration == 'XL290Gen10Plus')
+    		Node1 = 'XL290n Gen10 Plus';
+    	if (NodeConfiguration == 'XL220Gen10PlusXL290Gen10Plus')
+    		Node1 = 'XL220n Gen10 Plus';
+    	
+		if (NodeConfiguration == 'none_item') {
+			$('#accordion1').hide();
+			$('#accordion2').hide();
+		}
+		if (NodeConfiguration == 'XL220Gen10Plus' || NodeConfiguration == 'XL225Gen10Plus' || NodeConfiguration == 'XL290Gen10Plus') {
+			$('#accordion1').show();
+			$('#accordion2').hide();
+		}
+		if (NodeConfiguration == 'XL220Gen10PlusXL290Gen10Plus') {
+			$('#accordion1').show();
+			$('#accordion2').show();
+		}
+		
+		var ChevronCode1 = '<span class="chevron-down"> <?xml version="1.0" encoding="UTF-8"?><svg width="14px" height="9px" viewBox="0 0 14 9" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g id="Cray---Sprint-2" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><g id="9-/-Catalog---Wizard---Full-Solution-1---Slingshot" transform="translate(-229.000000, -1148.000000)"><g id="Icon/Functional/Light/Down" transform="translate(224.000000, 1140.000000)"><rect id="viewBox" x="0" y="0" width="24" height="24"></rect><polyline id="Path" stroke="#666666" stroke-width="2"points="18 9 12 15 6 9"></polyline></g></g></g></svg></span>' + Node1;
+		var ChevronCode2 = '<span class="chevron-down"> <?xml version="1.0" encoding="UTF-8"?><svg width="14px" height="9px" viewBox="0 0 14 9" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g id="Cray---Sprint-2" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><g id="9-/-Catalog---Wizard---Full-Solution-1---Slingshot" transform="translate(-229.000000, -1148.000000)"><g id="Icon/Functional/Light/Down" transform="translate(224.000000, 1140.000000)"><rect id="viewBox" x="0" y="0" width="24" height="24"></rect><polyline id="Path" stroke="#666666" stroke-width="2"points="18 9 12 15 6 9"></polyline></g></g></g></svg></span>' + Node2;
+		
+		$('#node1_header').html(ChevronCode1);
+		$('#node2_header').html(ChevronCode2);
+
+        var CoolingOption = $('#cooling_option').val();
+        if (CoolingOption == 'AirCoolingChoiceItem' || CoolingOption == 'none_item') {
+			$('#node1dlc').hide();
+			$('#node2dlc').hide();
+			$('#node1leftriser').show();
+			$('#node2leftriser').show();
+		} else {
+			$('#node1dlc').show();
+			$('#node2dlc').show();
+			$('#node1leftriser').hide();
+			$('#node2leftriser').hide();
+			$('#node1_processorqty').hide();
+			$('#node2_processorqty').hide();
+		}
+        
+        if (CoolingOption == 'AirCoolingChoiceItem') {
+        	if (NodeConfiguration == 'XL225Gen10Plus') {
+        		$('#buildSolutionWarning_message').html("Warning: There is high thermal risk and potential damage to the system if the correct configuration is not selected. User is required to go through the thermal requirement given in the following link to make sure the selected configuration is valid for the 5-Fan Configuration or the 7-Fan configuration. * 5-Fan (standard): System will support only few configurations and only certain qualified options. * 7-Fan (with optional Fan Module): still some configurations are not supported even with 7 fans. https://www.hpe.com/support/xl225ngen10plus-thermal");
+        	} else {
+        		$('#buildSolutionWarning_message').html("Warning: There is high thermal risk and potential damage to the system if the correct configuration is not selected. User is required to go through the thermal requirement given in the following link to make sure the selected configuration is valid for the 5-Fan Configuration or the 7-Fan configuration. * 5-Fan (standard): System will support only few configurations and only certain qualified options. * 7-Fan (with optional Fan Module): still some configurations are not supported even with 7 fans.");
+        	}
+        	$('#buildSolutionWarning_message').show();
+        } else {
+			$('#buildSolutionWarning_message').hide();
+		}
+        
+        updateWithChassisSelection();
+    }   
+        
+    
+    function updateUi() {
+
+        formInteraction();
+        wizard_utils.applyLimitsDefault(baseline_wizard_specs);        
+
+        displaySummary(event);
+        updateFlag && update_page();
+    }
+
+
+    function displaySummary(event) {
+        var presets = baseline_wizard_specs.presets(),
+        oldPresets = $.extend(true, { }, presets)
+         ;
+    
+		presets.medium['chassis'] = $('#chassis > option:selected').val();
+		
+		presets.medium['chassis_qty'] = $('#chassis_qty').val();
+								
+		presets.medium['cooling_option'] = $('#cooling_option > option:selected').val();
+								
+		presets.medium['storage_backplane'] = $('#storage_backplane > option:selected').val();
+								
+		presets.medium['power_supply'] = $('#power_supply > option:selected').val();
+								
+		presets.medium['node_configuration'] = $('#node_configuration > option:selected').val();
+								
+        presets.medium['node_1_qty'] = $('#node_1_qty').val();
+        
+								
+		presets.medium['node_1_dlc'] = $('#node_1_dlc > option:selected').val();
+								
+		presets.medium['node_1_primary_processor'] = $('#node_1_primary_processor > option:selected').val();
+		
+		presets.medium['node_1_processor_qty'] = $('#node_1_processor_qty').val();
+								
+		presets.medium['node_1_memory'] = $('#node_1_memory > option:selected').val();
+								
+        presets.medium['node_1_memory_qty'] = $('#node_1_memory_qty').val();
+        
+								
+		presets.medium['node_1_left_riser'] = $('#node_1_left_riser > option:selected').val();
+								
+		presets.medium['node_1_right_riser'] = $('#node_1_right_riser > option:selected').val();
+								
+		presets.medium['node_1_raid_controller'] = $('#node_1_raid_controller > option:selected').val();
+								
+		presets.medium['node_1_drive_type'] = $('#node_1_drive_type > option:selected').val();
+								
+		presets.medium['node_1_cable'] = $('#node_1_cable > option:selected').val();
+								
+        presets.medium['node_2_qty'] = $('#node_2_qty').val();
+        
+								
+		presets.medium['node_2_dlc'] = $('#node_2_dlc > option:selected').val();
+								
+		presets.medium['node_2_primary_processor'] = $('#node_2_primary_processor > option:selected').val();
+		
+		presets.medium['node_2_processor_qty'] = $('#node_2_processor_qty').val();
+								
+		presets.medium['node_2_memory'] = $('#node_2_memory > option:selected').val();
+								
+        presets.medium['node_2_memory_qty'] = $('#node_2_memory_qty').val();
+								
+		presets.medium['node_2_left_riser'] = $('#node_2_left_riser > option:selected').val();
+								
+		presets.medium['node_2_right_riser'] = $('#node_2_right_riser > option:selected').val();
+								
+		presets.medium['node_2_raid_controller'] = $('#node_2_raid_controller > option:selected').val();
+								
+		presets.medium['node_2_drive_type'] = $('#node_2_drive_type > option:selected').val();
+								
+		presets.medium['node_2_cable'] = $('#node_2_cable > option:selected').val();
+									
+			
+		if (JSON.stringify(presets) !== JSON.stringify(oldPresets)) {
+        triggerUpdateFlag(event);
+        }
+    }    
+    
+    
+    function addConstraintMessage(messageRoot, message, severity){
+	  
+	  var msgDiv = document.createElement('div');
+	  msgDiv.className = 'status-messaging';
+	  messageRoot.append(msgDiv);
+	  
+	  var msgIcon = document.createElement('div');
+	  var msgSpan = document.createElement('span');
+	  msgSpan.innerHTML = message;
+	
+	  if(severity == "ERROR"){
+		  msgIcon.className = 'status-red';
+	  } else if(severity == "WARNING"){
+		  msgIcon.className = 'status-yellow';
+	  } else {
+		  msgIcon.className = 'status-green';
+	  }
+	  msgDiv.appendChild(msgIcon);
+	  msgDiv.appendChild(msgSpan);
+		
+  }
+  
+  function checkConstraints(specs){
+  	var constraintData = specs.constraintData();  	
+  	
+  }
+  
+  function updateAttributes(specs){
+	var attributeData = specs.attributeData();
+		
+  }
+
+  function showConstraintErrorMsg(constraint, errorSectionId){
+  	errorSectionId.html(constraint.message);
+  }
+ 
+  function update_page (e) {
+  	serverTransaction({
+    	method: 'update_page', widget_id: namespace
+    });
+    unsaveDirtyFlag(true);
+    updateFlag = false;
+  }
+
+  function triggerUpdateFlag() {
+      maui.server.notifyServer({
+          method: 'synchronize_data',
+          widget_id: namespace,
+          presets: baseline_wizard_specs.presets()
+      }, true);
+      updateFlag = true;
+  }
+
+  function handleException(e) {
+      maui.blockUI.forceHide();
+      displayHTMLInModalDialog($.i18n.prop('Alert'), 'name=' + e.name
+              + " message=" + e.message, 300, 200);
+  }
+  
+  function reloadChoice (widgetData, id){
+	  var specs = baseline_wizard_specs,
+	  	values = specs.presets()['medium'];
+	wizard_utils.reloadChoice(id,values[id],specs,updateUi);
+		
+  }
+  function updateWithChassisSelection(){
+		var chassisSelected = $('#chassis').val();
+		var chassisQty = $('#chassis_qty').val();
+		var coolingOptSelected = $('#cooling_option').val();
+		var storageBPOptSelected = $('#storage_backplane').val();
+		var porwerSplyOptSelected = $('#power_supply').val();
+		if ( chassisSelected == 'none_item'){
+			$('#chassis_qty').removeClass("requiredChoice");
+			$('#cooling_option').removeClass("requiredChoice");
+			$('#storage_backplane').removeClass("requiredChoice");
+			$('#power_supply').removeClass("requiredChoice");
+			$('#chassis_qty').attr("min",0);
+			$('#chassis_qty').attr("max",0);
+			$('#chassis_qty').val(0);
+			$('#chassis_capacity').text("0 Minimum 20 Maximum");
+		}else{
+			$('#chassis_qty').addClass("requiredChoice");
+			$('#cooling_option').addClass("requiredChoice");
+			$('#power_supply').addClass("requiredChoice");
+			$('#chassis_qty').attr("min",1);
+			$('#chassis_qty').attr("max",20);
+			
+			if( chassisSelected == 'N2600Gen10Plus'){
+				$('#storage_backplane').addClass("requiredChoice");
+			}else{
+				$('#storage_backplane').removeClass("requiredChoice");
+			}
+			
+			if (chassisQty != 0) {$('#chassis_qty').val(chassisQty);}
+			else{ $('#chassis_qty').val(1);}
+			$('#chassis_capacity').text("1 Minimum 20 Maximum");
+		}
+		
+		if (coolingOptSelected == "DirectLiquidCoolingChoiceItem") {
+        	$('#node_configuration').addClass("requiredChoice");
+        } else {
+            $('#node_configuration').removeClass("requiredChoice");
+        }
+		
+		updateWithNodeConfigSelection(chassisSelected, coolingOptSelected);
+	  }
+  function updateWithNodeConfigSelection(chassisSelected, coolingOptSelected){
+		
+	  	var nodeConfigSelected = $('#node_configuration').val();
+	  	var node_1_qty = $('#node_1_qty').val();
+	  	var node_2_qty = $('#node_2_qty').val();
+	  	
+	  	if ( nodeConfigSelected == 'none_item'){
+	  		 
+	  		removeRequiredClassSingleNode('node_1')	 
+	  		removeRequiredClassSingleNode('node_2')
+	  		
+	  	}else{
+	  		if (nodeConfigSelected == 'XL220Gen10PlusXL290Gen10Plus'){
+	  			addRequiredClassSingleNode('node_1', chassisSelected, coolingOptSelected, nodeConfigSelected)
+	  			addRequiredClassSingleNode('node_2', chassisSelected, coolingOptSelected, nodeConfigSelected)
+	  		}else{
+	  			addRequiredClassSingleNode('node_1', chassisSelected, coolingOptSelected, nodeConfigSelected)
+	  		}
+	  		
+	  	}
+  }
+  
+  function removeRequiredClassSingleNode( node ){
+	  $('#'+ node + '_qty').removeClass("requiredChoice");
+	  $('#'+ node + '_qty').attr("min",0);
+	  $('#'+ node + '_qty').attr("max",0);
+	  $('#'+ node + '_qty').val(0);
+	  $('#'+ node + '_capacity').text("0 Minimum 0 Maximum");
+	  $('#'+ node + '_dlc').removeClass("requiredChoice");
+	  $('#'+ node + '_primary_processor').removeClass("requiredChoice");
+	  $('#'+ node + '_memory').removeClass("requiredChoice");
+	  $('#'+ node + '_memory_qty').attr("min",0);
+	  $('#'+ node + '_memory_qty').attr("max",0);
+	  $('#'+ node + '_memory_qty').val(0);
+	  $('#'+ node + '_memory_capacity').text("0 Minimum 0 Maximum");
+	  $('#'+ node + '_raid_controller').removeClass("requiredChoice");
+	  $('#'+ node + '_cable').removeClass("requiredChoice");	  
+  }
+  function addRequiredClassSingleNode(node, chassisSelected, coolingOptSelected, nodeConfigSelected ){
+	  
+	  var node_qty = $('#'+ node + '_qty').val();
+	  var memory_qty = $('#'+ node + '_memory_qty').val()
+	  var nodeDlcSelected = $('#'+ node + '_dlc').val();
+	  var nodedriveTypeSelected = $('#'+ node + '_drive_type').val();
+	  
+	  $('#'+ node + '_qty').addClass("requiredChoice");
+	  
+	  var bp = $('#storage_backplane').val();
+	  var processor = $('#'+ node + '_primary_processor').val();
+	  var chassis = $('#chassis').val();
+
+	  if(node == 'node_1'){
+		  if( bp == 'P20285-B21' && (processor == ('P36815-L21') || processor == ('P36816-L21') || processor == ('P36814-L21') || processor == ('P36813-L21') || processor == ('P39472-L21') || processor == ('P38734-L21') || processor == ('P38730-L21') || processor == ('P38729-L21') || processor == ('P38728-L21') 
+				   || processor == ('P38725-L21') || processor == ('P26687-L21') || processor == ('P26688-L21') || processor == ('P24392-L21') || processor == ('P24393-L21') || processor == ('P24259-L21') || processor == ('P24256-L21') || processor == ('P26686-L21') || processor == ('P38733-L21') || processor == ('P36812-L21')
+				   || processor == ('P36809-L21') || processor == ('P36810-L21') || processor == ('P36811-L21') || processor == ('P36802-L21') || processor == ('P36803-L21') || processor == ('P36804-L21' ))){
+		 $('#node_1_processor_qty').val(1);
+			}else{
+				if(bp == 'P20287-B21' && (processor == ('P36815-L21') || processor == ('P36816-L21') || processor == ('P36814-L21') || processor == ('P36813-L21') || processor == ('P36812-L21') || processor == ('P36809-L21') || processor == ('P36810-L21') 
+							   || processor == ('P36811-L21') || processor ==('P36802-L21') || processor ==('P36803-L21') || processor ==('P36804-L21'))){
+					$('#node_1_processor_qty').val(1)
+				}else{
+					if (chassis == 'N2800Gen10Plus' && (processor == ('P36815-L21')  || processor == ('P36816-L21')  || processor ==  ('P36814-L21') || processor ==  ('P36813-L21') || processor == ('P36809-L21') || processor == ('P36810-L21') 
+							   || processor == ('P36811-L21') || processor == ('P36802-L21') || processor == ('P36803-L21') ||  processor == ('P36804-L21'))){
+						$('#node_1_processor_qty').val(1);						
+					}else{
+						$('#node_1_processor_qty').val(2)
+					}
+				}
+			}
+		}else{
+			if( bp == 'P20285-B21' && (processor == ('P36815-L21') || processor == ('P36816-L21') || processor == ('P36814-L21') || processor == ('P36813-L21') || processor == ('P39472-L21') || processor == ('P38734-L21') || processor == ('P38730-L21') || processor == ('P38729-L21') || processor == ('P38728-L21') 
+						   || processor == ('P38725-L21') || processor == ('P26687-L21') || processor == ('P26688-L21') || processor == ('P24392-L21') || processor == ('P24393-L21') || processor == ('P24259-L21') || processor == ('P24256-L21') || processor == ('P26686-L21') || processor == ('P38733-L21') || processor == ('P36812-L21')
+						   || processor == ('P36809-L21') || processor == ('P36810-L21') || processor == ('P36811-L21') || processor == ('P36802-L21') || processor == ('P36803-L21') || processor == ('P36804-L21' ))){
+				 $('#node_2_processor_qty').val(1);
+			}else{
+				if(bp == 'P20287-B21' && (processor == ('P36815-L21') || processor == ('P36816-L21') || processor == ('P36814-L21') || processor == ('P36813-L21') || processor == ('P36812-L21') || processor == ('P36809-L21') || processor == ('P36810-L21') 
+							   || processor == ('P36811-L21') || processor ==('P36802-L21') || processor ==('P36803-L21') || processor ==('P36804-L21'))){
+					$('#node_2_processor_qty').val(1)
+				}else{
+					if (chassis == 'N2800Gen10Plus' && (processor == ('P36815-L21')  || processor == ('P36816-L21')  || processor ==  ('P36814-L21') || processor ==  ('P36813-L21') || processor == ('P36809-L21') || processor == ('P36810-L21') 
+							   || processor == ('P36811-L21') || processor == ('P36802-L21') || processor == ('P36803-L21') ||  processor == ('P36804-L21'))){
+						$('#node_2_processor_qty').val(1);						
+					}else{
+						$('#node_2_processor_qty').val(2)
+					}
+				}
+			}
+		}
+	  
+	  
+	  if(node == 'node_1'){
+		  if (nodeConfigSelected == 'XL290Gen10Plus') {			
+			  $('#'+ node + '_processor_capacity').text("2 Minimum / Maximum");
+		  }else{
+			  $('#'+ node + '_processor_capacity').text("1 Minimum 2 Maximum");
+		  }
+		  
+		  if (nodeConfigSelected == 'XL220Gen10PlusXL290Gen10Plus' || nodeConfigSelected == 'XL290Gen10Plus') {
+			  if (coolingOptSelected == 'DirectLiquidCoolingChoiceItem'){ 
+				  $('#'+ node + '_qty').attr("min",2);
+				  $('#'+ node + '_qty').attr("max",2);
+				  $('#'+ node + '_capacity').text("2 Minimum 2 Maximum");
+				  
+				  if (node_qty != 0) {$('#'+ node + '_qty').val(node_qty);}
+				  else{ $('#'+ node + '_qty').val(2);}
+			  }else{
+				  $('#'+ node + '_qty').attr("min",1);
+				  $('#'+ node + '_qty').attr("max",2);
+				  $('#'+ node + '_capacity').text("1 Minimum 2 Maximum");
+				 
+				  if (node_qty != 0) {$('#'+ node + '_qty').val(node_qty);}
+				  else{ $('#'+ node + '_qty').val(1);}
+			  }
+			  
+		  }else{
+			
+			  if (coolingOptSelected == 'DirectLiquidCoolingChoiceItem'){ 
+				  $('#'+ node + '_qty').attr("min",4);
+				  $('#'+ node + '_qty').attr("max",4);
+				  $('#'+ node + '_capacity').text("4 Minimum 4 Maximum");
+				  
+				  if (node_qty != 0) {$('#'+ node + '_qty').val(node_qty);}
+				  else{ $('#'+ node + '_qty').val(4);}
+			  }else{
+				  $('#'+ node + '_qty').attr("min",1);
+				  $('#'+ node + '_qty').attr("max",4);
+				  $('#'+ node + '_capacity').text("1 Minimum 4 Maximum");
+				  
+				  if (node_qty != 0) {$('#'+ node + '_qty').val(node_qty);}
+				  else{ $('#'+ node + '_qty').val(1);}
+			  } 
+		  }
+		  
+	  }else{
+		  $('#'+ node + '_qty').attr("min",1);
+		  $('#'+ node + '_qty').attr("max",1);
+		  $('#'+ node + '_capacity').text("1 Minimum 1 Maximum");
+		  
+		  if (node_qty != 0) {$('#'+ node + '_qty').val(node_qty);}
+		  else{ $('#'+ node + '_qty').val(1);}
+		  
+		  if (nodeConfigSelected == 'XL220Gen10PlusXL290Gen10Plus') {			
+			  $('#'+ node + '_processor_capacity').text("2 Minimum / Maximum");
+		  }else{
+			  $('#'+ node + '_processor_capacity').text("1 Minimum 2 Maximum");
+		  }
+	  }
+	  
+	 
+	  
+	  if (coolingOptSelected == 'DirectLiquidCoolingChoiceItem') {$('#'+ node + '_dlc').addClass("requiredChoice");}
+	  $('#'+ node + '_primary_processor').addClass("requiredChoice");
+	  $('#'+ node + '_memory').addClass("requiredChoice");
+	  
+	  if (nodeDlcSelected == 'CPUAndDIMMChoiceItem'){
+		  $('#'+ node + '_memory_qty').attr("min",16);
+		  $('#'+ node + '_memory_qty').attr("max",16);
+		  $('#'+ node + '_memory_capacity').text("16 Minimum 16 Maximum");
+		  $('#'+ node + '_memory_qty').val(16);
+		  $('#'+ node + '_processor_qty').val(1);
+	  }else{
+		  $('#'+ node + '_memory_qty').attr("min",2);
+		  $('#'+ node + '_memory_qty').attr("max",16);
+		  $('#'+ node + '_memory_capacity').text("2 Minimum 16 Maximum");
+		  if (memory_qty != 0) {$('#'+ node + '_memory_qty').val(memory_qty);}
+		  else{ $('#'+ node + '_memory_qty').val(2);}
+	  }
+	  
+	  if( nodedriveTypeSelected == 'SASw_woSATAChoiceItem' || nodedriveTypeSelected == 'SATA_onlyChoiceItem' ){
+		  $('#'+ node + '_raid_controller').addClass("requiredChoice");
+		  $('#'+ node + '_cable').addClass("requiredChoice");
+		  $('#'+ node + '_right_riser').addClass("requiredChoice");
+	  }else if(nodedriveTypeSelected == 'NVMeonlyChoiceItem'){
+		  $('#'+ node + '_right_riser').addClass("requiredChoice");
+		  $('#'+ node + '_raid_controller').removeClass("requiredChoice");
+		  $('#'+ node + '_cable').removeClass("requiredChoice");
+	  }else{
+		  $('#'+ node + '_right_riser').removeClass("requiredChoice");
+		  $('#'+ node + '_raid_controller').removeClass("requiredChoice");
+		  $('#'+ node + '_cable').removeClass("requiredChoice");
+	  }
+	  
+  }
+  
+  function refreshNode1DriveTable(){
+		var attributeData = baseline_wizard_specs.attributeData();
+		var node1nvmeQTY = attributeData['Node1nvmeDriveSupported'];
+		var node1sataQTY = attributeData['Node1SATADriveSupported'];
+		var node1sasOrSataQTY = attributeData['Node1SASorSATASupported'];
+		refreshFielDataForRow('node_1_nvmeQty', node1nvmeQTY);
+		refreshFielDataForRow('node_1_sataQty', node1sataQTY);
+		refreshFielDataForRow('node_1_sas_sataQty', node1sasOrSataQTY);
+  }
+  
+  function refreshNode2DriveTable(){
+		var attributeData = baseline_wizard_specs.attributeData();
+		var node2nvmeQTY = attributeData['Node2nvmeDriveSupported'];
+		var node2sataQTY = attributeData['Node2SATADriveSupported'];
+		var node2sasOrSataQTY = attributeData['Node2SASorSATASupported'];
+		refreshFielDataForRow('node_2_nvmeQty', node2nvmeQTY);
+		refreshFielDataForRow('node_2_sataQty', node2sataQTY);
+		refreshFielDataForRow('node_2_sas_sataQty', node2sasOrSataQTY);
+  }
+  
+  function refreshNode1RiserTable(){
+		var attributeData = baseline_wizard_specs.attributeData();
+		var node1LeftRiserQTY = attributeData['Node1LeftRiserSupported'];
+		var node1RightRiserQTY = attributeData['Node1RightRiserSupported'];
+		refreshFielDataForRow('node_1_leftRiserQty', node1LeftRiserQTY);
+		refreshFielDataForRow('node_1_rightRiserQty', node1RightRiserQTY);
+  }
+  
+  function refreshNode2RiserTable(){
+		var attributeData = baseline_wizard_specs.attributeData();
+		var node2LeftRiserQTY = attributeData['Node2LeftRiserSupported'];
+		var node2RightRiserQTY = attributeData['Node2RightRiserSupported'];
+		refreshFielDataForRow('node_2_leftRiserQty', node2LeftRiserQTY);
+		refreshFielDataForRow('node_2_rightRiserQty', node2RightRiserQTY);
+}
+  
+  function refreshFielDataForRow(id, newValue){
+		$('#'+id).html(newValue);
+		if (newValue == 0 ) {
+			$('#'+id + "Item").hide();
+		} else {
+			$('#'+id + "Item").show();
+		}
+  }
+  function checkAvailableNodeTextBoxQty( node , selectedQty) {
+	  var nodeConfigSelected = $('#node_configuration').val();
+	  var coolingOptSelected = $('#cooling_option').val();
+		
+	  if(node == 'node_1'){
+		  if (nodeConfigSelected == 'XL220Gen10PlusXL290Gen10Plus' || nodeConfigSelected == 'XL290Gen10Plus') {
+			  if(selectedQty > 2){$('#'+ node + '_qty').val(2);}
+		  }else{
+			  if (coolingOptSelected == 'DirectLiquidCoolingChoiceItem'){ 
+				  if(selectedQty != 4){$('#'+ node + '_qty').val(4);}
+			  }else{
+				  if(selectedQty > 4){$('#'+ node + '_qty').val(4);}
+			  }
+		  }
+	  }else{
+		  if(selectedQty > 1){$('#'+ node + '_qty').val(1);}
+	  }
+  }
+  function checkAvailableTextBoxQty( values , id) {
+		var qty = values[id]
+		if (id == 'chassis_qty' && qty > 20)  $('#'+ id).val(20);
+		if (id == 'node_1_memory_qty' && qty > 16)  $('#'+ id).val(16);
+		if (id == 'node_2_memory_qty' && qty > 16)  $('#'+ id).val(16);
+	}
+
+  var methods = {
+      init : function(options, widgetData) {
+          l10n_solutionwizard = {
+
+          };
+          this.data(dataTag, options);
+          namespace = widgetData.namespace;
+          load(this, widgetData);
+          return this;
+      },
+      update: function (updateData) {
+      	baseline_wizard_specs.init(updateData);
+      	
+      	if(updateData.refreshUI !== undefined){
+          	var values = baseline_wizard_specs.presets()['medium'];
+          	
+          	
+		
+			if(updateData.refreshUI == 'Chassis'){    
+				
+//          		var v_chassis = values['chassis'];
+				checkAvailableTextBoxQty(values,'chassis_qty')
+          	}
+			
+			if(updateData.refreshUI == 'ChassisQty'){            		
+          		var v_chassis_qty = values['chassis_qty'];
+          		reloadChoice (updateData, 'cooling_option');
+				reloadChoice (updateData, 'storage_backplane');
+				reloadChoice (updateData, 'power_supply');
+				reloadChoice (updateData, 'node_configuration');
+				reloadChoice (updateData, 'node_1_drive_type');
+				reloadChoice (updateData, 'node_2_drive_type');
+				reloadChoice (updateData, 'node_1_raid_controller');
+				reloadChoice (updateData, 'node_2_raid_controller');
+				reloadChoice (updateData, 'node_1_cable');
+				reloadChoice (updateData, 'node_2_cable');
+          		checkAvailableTextBoxQty(values,'chassis_qty')
+          	}		
+					
+			if(updateData.refreshUI == 'CoolingOption'){  
+				reloadChoice (updateData, 'node_configuration');
+				reloadChoice (updateData, 'node_1_primary_processor');
+				reloadChoice (updateData, 'node_2_primary_processor');
+ //         		var v_cooling_option = values['cooling_option'];
+          	}		
+					
+					
+			if(updateData.refreshUI == 'StorageBackplane'){            		
+          		var v_storage_backplane = values['storage_backplane'];
+          		reloadChoice (updateData, 'node_1_right_riser');
+				reloadChoice (updateData, 'node_2_right_riser');
+          		reloadChoice (updateData, 'node_1_drive_type');
+				reloadChoice (updateData, 'node_2_drive_type');
+          	}		
+					
+					
+			if(updateData.refreshUI == 'PowerSupply'){            		
+          		var v_power_supply = values['power_supply'];
+          	}		
+					
+					
+			if(updateData.refreshUI == 'NodeConfiguration'){ 
+				
+				reloadChoice (updateData, 'node_1_dlc');
+				reloadChoice (updateData, 'node_2_dlc');
+				reloadChoice (updateData, 'node_1_primary_processor');
+				reloadChoice (updateData, 'node_2_primary_processor');
+				reloadChoice (updateData, 'node_1_memory');
+				reloadChoice (updateData, 'node_2_memory');
+				reloadChoice (updateData, 'node_1_right_riser');
+				reloadChoice (updateData, 'node_2_right_riser');
+				reloadChoice (updateData, 'node_1_raid_controller');
+				reloadChoice (updateData, 'node_2_raid_controller');
+				reloadChoice (updateData, 'node_1_drive_type');
+				reloadChoice (updateData, 'node_2_drive_type');
+				reloadChoice (updateData, 'node_1_cable');
+				reloadChoice (updateData, 'node_2_cable');
+				
+			//	var v_node_configuration = values['node_configuration'];
+          	}		
+					
+					
+			if(updateData.refreshUI == 'Node1Qty'){            		
+          		var v_node_1_qty = values['node_1_qty'];
+          		reloadChoice (updateData, 'node_1_primary_processor');
+				reloadChoice (updateData, 'node_1_memory');
+				reloadChoice (updateData, 'node_1_right_riser');
+				reloadChoice (updateData, 'node_1_raid_controller');
+				reloadChoice (updateData, 'node_1_drive_type');
+				reloadChoice (updateData, 'node_1_cable');
+          		checkAvailableNodeTextBoxQty('node_1', v_node_1_qty)
+          	}		
+					
+					
+			if(updateData.refreshUI == 'Node1DLC'){            		
+          		var v_node_1_dlc = values['node_1_dlc'];
+          		reloadChoice (updateData, 'node_1_primary_processor');
+				reloadChoice (updateData, 'node_2_primary_processor');
+          	}		
+					
+					
+			if(updateData.refreshUI == 'Node1PrimaryProcessor'){            		
+          		var v_node_1_primary_processor = values['node_1_primary_processor'];
+          		checkAvailableTextBoxQty(values,'node_1_processor_qty')
+          	}		
+			
+			if(updateData.refreshUI == 'Node1ProcessorQty'){
+				var v_node_1_processor_qty = values['node_1_processor_qty'];
+				checkAvailableTextBoxQty(values,'node_1_processor_qty')
+				$('#node_1_processor_qty').val(1);
+			}
+					
+			if(updateData.refreshUI == 'Node1Memory'){            		
+          		var v_node_1_memory = values['node_1_memory'];
+          		checkAvailableTextBoxQty(values,'node_1_memory_qty')
+          	}		
+					
+					
+			if(updateData.refreshUI == 'Node1MemoryQty'){            		
+          		var v_node_1_memory_qty = values['node_1_memory_qty'];
+          		checkAvailableTextBoxQty(values,'node_1_memory_qty')
+          		
+          		var selectedNode = values['node_configuration'];
+                var memoryQty = values['node_1_memory_qty'];
+          		if (selectedNode == 'XL220Gen10Plus' || selectedNode == 'XL290Gen10Plus') {
+          			if (memoryQty % 2) {
+          				$('#node_1_memory_qty').val(2);
+          			}
+          		}
+          	}		
+					
+					
+			if(updateData.refreshUI == 'Node1LeftRiser'){            		
+          		var v_node_1_left_riser = values['node_1_left_riser'];
+          		refreshNode1RiserTable();
+          	}		
+					
+					
+			if(updateData.refreshUI == 'Node1RightRiser'){            		
+          		var v_node_1_right_riser = values['node_1_right_riser'];
+          		reloadChoice (updateData, 'node_1_drive_type');
+          		refreshNode1RiserTable();
+          	}		
+					
+					
+			if(updateData.refreshUI == 'Node1RAIDController'){            		
+          		var v_node_1_raid_controller = values['node_1_raid_controller'];
+          		reloadChoice (updateData, 'node_1_cable');
+          		refreshNode1DriveTable();
+          	}		
+					
+					
+			if(updateData.refreshUI == 'Node1DriveType'){            		
+          		var v_node_1_drive_type = values['node_1_drive_type'];
+          		reloadChoice (updateData, 'node_1_raid_controller');
+          		refreshNode1DriveTable();
+          	}		
+					
+					
+			if(updateData.refreshUI == 'Node1Cable'){            		
+          		var v_node_1_cable = values['node_1_cable'];
+          	}		
+					
+					
+			if(updateData.refreshUI == 'Node2Qty'){            		
+          		var v_node_2_qty = values['node_2_qty'];
+				reloadChoice (updateData, 'node_2_primary_processor');
+				reloadChoice (updateData, 'node_2_memory');
+				reloadChoice (updateData, 'node_2_right_riser');
+				reloadChoice (updateData, 'node_2_raid_controller');
+				reloadChoice (updateData, 'node_2_drive_type');
+				reloadChoice (updateData, 'node_2_cable');
+          		checkAvailableNodeTextBoxQty('node_2', v_node_2_qty)
+          	}		
+					
+					
+			if(updateData.refreshUI == 'Node2DLC'){            		
+          		var v_node_2_dlc = values['node_2_dlc'];
+          		reloadChoice (updateData, 'node_1_primary_processor');
+				reloadChoice (updateData, 'node_2_primary_processor');
+          	}		
+					
+					
+			if(updateData.refreshUI == 'Node2PrimaryProcessor'){            		
+          		var v_node_2_primary_processor = values['node_2_primary_processor'];
+          		checkAvailableTextBoxQty(values,'node_2_processor_qty')
+          	}		
+					
+			if(updateData.refreshUI == 'Node2ProcessorQty'){
+				var v_node_2_processor_qty = values['node_2_processor_qty'];
+				checkAvailableTextBoxQty(values,'node_2_processor_qty')
+				$('#node_2_processor_qty').val(1);
+			}
+			
+			if(updateData.refreshUI == 'Node2Memory'){            		
+          		var v_node_2_memory = values['node_2_memory'];
+          		checkAvailableTextBoxQty(values,'node_2_memory_qty')
+          	}		
+					
+					
+			if(updateData.refreshUI == 'Node2MemoryQty'){            		
+          		var v_node_2_memory_qty = values['node_2_memory_qty'];
+          		checkAvailableTextBoxQty(values,'node_2_memory_qty')
+          		
+          		var memoryQty = values['node_2_memory_qty'];
+          		if (memoryQty % 2) {
+          			$('#node_2_memory_qty').val(2);
+          		}
+          	}		
+					
+					
+			if(updateData.refreshUI == 'Node2LeftRiser'){            		
+          		var v_node_2_left_riser = values['node_2_left_riser'];
+          		refreshNode2RiserTable();
+          	}		
+					
+					
+			if(updateData.refreshUI == 'Node2RightRiser'){            		
+          		var v_node_2_right_riser = values['node_2_right_riser'];
+				reloadChoice (updateData, 'node_2_drive_type');
+          		refreshNode2RiserTable();
+          	}		
+					
+					
+			if(updateData.refreshUI == 'Node2RAIDController'){            		
+          		var v_node_2_raid_controller = values['node_2_raid_controller'];
+				reloadChoice (updateData, 'node_2_cable');
+          		refreshNode2DriveTable();
+          	}		
+					
+					
+			if(updateData.refreshUI == 'Node2DriveType'){            		
+          		var v_node_2_drive_type = values['node_2_drive_type'];
+          		reloadChoice (updateData, 'node_2_raid_controller');
+          		refreshNode2DriveTable();
+          	}		
+					
+					
+			if(updateData.refreshUI == 'Node2Cable'){            		
+          		var v_node_2_cable = values['node_2_cable'];
+          	}	
+			reloadChoice (updateData, 'cooling_option');
+			reloadChoice (updateData, 'storage_backplane');
+			reloadChoice (updateData, 'power_supply');
+			reloadChoice (updateData, 'node_configuration');
+			reloadChoice (updateData, 'node_1_dlc');
+			reloadChoice (updateData, 'node_2_dlc');
+			reloadChoice (updateData, 'node_1_primary_processor');
+			reloadChoice (updateData, 'node_2_primary_processor');
+			reloadChoice (updateData, 'node_1_memory');
+			reloadChoice (updateData, 'node_2_memory');
+			reloadChoice (updateData, 'node_1_right_riser');
+			reloadChoice (updateData, 'node_2_right_riser');
+			reloadChoice (updateData, 'node_1_drive_type');
+			reloadChoice (updateData, 'node_2_drive_type');
+			reloadChoice (updateData, 'node_1_raid_controller');
+			reloadChoice (updateData, 'node_2_raid_controller');
+			reloadChoice (updateData, 'node_1_cable');
+			reloadChoice (updateData, 'node_2_cable');
+			var NodeConfiguration = $('#node_configuration').val();
+			if (NodeConfiguration == 'none_item') {
+				$('#accordion1').hide();
+				$('#accordion2').hide();
+			}
+      	}
+      	
+      	  
+          
+  		var actionData = baseline_wizard_specs.actionData(),buildSolutionNeeded = false;
+        if(actionData.buildSolutionAction){
+            $('#buildSolution').removeAttr("disabled");
+            buildSolutionNeeded = true;
+        } else {
+            $('#buildSolution').attr("disabled","true");
+        }
+  
+        wizard_utils.checkRequiredChoices(baseline_wizard_specs,buildSolutionNeeded, "Build Solution Required", updateData.isNewUIEnabled);
+          
+
+          
+		  updateAttributes(baseline_wizard_specs);
+		  var attributeData = baseline_wizard_specs.attributeData();
+          
+          checkConstraints(baseline_wizard_specs);
+
+      },
+      refreshUI: function () {
+
+      }
+  };
+
+  $.fn.apollo_2000_g10_plus_wizard_wizard = function(method) {
+      if (methods[method]) {
+          return methods[method].apply(this, Array.prototype.slice.call(
+                  arguments, 1));
+      } else if (typeof method === 'object' || !method) {
+          return methods.init.apply(this, arguments);
+      } else {
+          $.error('Method ' + method
+              + ' does not exist on jQuery.apollo_2000_g10_plus_wizard_wizard');
+      }
+  };
+
+};
+
+apollo_2000_g10_plus_wizard_wizard_plugin.prototype = {};
+apollo_2000_g10_plus_wizard_wizard_plugin(jQuery);
+				
+		

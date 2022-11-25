@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  xmlns:security="http://www.springframework.org/schema/security" elementFormDefault="qualified"
+  targetNamespace="http://www.springframework.org/schema/security">
+  <xs:attributeGroup name="hash">
+    <xs:attribute name="hash" use="required">
+      <xs:annotation>
+        <xs:documentation>Defines the hashing algorithm used on user passwords. We recommend
+          strongly against using MD4, as it is a very weak hashing algorithm.</xs:documentation>
+      </xs:annotation>
+      <xs:simpleType>
+        <xs:restriction base="xs:token">
+          <xs:enumeration value="plaintext"/>
+          <xs:enumeration value="sha"/>
+          <xs:enumeration value="sha-256"/>
+          <xs:enumeration value="md5"/>
+          <xs:enumeration value="md4"/>
+          <xs:enumeration value="{sha}"/>
+          <xs:enumeration value="{ssha}"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="base64">
+    <xs:attribute name="base64" use="required">
+      <xs:annotation>
+        <xs:documentation>Whether a string should be base64 encoded</xs:documentation>
+      </xs:annotation>
+      <xs:simpleType>
+        <xs:restriction base="xs:token">
+          <xs:enumeration value="true"/>
+          <xs:enumeration value="false"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="path-type">
+    <xs:attribute name="path-type" use="required">
+      <xs:annotation>
+        <xs:documentation>Defines the type of pattern used to specify URL paths (either JDK
+          1.4-compatible regular expressions, or Apache Ant expressions). Defaults to "ant" if
+          unspecified.</xs:documentation>
+      </xs:annotation>
+      <xs:simpleType>
+        <xs:restriction base="xs:token">
+          <xs:enumeration value="ant"/>
+          <xs:enumeration value="regex"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="port">
+    <xs:attribute name="port" use="required" type="xs:integer">
+      <xs:annotation>
+        <xs:documentation>Specifies an IP port number. Used to configure an embedded LDAP server,
+          for example.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="url">
+    <xs:attribute name="url" use="required" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>Specifies a URL.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="id">
+    <xs:attribute name="id" use="required" type="xs:ID">
+      <xs:annotation>
+        <xs:documentation>A bean identifier, used for referring to the bean elsewhere in the
+          context.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="ref">
+    <xs:attribute name="ref" use="required" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>Defines a reference to a Spring bean Id.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="cache-ref">
+    <xs:attribute name="cache-ref" use="required" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>Defines a reference to a cache for use with a
+        UserDetailsService.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="user-service-ref">
+    <xs:attribute name="user-service-ref" use="required" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>A reference to a user-service (or UserDetailsService bean)
+        Id</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="data-source-ref">
+    <xs:attribute name="data-source-ref" use="required" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>A reference to a DataSource bean</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="password-encoder.attlist">
+    <xs:attribute name="ref" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>Defines a reference to a Spring bean Id.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="hash">
+      <xs:annotation>
+        <xs:documentation>Defines the hashing algorithm used on user passwords. We recommend
+          strongly against using MD4, as it is a very weak hashing algorithm.</xs:documentation>
+      </xs:annotation>
+      <xs:simpleType>
+        <xs:restriction base="xs:token">
+          <xs:enumeration value="plaintext"/>
+          <xs:enumeration value="sha"/>
+          <xs:enumeration value="sha-256"/>
+          <xs:enumeration value="md5"/>
+          <xs:enumeration value="md4"/>
+          <xs:enumeration value="{sha}"/>
+          <xs:enumeration value="{ssha}"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="base64">
+      <xs:annotation>
+        <xs:documentation>Whether a string should be base64 encoded</xs:documentation>
+      </xs:annotation>
+      <xs:simpleType>
+        <xs:restriction base="xs:token">
+          <xs:enumeration value="true"/>
+          <xs:enumeration value="false"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="user-property">
+    <xs:attribute name="user-property" use="required" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>A property of the UserDetails object which will be used as salt by a
+          password encoder. Typically something like "username" might be used. </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="system-wide">
+    <xs:attribute name="system-wide" use="required" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>A single value that will be used as the salt for a password encoder.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:simpleType name="boolean">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="true"/>
+      <xs:enumeration value="false"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:attributeGroup name="role-prefix">
+    <xs:attribute name="role-prefix" use="required" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>A non-empty string prefix that will be added to role strings loaded from
+          persistent storage (e.g. "ROLE_"). Use the value "none" for no prefix in cases where the
+          default is non-empty.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:element name="ldap-server">
+    <xs:annotation>
+      <xs:documentation>Defines an LDAP server location or starts an embedded server. The url
+        indicates the location of a remote server. If no url is given, an embedded server will be
+        started, listening on the supplied port number. The port is optional and defaults to 33389.
+        A Spring LDAP ContextSource bean will be registered for the server with the id supplied.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:attributeGroup ref="security:ldap-server.attlist"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:attributeGroup name="ldap-server.attlist">
+    <xs:attribute name="id" type="xs:ID">
+      <xs:annotation>
+        <xs:documentation>A bean identifier, used for referring to the bean elsewhere in the
+          context.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="url" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>Specifies a URL.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="port" type="xs:integer">
+      <xs:annotation>
+        <xs:documentation>Specifies an IP port number. Used to configure an embedded LDAP server,
+          for example.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="manager-dn" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>Username (DN) of the "manager" user identity which will be used to
+          authenticate to a (non-embedded) LDAP server. If omitted, anonymous access will be used.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="manager-password" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>The password for the manager DN.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="ldif" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>Explicitly specifies an ldif file resource to load into an embedded LDAP
+          server</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="root" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>Optional root suffix for the embedded LDAP server. Default is
+          "dc=springframework,dc=org"</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="ldap-server-ref-attribute">
+    <xs:attribute name="server-ref" use="required" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>The optional server to use. If omitted, and a default LDAP server is
+          registered (using &lt;ldap-server&gt; with no Id), that server will be used.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="group-search-filter-attribute">
+    <xs:attribute name="group-search-filter" use="required" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>Group search filter. Defaults to (uniqueMember={0}). The substituted
+          parameter is the DN of the user.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="group-search-base-attribute">
+    <xs:attribute name="group-search-base" use="required" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>Search base for group membership searches. Defaults to
+        "ou=groups".</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="user-search-filter-attribute">
+    <xs:attribute name="user-search-filter" use="required" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>The LDAP filter used to search for users (optional). For example
+          "(uid={0})". The substituted parameter is the user's login name.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="user-search-base-attribute">
+    <xs:attribute name="user-search-base" use="required" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>Search base for user searches. Defaults to "". Only used with a
+          'user-search-filter'.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="group-role-attribute-attribute">
+    <xs:attribute name="group-role-attribute" use="required" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>The LDAP attribute name which contains the role name which will be used
+          within Spring Security. Defaults to "cn".</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="user-details-class-attribute">
+    <xs:attribute name="user-details-class" use="required">
+      <xs:annotation>
+        <xs:documentation>Allows the objectClass of the user entry to be specified. If set, the
+          framework will attempt to load standard attributes for the defined class into the returned
+          UserDetails object</xs:documentation>
+      </xs:annotation>
+      <xs:simpleType>
+        <xs:restriction base="xs:token">
+          <xs:enumeration value="person"/>
+          <xs:enumeration value="inetOrgPerson"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:element name="ldap-user-service" substitutionGroup="security:any-user-service">
+    <xs:complexType>
+      <xs:attributeGroup ref="security:ldap-us.attlist"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:attributeGroup name="ldap-us.attlist">
+    <xs:attribute name="id" type="xs:ID">
+      <xs:annotation>
+        <xs:documentation>A bean identifier, used for referring to the bean elsewhere in the
+          context.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="server-ref" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>The optional server to use. If omitted, and a default LDAP server is
+          registered (using &lt;ldap-server&gt; with no Id), that server will be used.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+ 

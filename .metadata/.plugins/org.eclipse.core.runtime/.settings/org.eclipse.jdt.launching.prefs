@@ -1,0 +1,3 @@
+eclipse.preferences.version=1
+org.eclipse.jdt.launching.PREF_DEFAULT_ENVIRONMENTS_XML=
+org.eclipse.jdt.launching.PREF_VM_XML=<?xml version\="1.0" encoding\="UTF-8" standalone\="no"?>\r\n<vmSettings defaultVM\="57,org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType13,1660917432402">\r\n<vmType id\="org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType">\r\n<vm id\="1629293059126" name\="jdk1.7.0_80" path\="C\:\\Program Files\\Java\\jdk1.7.0_80" vmargs\="-Xmx12g -Xms8g"/>\r\n<vm id\="1660917432402" javadocURL\="https\://docs.oracle.com/javase/8/docs/api/" name\="jre1.8.0_172" path\="C\:\\Program Files\\Java\\jdk1.8.0_202" vmargs\="-Xmx12g -Xms8g"/>\r\n</vmType>\r\n</vmSettings>\r\n

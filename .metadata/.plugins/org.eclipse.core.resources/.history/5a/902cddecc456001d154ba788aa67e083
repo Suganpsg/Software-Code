@@ -1,0 +1,682 @@
+package essn.storage.sds.dl380g10plussds {
+	import common.productcategories.*;
+	import common.agentutility.*;
+	import essn.server.common.servercommon.*;
+	import essn.storage.network.hpnetworkingcommon.*;
+	import essn.rack.rackcommon.*;
+	import common.globalsupport.*;
+	//import essn.cas.cascommon.*;
+	import essn.common.software.*;
+	import common.coremodel.*;
+	import essn.server.proliantservers.common.proliantproductoption.*;
+	import essn.server.newgenproliant.newgendlservers.newgendl300.dl380g10plus.*;
+	class OEMDL380SDSTrackingSku extends CSTrackingSKU {
+		int sequenceNumber: 10;
+		int childSequenceNumber: 10;
+		int iNumHalfEiaUnits: 2;
+		int iHalfEiaUnitsRequired: 4;
+		boolean ocaCompatible: true;
+		string[] validRackList: "P9K04A", "P9K06A", "P9K38A", "P9K08A", "P9K40A", "P9K10A";
+		string[] virtualRackList: "ZU715A";
+		def getValidRackList (): string[] = callout("GetValidRacks", thisInst, validRackList, virtualRackList);
+	}
+	class DL380G10PlusSDS extends DL380G10Plus {
+		boolean isGLSC : false; // JCN GLSC
+		description: "HPE DL380 Gen10+ 12LFF CTO Svr for SDS (R8S34A)";
+		configurationEntryPoint;
+		platformName: "DL380G10PlusSDS";
+		productCategories: DL380G10PlusSDS;
+		string softwarePlatformName: "";
+		string productIdForPLC: "R8S35A";
+		string quickSpecMap: "DL380G10PlusSDS";
+		boolean showCostOptimizationView: false;
+		def max_pciSlotsBandingFunction_G10: int = {
+			if(thisInst.realBasedummyId = "R8S35A_ARTESCA" || thisInst.realBasedummyId = "R8S35A_ARTESCA_GTA") then 2 else 4;
+		}
+		ifEffective GOM_PERT_25086 {
+			def nMaxBandingHardDrives: int = 14;
+		} otherwise {
+			def nMaxBandingHardDrives: int = 12;
+		}
+		def nMaxSFFHardDrives: int = 2;
+		int iNumRiserRows: 3;
+		def max_boot_Function: int = 1;
+		string[] dl380Defaults: "";
+		def max_internalstoragecontrollerCablesFunction: int = 1;
+		int iNumHalfEiaUnits: 2;
+		int iHalfEiaUnitsRequired: 4;
+		string[] validRackList: "P9K04A", "P9K06A", "P9K38A", "P9K08A", "P9K40A", "P9K10A";
+		string[] virtualRackList: "ZU715A";
+		int iNumSAP420iControllerCache: 0;
+		def HeatSinkDefaultNew (): string = {
+			val qty_proc = thisInst.selected(ProliantProcessor).filter(x => split(x.id, "#").get(0) <= "P36922-B21 P36921-B21 P36920-B21 P36930-B21").count;
+			val qty_dcage = thisInst.selected(ProliantDriveCage).filter(x => split(x.id, "#").get(0) <= "P26919-B21 P27193-B21 P39769-B21").count;
+			val qty_gc = thisInst.selected(GraphicsPciCard).count;
+			if(thisInst.realBasedummyId = "R8S35A_ARTESCA" || thisInst.realBasedummyId = "R8S35A_ARTESCA_GTA") then "" else if(thisInst.subTypes.get(0) = "0D1" and qty_proc > 0 and qty_dcage = 0 and qty_gc = 0) then expanderString ("P37034-B21",
+			qty_proc) else "";
+		}
+		def HeatSinkDefault (): string = {
+			val qty_proc = thisInst.selected(ProliantProcessor).count - thisInst.selected(ProliantProcessor).filter(x => split(x.id, "#").get(0) <= "P36922-B21 P36921-B21 P36920-B21 P36930-B21").count;
+			val qty_dcage = thisInst.selected(ProliantDriveCage).filter(x => split(x.id, "#").get(0) <= "P26919-B21 P27193-B21 P39769-B21").count;
+			if(thisInst.realBasedummyId = "R8S35A_ARTESCA" || thisInst.realBasedummyId = "R8S35A_ARTESCA_GTA") then "" else if(thisInst.subTypes.get(0) = "0D1" and qty_proc > 0 and qty_dcage = 0) then expanderString ("P27095-B21", qty_proc) else
+			"";
+		}
+		def max_Networking_BandingFunction: int = {
+			if(thisInst.realBasedummyId = "R8S35A_ARTESCA" || thisInst.realBasedummyId = "R8S35A_ARTESCA_GTA") then 2 else 4;
+		}
+		subsystem NodeSubsystem {
+			ifEffective SP_PERT_24949 {
+				part addDefaultsTrigger: triggerInternalDefaults {
+					string[] modelDefaults: "R8S34A", "P36929-B21", "P06029-B21", "P37038-B21", "833928-B21", "P01366-B21", "P02377-B21";
+				}
+			}
+			otherwise {
+				part addDefaultsTrigger: triggerInternalDefaults {
+					string[] modelDefaults: "R8S34A", "P36929-B21", "P06029-B21", "P37038-B21", "833928-B21", "804338-B21", "P01366-B21"; //804331-B21,P14602-B21,
+
+				}
+			}
+		}
+		subsystem trackingSubsystem {
+			locationArray trackingSkuChoice {
+				rows: 1;
+				fillerClasses: OEMDL380SDSTrackingSku;
+			}
+		}
+		subsystem processorSubsystem {
+			constraint processorNoMix {
+				message: "Processor types cannot be mixed.";
+				body: restriction (ProliantProcessor.noMix);
+			}
+			constraint processor_r1 {
+				message: "This Processor requires selection of High Performance Heatsink (P27095-B21). Selection of Heatsink must match the number of Processor selected.";
+				body: true;
+			}
+			constraint processor_r1a {
+				message: "Selection of Heatsink must match the number of Processor selected.";
+				body: true;
+			}
+			constraint processorWattage {
+				message: "If Processor Wattage  150W or more, Then the Min = 1 P27095-B21 (High Performance heatsink) per processor is required";
+				body:
+				{
+					val processorCount = thisInst.selected(ProliantProcessor).filter(x => x.iNumWattage >= 150).count;
+					val kitCount = thisInst.selected(HeatSinkKit).filter(x => x.id = 'P27095-B21').count;
+					if(thisInst.realBasedummyId = "R8S35A_ARTESCA" || thisInst.realBasedummyId = "R8S35A_ARTESCA_GTA") then true else if processorCount > 0 then kitCount = processorCount;
+				}
+			}
+			constraint processorWattage_149W_or_less {
+				message: "If Processor Wattage  149W or less, Then the Min = 1 P37034-B21 (Standard heatsink) per processor is required.";
+				body:
+				{
+					val processorCount = thisInst.selected(ProliantProcessor).filter(x => x.iNumWattage <= 149).count;
+					val kitCount = thisInst.selected(HeatSinkKit).filter(x => x.id = 'P37034-B21').count;
+					if(thisInst.realBasedummyId = "R8S35A_ARTESCA" || thisInst.realBasedummyId = "R8S35A_ARTESCA_GTA") then true else if processorCount > 0 then kitCount = processorCount;
+				}
+			}
+			constraint processorAccessoriesNoMix {
+				message: "Processor types cannot be mixed.";
+				body:
+				true;
+				//restriction (HeatSinkKit.noMix);
+
+			}
+			constraint HeatSink_rule3 {
+				message: "Mixing of High Performance Heatsink (P27095-B21) and Standard Heatsink (P37034-B21) is not allowed.";
+				enabled: (thisInst.realBasedummyId != "R8S35A_ARTESCA" || thisInst.realBasedummyId != "R8S35A_ARTESCA_GTA");
+				body: true;
+				//if(thisInst.selected(HeatSinkKit).filter(x => split(x.id, "#").get(0) <= "P37034-B21").count > 0 and thisInst.selected(HeatSinkKit).filter(x => split(x.id, "#").get(0) <= "P27095-B21").count > 0) then false;
+
+			}
+			constraint processorWattageForArtesca {
+				message: "If Processor Wattage < 149W, Then the Min = 1 P27095-B21 (heatsink) per processor is required.  ";
+				enabled: (thisInst.realBasedummyId = "R8S35A_ARTESCA" || thisInst.realBasedummyId = "R8S35A_ARTESCA_GTA");
+				body: true;
+				/*{
+						val processorCount = thisInst.selected(ProliantProcessor).filter(x => x.iNumWattage < 149).count;
+						val kitCount = thisInst.selected(HeatSinkKit).filter(x => x.id = 'P27095-B21').count;
+						if processorCount > 0 then kitCount = processorCount;
+					}*/
+			}
+		}
+		ifEffective GOM_PERT_24996 {
+			subsystem powerSubsystem {
+				constraint powerSuppliesMixMaxRule_a {
+					message: "User Selection (Min 2) Per Node";
+					enabled: (thisInst.realBasedummyId = "R8S35A_ARTESCA" || thisInst.realBasedummyId = "R8S35A_ARTESCA_GTA");
+					body:
+					{
+						thisInst.selected(ProliantPowerOption).count = 2;
+					}
+				}
+				constraint min2Max2 {
+					message: "Power supplies min and max is 2";
+					enabled: (thisInst.realBasedummyId = "R8S35A_ARTESCA" || thisInst.realBasedummyId = "R8S35A_ARTESCA_GTA");
+					body: restriction (ProliantPowerOption.pairs);
+				}
+				constraint powersupply_Remarks1 {
+					message: "";
+					body: true;
+				}
+			}
+		}
+		subsystem RackingSubsystem {
+			constraint RailKitMustSelectServerIntegratedWithRack {
+				message:
+				"If Server is ordered with Rack then Rail kit must be selected.<br> However if server is not selected with rack (ordered as standalone) then Easy Install Rail kit to be defaulted but customer has to be given option to deselect this.";
+				body: true;
+			}
+			constraint rackOptions_r4 {
+				message: "A DL38X Gen10 Plus 2U LFF Easy Install Rail Kit (P22019-B21) is included with R8S35A Base SKU ";
+				body:
+				if thisInst.selected(ProliantRackOption).filter(x => split(x.id, "#").get(0) <= "P22020-B21").count > 0 then thisInst.selected(ProliantRackOption).filter(x => split(x.id, "#").get(0) <= "P22018-B21 P22019-B21").count > 0;
+			}
+		}
+		subsystem deviceSubsystem {
+		//			choice InternalSCCablesLocArary {
+		//				optional: true;
+		//				targetClass: ProliantStorageContSASSA;
+		//			}
+		
+		constraint Upgrade_rule52 {
+				message: "If 804405-B21 P04220-B21 P26279-B21 P06367-B21 selected then  Qty 1x (P01366-B21 or P02377-B21) is required. (Battery or Capacitor)";
+				body:
+				{
+					val listOfcontrollers = "804405-B21 P04220-B21 P26279-B21 P06367-B21";
+					val listOfbattery = "P01366-B21 P02377-B21";
+					if thisInst.selected(ProliantStorageContSASSA).filter(x => split(x.id, "#").get(0) <= listOfcontrollers).count > 0
+					 then thisInst.selected(SAP420iControllerCacheUpgrade).filter(x => split(x.id, "#").get(0) <= listOfbattery).count > 0 ;
+				}
+			}	
+		constraint mandat_trimcable_8sffa {
+			message: "message";
+			body: true;
+		}
+		
+		locationArray PCIAdaptersChoice {
+				rows: 1;
+				fillerClasses: ProliantStorageContSASSA;
+			}
+		
+		ifEffective SP_26355_SDS{
+			constraint cableKit_Rule3 {
+					message: "If P55469-B21 this sku is selected, Then Min = 1 P26920-B21 (Drive Cage) or P25903-B21 (Risers) is required.";
+					body:
+					if thisInst.selected(DlPlusCableKit).filter(x => split(x.id, "#").get(0) = "P55469-B21" ).count > 0 then 
+					thisInst.selected(ProliantDriveCage).filter(x => split(x.id, "#").get(0) = "P26920-B21" || split(x.id, "#").get(0) = "P25903-B21").count > 0 else true;
+				}
+			constraint driveCage_Rule1 {
+					message: "If P26920-B21 or P25903-B21 or P26923-B21 selected, MUST select one of the following: P06367-B21 MR416i-p (Storage Controllers) or P26324-B21 MR216i-p (Storage Controllers)";
+					body:
+					if thisInst.selected(ProliantDriveCage).filter(x => split(x.id, "#").get(0) = "P26920-B21" || split(x.id, "#").get(0) = "P25903-B21" || split(x.id, "#").get(0) = "P26923-B21").count > 0 then 
+					thisInst.selected(ProliantStorageContSASSA).filter(x => split(x.id, "#").get(0) = "P06367-B21" || split(x.id, "#").get(0) = "P26324-B21").count > 0 else true;
+				}
+				
+				
+			constraint driveCage_Rule2 {
+				message: "If P26920-B21 selected, cannot select Primary or Secondary Risers (P37038-B21, P27089-B21, P14587-B21 OR P14589-B21) (Risers)";
+				body: if thisInst.selected(ProliantDriveCage).filter(x => x.id = 'P26920-B21').count > 0 then
+				thisInst.selected(ProliantPciRiser).filter(x => x.id = 'P37038-B21'|| x.id = 'P27089-B21' || x.id = 'P14587-B21' || x.id = 'P14589-B21').count = 0 else true;
+			}
+			
+			constraint driveCage_Rule3 {
+				message: "If selected cannot select Secondary Risers (P27089-B21, P14587-B21 OR P14589-B21) (Risers)";
+				body: if thisInst.selected(ProliantDriveCage).filter(x => x.id = 'P25903-B21').count > 0 then
+				thisInst.selected(ProliantPciRiser).filter(x => x.id = 'P27089-B21' || x.id = 'P14587-B21' || x.id = 'P14589-B21').count = 0 else true;
+			}
+			
+			constraint driveCage_Rule4 {
+				message: "If P26923-B21 or P26922-B21 selected, cannot select Tertiary Risers (P14581-B21 OR P14588-B21) (Risers)";
+				body: if thisInst.selected(ProliantDriveCage).filter(x => x.id = 'P26923-B21' || x.id = 'P26922-B21').count > 0 then
+				thisInst.selected(ProliantPciRiser).filter(x => x.id = 'P14581-B21'|| x.id = 'P14588-B21').count = 0 else true;
+			}
+			
+			constraint driveCage_Rule5 {
+				message: "If P26922-B21 selected, MUST select one of the following: </br>
+							P27093-B21 2p 4NVMe SlimSAS Ter riser  (Risers) </br>
+							P27089-B21 2p NVMe x16 SlimSAS Sec riser  (Risers)  </br>
+							P06367-B21 MR416i-p (Storage Controllers) </br>
+							P26324-B21 MR216i-p (Storage Controllers)";
+				body: if thisInst.selected(ProliantDriveCage).filter(x => x.id = 'P26922-B21').count > 0 then
+						 thisInst.selected(ProliantPciRiser).filter(x => x.id = 'P27093-B21'|| x.id = 'P27089-B21').count + 
+						 thisInst.selected(ProliantStorageContSASSA).filter(x => x.id = 'P06367-B21'|| x.id = 'P26324-B21').count > 0 else true;
+			}
+			
+		}	
+			
+			
+		ifEffective KS_PERT_25032{
+			
+			constraint PCI_Adapters_Flexible_Modular_Controller{
+				message: "Maximum 3 quantity of the following PCIe Adapter Option must be selected per Node";
+				enabled: (thisInst.realBasedummyId != "R8S35A_ARTESCA" || thisInst.realBasedummyId != "R8S35A_ARTESCA_GTA");
+				body:
+				//restriction(ProliantStorageContSASSA[ P26325-B21 || P06367-B21 || P26279-B21 || 804338-B21] = 1);
+				thisInst.selected(ProliantStorageContSASSA).filter(x => x.id = 'P26325-B21'|| x.id = 'P06367-B21' || x.id = 'P26279-B21' || x.id = '804338-B21').count = 3;
+			}
+			constraint Cable_Kits_MinMax{
+				message: "Maximum 1 quantity of the following Option must be selected per Node.";
+				body:
+				restriction(SAP420iControllerCacheUpgrade[ P01366-B21 || P02377-B21] <= 1);
+			}
+			constraint MustSelectController { // Overriding the constraint. Since, SDS menu don't have this Scope for this Section
+				message: "The 'AHCI Embedded SATA Controller' can support up to 12 'SATA Only' hard drives. you have $a{nSATAHDcount} SATA and $a{nSASHDcount} SAS drives.<br>
+						  The additional controllers selected support only $a{controllersCount} SAS/SATA drives.";
+				body:
+				/*{
+					val maxControllerSATA = controllersCount + 12;
+					val maxControllerSAS = controllersCount;
+					val availableControllerSAS = maxControllerSAS - nSASHDcount;
+					val availableControllerSATA = maxControllerSATA - nSATAHDcount - nSASHDcount;
+					//val availableControllerSATA = maxControllerSATA - nSATAHDcount;
+					if(thisInst.id >= "P05173-B21" or thisInst.id >= "P05173-B21#GTA") then true else if(availableControllerSAS < 0) or (availableControllerSATA < 0) then false;
+				}*/
+				true;
+			}
+			constraint Controller_rule8 {
+				message: "Any of the below Drive cages must be selected when P06367-B21, P26324-B21 controller is selected<br>
+						 - P26922-B21 - HPE DL38X Gen10+ 2SFF x4Tri-Mode U.3 Kit
+						 - P26924-B21 - HPE DL300 Gen10+ 2U 2SFF x4Tmode U.3 Kit
+						 - P27194-B21 - HPE DL300 Gen10+ 2U 8SFF x1Tmode U.3 Kit
+						 - P27193-B21 - HPE DL38X Gen10+ 8SFF x1Tri-Mode U.3 Kit
+						 - P39769-B21 - HPE DL300 G10+ 2U 8SFF x4TM Midplane Kit
+						 - P26931-B21 - HPE DL300 Gen10+ 2U 8SFF x4Tmode U.3 Kit";
+				body:
+				/*{
+					val listOfdrivecage = "P26922-B21 P26924-B21 P27194-B21 P27193-B21 P39769-B21 P26931-B21";
+					if thisInst.selected(ProliantStorageContSASSA).filter(x => split(x.id, "#").get(0) <= "P06367-B21 P26324-B21").count > 0 then thisInst.selected(ProliantDriveCage).filter(x => split(x.id, "#").get(0) <= listOfdrivecage).count > 0;
+				}*/
+				true;
+			}
+			constraint Controller_rule7 {
+				message: "This controller can support below Drive Cages<br>
+						 - P26922-B21 - HPE DL38X Gen10+ 2SFF x4Tri-Mode U.3 Kit <br>
+						 - P26924-B21 - HPE DL300 Gen10+ 2U 2SFF x4Tmode U.3 Kit <br>
+						 - P27194-B21 - HPE DL300 Gen10+ 2U 8SFF x1Tmode U.3 Kit <br>
+						 - P27193-B21 - HPE DL38X Gen10+ 8SFF x1Tri-Mode U.3 Kit <br>
+						 - P26931-B21 - HPE DL300 Gen10+ 2U 8SFF x4Tmode U.3 Kit";
+				body:
+				/*if thisInst.selected(ProliantStorageContSASSA).filter(x => split(x.id, "#").get(0) <= "P26325-B21 P26279-B21 P12688-B21").count > 0 then thisInst.selected(ProliantDriveCage).filter(x => split(x.id, "#").get(0) <=
+				"P26922-B21 P26924-B21 P27194-B21 P27193-B21 P26931-B21").count > 0;*/
+				true;
+			}
+			}
+			constraint DriveCage_rule3 {
+				message: "For use only with 8LFF Mod-X and 12LFF Mod-X.";
+				enabled: ! isBandingPage;
+				body: true;
+			}
+			constraint DriveCage_rule3_banding {
+				message: "For use only with 8LFF Mod-X and 12LFF Mod-X.";
+				enabled: isBandingPage ();
+				body: true;
+			}
+
+			constraint DriveCage_rule17 {
+				message: "P25903-B21 or P27089-B21 or P14587-B21 or P14589-B21 or P14581-B21 or P14588-B21 or P27093-B21 Requires selection of Second Processor.";
+				body: 
+				{
+					val riserCards = thisInst.selected(ProliantPciRiser).filter(x => split(x.id, "#").get(0) <= "P27093-B21 P14588-B21 P27089-B21 P14587-B21 P14589-B21 P14581-B21").count;
+					val driveCageSlot = thisInst.selected(ProliantDriveCage).filter(x => split(x.id, "#").get(0) <= "P25903-B21").count;
+					val totalriser = driveCageSlot + riserCards;
+					if totalriser > 0 then thisInst.selected(ProliantProcessor).count > 1;
+				}
+			}
+			
+			constraint HDDSFF_rule6a {
+				message: "SED Drive max quantity selection is dependent on selection of below tri mode controllers and supported drive cage selected.";
+				body: true;
+			}
+			constraint HDDSFF_remarks {
+				message: "* The embedded Controller is a SATA based controller. This means it can only support SATA hard drives.<br> 
+						  * To enable the SR100i mode, the “HPE SR100i Gen10+ FIO SW” [P28417-B21] must be selected. This allows for RAID and Hot-Plug capabilities.<br>
+						  * Smart Array Controllers (AROC or PCIe) under SAS Controllers can support both SATA and SAS hard drives.<br>
+						  * Tri Mode Controllers (AROC or PCIe) under SAS Controllers can support SAS, SATA and NVMe Drives.";
+				body: true;
+			}
+			constraint HDDSFF_rule6 {
+				message: "If any of the SED drive is selected then any one of below tri mode controller must be selected. SED Drive max quantity selection is dependent on selection of below tri mode controllers and supported drive cage selected (Refer Controller category for details of Drive cage supported).<br>
+						  - P26279-B21 - Broadcom MR416i-a Cntrl for HPE Gen10+<br>
+						  - P06367-B21 - Broadcom MR416i-p Cntrl for HPE Gen10+<br>
+						  - P26325-B21 - Broadcom MR216i-a Cntrl for HPE Gen10+<br>
+						  - P26324-B21 - Broadcom MR216i-p Cntrl for HPE Gen10+";
+				body: true;
+			}
+			constraint Prioritization_controller_CTO_rule1b {
+				message: "If no controller is selected from the Prioritization list, the  'AHCI Embedded SATA Controller' will act as the Primary Controller. This controller can support up to 14 'SATA Only' devices.";
+				body: true;
+			}
+			constraint Capacitorctrl_rule4 {
+				message: "The Smart Hybrid Capacitor can support up to 2 P-Class/ SR932/ MR416/ SR416 controllers if SR932 or SR416 is present in configuration.<br>
+						  The Smart Hybrid Capacitor can support up to 3 P-Class/ MR416 controllers if SR932 or SR416 is NOT present in configuration.";
+				body: true;
+			}
+			constraint Controller_rule1and2 {
+				message: "Does not consume a PCIe Slot. <br> 
+						  - Min/max is not applicable however Max=1 of AROC controller can be selected.";
+				body: true;
+			}
+			constraint hotSFFKitRequired {
+				message: "If this skus is selected, Then Min =1 P26920-B21 2SFF SAS/SATA Pri/Sec Kit per server is required.";
+				enabled: (thisInst.realBasedummyId != "R8S35A_ARTESCA" || thisInst.realBasedummyId != "R8S35A_ARTESCA_GTA");
+				body:
+				{
+					val hotSFFCount = thisInst.selected(ProliantHardDrive).filter(x => x.subCategory = 'SSDRI' || x.subCategory = 'SSDWI' || x.subCategory = 'SSDMU').count;
+					val kitCount = thisInst.selected(ProliantDriveCage).filter(x => x.id = 'P26920-B21').count;
+					if hotSFFCount > 0 then if kitCount >= 1 then true else false;
+				}
+			}
+			constraint DriveCage_rule32 {
+				message: "If this Qty1 of this option is selected along with other Primary Riser (i.e. if it is selected as Secondary Riser) or Qty2 of this option is selected then 
+						 - Tertiary Riser cannot be selected (Except Tertiary 2P NVMe Riser (P27093-B21))
+						 - Second Processor must be selected";
+				body: true;
+			}
+			constraint SFF_Max {
+				message: "Maximum 2 For Hot Plug SFF";
+				body: restriction (ProliantHardDrive [ subCategory = 'SSDRI' || subCategory = 'SSDWI' || subCategory = 'SSDMU' ] <= 2);
+			}
+		
+			constraint LFF_Max {
+				message: "Max 12 for Hot Plug LFF, max 14 with P25903-B21 selected.";
+				body: dependency (ProliantDriveCage[P25903-B21] = 0, ProliantHardDrive [ 834031-B21 || 861746-B21 || P09149-B21 || 
+				P09155-B21 || P23608-B21 || P37669-B21 || 833928-B21 || 881781-B21 || 861686-B21 || P53556-B21 || P53553-B21 ] <= 12);
+				dependency (ProliantDriveCage[P25903-B21] > 0, ProliantHardDrive [ 834031-B21 || 861746-B21 || P09149-B21 || 
+				P09155-B21 || P23608-B21 || P37669-B21 || 833928-B21 || 881781-B21 || 861686-B21 || P53556-B21 || P53553-B21] <= 14);
+			}
+
+			constraint DriveCage_rule6a {
+				message: " If other Primary Riser is selected along with P26920-B21 Drive Cage , then it will be considered as Secondary Riser and vice-versa (Max of 1 Primary Riser per Server and Max of 1 Secondary Riser per Server)";
+				body: true;
+			}
+
+			constraint LFF_Min {
+				message: "Minimum 10 for Hot Plug LFF";
+				enabled: (thisInst.realBasedummyId = "R8S35A_ARTESCA" || thisInst.realBasedummyId = "R8S35A_ARTESCA_GTA");
+				body: restriction (ProliantHardDrive_HP_LFF >= 10);
+			}
+			constraint Controller_rule4 {
+				message: "";
+				enabled: (thisInst.realBasedummyId = "R8S35A_ARTESCA" || thisInst.realBasedummyId = "R8S35A_ARTESCA_GTA");
+				body: true;
+			}
+			constraint Controller_rule6 {
+				message: "";
+				enabled: (thisInst.realBasedummyId = "R8S35A_ARTESCA" || thisInst.realBasedummyId = "R8S35A_ARTESCA_GTA");
+				body: true;
+			}
+			constraint HDDSFF_rule2 {
+				message: "NVME Drives Can be selected only with supported U.2 NVMe Drive Cage (P26932-B21).";
+				body: true; //Never trigger this rule
+
+			}
+			constraint Nvme_Max {
+				message: "Maximum 2 for SFF NVMe SSD";
+				body: restriction (ProliantHardDrive [ subCategory = 'NVMeSSDAICRI' || subCategory = 'NVMeSSDAICMU' ] <= 2);
+			}
+		}
+		subsystem HPCSoftwareSystemSubsystem {
+			constraint checkMaxlimit {
+				message: "";
+				enabled: (thisInst.realBasedummyId = "R8S35A_ARTESCA" || thisInst.realBasedummyId = "R8S35A_ARTESCA_GTA");
+				body: true;
+			}
+		}
+		subsystem securityOptionsSubsystem {
+			constraint restrictMaxPerSku {
+				message: "Max = 1 per sku in this section. ";
+				body: restriction (SecurityHardware [ 867809-B21 ] <= 1);
+				restriction (SecurityHardware [ 875519-B21 ] <= 1);
+				restriction (SecurityHardware [ P13771-B21 ] <= 1);
+				restriction (SecurityHardware [ P14604-B21 ] <= 1);
+			}
+			constraint requiredSku {
+				message: "If this sku is selected, Then Min =1 867809-B21 (Bezel) required. ";
+				body: dependency (SecurityHardware [ 875519-B21 ] > 0, SecurityHardware [ 867809-B21 ] > 0);
+			}
+			constraint MaxSKU {
+				message: "Max 4 is allowed";
+				body: restriction (SecurityHardware <= 4);
+			}
+		}
+		subsystem pciSubsystem {
+			
+			constraint trans_max{
+				message: "User can select Min 0 // Max 16 of transceivers";
+				body:
+					if (thisInst.selected(Transceivers).filter(x => split(x.id, "#").get(0) <= "453151-B21 453154-B21 455883-B21 455886-B21 845398-B21 845966-B21 Q2F19A Q8J73A Q9S71A").count +
+						thisInst.selected(TransceiverAdapter).filter(x => split(x.id, "#").get(0) <= "845970-B21").count) > 16 then false;
+			}
+			
+			constraint riser_rule5 {
+				message: "A Secondary Riser (P26920-B21, P25903-B21, P27089-B21, P14587-B21 OR P14589-B21) must be selected.";
+				body: {
+					val riserCards = thisInst.selected(ProliantPciRiser).filter(x => split(x.id, "#").get(0) <= "P27089-B21 P14587-B21 P14589-B21").count;
+					val driveCageSlot = thisInst.selected(ProliantDriveCage).filter(x => split(x.id, "#").get(0) <= "P26920-B21 P25903-B21").count;
+					val totalriser = driveCageSlot + riserCards;
+					if totalriser > 0 then true else false;
+				}
+			}
+			
+			constraint riser_rule6 {
+				message: "If P27093-B21 selected,Then Qty 1x P26922-B21 (Front/Tertiary Drive Cage Kit) is required. ";
+				body: if thisInst.selected(ProliantPciRiser).filter(x => x.id = 'P27093-B21').count > 0 then thisInst.selected(ProliantDriveCage).filter(x => x.id = 'P26922-B21').count > 0 else true;
+			}
+			
+			constraint NetworkingOCP_rule4 {
+				message: "The P08449-B21 option to be defaulted for all CTO Servers. However customer is allowed to deselect.<br>
+							  If this option is deselected then another OCP Networking card OR any PCIe Networking card OR OCP Infiniband OR Smart IO (HW) Card MUST be selected.";
+				body: true;
+			}
+			constraint Riser_mustbe_selected {
+				message: "A Primary riser (P37038-B21 OR P26920-B21 ) must be selected.";
+				body: 
+				{
+					val riserCards = thisInst.selected(ProliantPciRiser).filter(x => split(x.id, "#").get(0) <= "P37038-B21").count;
+					val driveCageSlot = thisInst.selected(ProliantDriveCage).filter(x => split(x.id, "#").get(0) <= "P26920-B21").count;
+					val totalriser = driveCageSlot + riserCards;
+					if totalriser > 0 then true else false;
+				}
+			}
+			constraint networking_r4 {
+				message: "INT E810 adptr (P08458-B21/P21112-B21) can be selected only if any OCP card or PCIe Networking card or Pensando DSP card is in the order.";
+				body: true;
+			}
+			
+			ifEffective SP_PERT_24949 {
+				constraint RiserMax3 {
+					message: "P25903-B21, P26923-B21, P26922-B21, P27089-B21, P14587-B21, P14589-B21, P26920-B21 allow a Max of 1 Riser Card";
+					body:
+					if(thisInst.selected(ProliantPciRiser).filter(x => split(x.id, "#").get(0) = "P27089-B21" || split(x.id, "#").get(0) = "P14587-B21" || split(x.id, "#").get(0) = "P14589-B21").count + thisInst.selected(ProliantDriveCage).filter(x =>
+					split(x.id, "#").get(0) = "P26920-B21" || split(x.id, "#").get(0) = "P25903-B21" || split(x.id, "#").get(0) = "P26923-B21" || split(x.id, "#").get(0) = "P26922-B21").count) <= 1 then true else false;
+				}
+			}
+			otherwise {
+				constraint RiserMax3 {
+					message: "P26922-B21, P27089-B21, P14587-B21, P14589-B21, P26920-B21 allow a Max of 1 Riser Card";
+					body:
+					if(thisInst.selected(ProliantPciRiser).filter(x => split(x.id, "#").get(0) = "P27089-B21" || split(x.id, "#").get(0) = "P14587-B21" || split(x.id, "#").get(0) = "P14589-B21").count + thisInst.selected(ProliantDriveCage).filter(x =>
+					split(x.id, "#").get(0) = "P26920-B21" || split(x.id, "#").get(0) = "P26922-B21").count) <= 1 then true else false;
+				}
+			}
+			constraint RiserMax4 {
+				message: "P14581-B21,P14588-B21 allow a Max of 1 Riser Card";
+				enabled: (thisInst.realBasedummyId != "R8S35A_ARTESCA" || thisInst.realBasedummyId != "R8S35A_ARTESCA_GTA");
+				body: restriction (ProliantPciRiser [ P14581-B21 || P14588-B21 ] <= 1);
+			}
+			constraint RiserallowedRemark {
+				message: "1 primary riser is required,  1 Secondary and 1 Tertiary risers are allowed.";
+				body: false;
+			}
+			constraint infinRequireForARTESCA {
+				message: "If this sku is selected, THEN Min 1x P08449-B21 (Intel T-4) adapter is required.";
+				enabled: (thisInst.realBasedummyId = "R8S35A_ARTESCA" || thisInst.realBasedummyId = "R8S35A_ARTESCA_GTA");
+				body: dependency (ProliantInfiniband [ P31323-B21 || P31348-B21 ], NetworkingPci [ P08449-B21 ] > 0);
+			}
+			constraint PCIAdapter_Max1 { // enabled this constraint for artesca only, For each of the component to have 2 as max
+				message: "max is 2";
+				enabled: (thisInst.realBasedummyId = "R8S35A_ARTESCA" || thisInst.realBasedummyId = "R8S35A_ARTESCA_GTA");
+				body: restriction (NetworkingPci [ P08458-B21 || P10180-B21 || P13188-B21 || P21109-B21 || P21112-B21 || P21933-B21 || P22702-B21 || P24437-B21 || P31246-B21 || P08443-B21 || P08437-B21 ] <= 2);
+				restriction (NetworkAdapterPci [ P25960-B21 || P28787-B21 || P26262-B21 || P26259-B21 || P26253-B21 ] <= 2);
+			}
+			constraint PCIAdapter_Max2 {
+				message: "Maximum 4 for PCI Adapter is Allowed";
+				enabled: (thisInst.realBasedummyId != "R8S35A_ARTESCA" || thisInst.realBasedummyId != "R8S35A_ARTESCA_GTA");
+				body:
+				{
+					val NetworkPCICount = thisInst.selected(NetworkingPci).filter(x => x.id = 'P08458-B21' || x.id = 'P10180-B21' || x.id = 'P13188-B21' || x.id = 'P21109-B21' || x.id = 'P21112-B21' || x.id = 'P21933-B21' || x.id = 'P22702-B21' || x.id
+					= 'P24437-B21' || x.id = 'P31246-B21' || x.id = 'P08443-B21' || x.id = 'P08437-B21').count;
+					val NetworkAdaterPCICount = thisInst.selected(NetworkAdapterPci).filter(x => x.id = 'P25960-B21' || x.id = 'P28787-B21' || x.id = 'P26262-B21' || x.id = 'P26259-B21' || x.id = 'P26253-B21').count;
+					if(NetworkPCICount + NetworkAdaterPCICount <= 4) then true else false;
+				}
+			}
+			constraint Networking_rule5 {
+				message: "Max 3";
+				body: true;
+			}
+			constraint Networking_rule5b {
+				message: "Max 3";
+				body: true;
+			}
+			ifEffective KS_PERT_25032{
+				constraint AROCAdapter_Max {
+				message: "Minimum 1 and Maximum 1 quantity of this option must be selected.";
+				body: //if(thisInst.realBasedummyId = "R8S35A_ARTESCA" || thisInst.realBasedummyId = "R8S35A_ARTESCA_GTA") then true else thisInst.selected(ProliantStorageContSASSA).filter(x => x.id = '830824-B21' || x.id = '804338-B21').count = 1;
+				true;
+			}
+			}
+			otherwise{
+			constraint AROCAdapter_Max {
+				message: "Minimum 1 and Maximum 1 quantity of this option must be selected.";
+				body: if(thisInst.realBasedummyId = "R8S35A_ARTESCA" || thisInst.realBasedummyId = "R8S35A_ARTESCA_GTA") then true else thisInst.selected(ProliantStorageContSASSA).filter(x => x.id = '830824-B21' || x.id = '804338-B21').count = 1;
+			}			
+			}
+			constraint infiniband_r2 {
+				message: "This option and 12LFF CTO Server CANNOT be selected together";
+				body: true;
+			}
+			//Upgrades Rules
+			constraint Upgrades_rule1 {
+				message: "OCP x16 enablement Kit requires selection of any one of the SKU from below list.<br>
+							  - P10112-B21 - MLX MCX562A 10/25GbE 2p SFP28 OCP3 Adptr<br>
+ 							  - P31323-B21 - HPE IB HDR/EN 200Gb 1p QSFP56 OCP3 Adptr<br>
+							  - P31348-B21 - HPE IB HDR/EN 200Gb 2p QSFP56 OCP3 Adptr<br>
+							  - P22767-B21 - INT E810 100GbE 2p QSFP28 OCP3 Adptr<br>
+							 ";
+				body: true;
+			}
+			constraint Upgrades_rule2 {
+				message: "OCP x16 Enablement Kit (P36661-B21) and AROC cannot be selected together.";
+				body: true;
+			}
+			constraint RiserCards_rule11 {
+				message: "Requires selection of any of Below Drive Cage. One Slimline Port supports 2 NVMe Drives.<br>
+					 - P26924-B21 - HPE DL300 Gen10+ 2U 2SFF x4Tmode U.3 Kit,
+					 - P26931-B21 - HPE DL300 Gen10+ 2U 8SFF x4Tmode U.3 Kit, 
+					 - P26932-B21 - HPE DL300 Gen10+ 2U 8SFF x4 NVMe U.2 Kit";
+				body: true;
+			}
+			constraint SFFNVMeSSD_rule2 {
+				message: "IF this SKU is selected, <br>
+						THEN min 1 P26922-B21  HPE ProLiant DL38X Gen10 Plus 2SFF x4 Tri-Mode 24G U.3 BC Front/Tertiary Drive Cage Kit is required.";
+				enabled: (thisInst.realBasedummyId != "R8S35A_ARTESCA" || thisInst.realBasedummyId != "R8S35A_ARTESCA_GTA");
+				body: dependency (ProliantHardDrive [ subCategory = 'NVMeSSDAICRI' || subCategory = 'NVMeSSDAICMU' ] > 0, ProliantDriveCage [ P26922-B21 ] > 0);
+			}
+			constraint OCPRequiredOnFibreSelection {
+				message: "";
+				body: true; //remove rule avoiding UISpec error in the future
+
+			}
+			constraint AROCAdapter_MaxFor_Artesca {
+				message: "Minimum 1 and Maximum 1 quantity of this option must be selected.";
+				enabled: (thisInst.realBasedummyId = "R8S35A_ARTESCA" || thisInst.realBasedummyId = "R8S35A_ARTESCA_GTA");
+				body: if(thisInst.realBasedummyId = "R8S35A_ARTESCA" || thisInst.realBasedummyId = "R8S35A_ARTESCA_GTA") then thisInst.selected(ProliantStorageContSASSA).filter(x => split(x.id, "#").get(0) <= "804331-B21 804338-B21").count = 1;
+				//restriction (ProliantStorageContSASSA [ 804331-B21 || 804338-B21 ] <= 2); 
+
+			}
+		}
+		subsystem acceleratorSubsystem {
+			locationArray AcceleratorLocArray {
+				rows: 2;
+				fillerClasses: IOAccelerator;
+			}
+		}
+		subsystem ConvergedInfrastructureManagementSoftwareSubsystem {
+			locationArray iLOAdvancedLocArray {
+				rows: 10;
+				fillerClasses: IntegratedLightsOut;
+			}
+			constraint iLOCommondeselectWarningMessage {
+				message: "";
+				enabled: (thisInst.realBasedummyId = "R8S35A_ARTESCA" || thisInst.realBasedummyId = "R8S35A_ARTESCA_GTA");
+				body: true;
+			}
+		}
+		subsystem memorySubsystem {
+			constraint memoryMaxR8S35A {
+				message: "Max 16 per Processor";
+				body: dependency (ProliantProcessor = 1, ProliantMemoryArray <= 16);
+				dependency (ProliantProcessor = 2, ProliantMemoryArray <= 32);
+			}
+			constraint memory_tablemax2pQty {
+				message: "Model X 2P (System: Std 0 // Max 32) (User Selection: Min 2 // Max 32)";
+				body: true;
+			}
+			constraint memory_Rule3_1pQty {
+				message: "";
+				enabled: (thisInst.realBasedummyId = "R8S35A_ARTESCA" || thisInst.realBasedummyId = "R8S35A_ARTESCA_GTA");
+				body: true;
+			}
+			constraint memory_r2Warning {
+				message: "";
+				enabled: (thisInst.realBasedummyId = "R8S35A_ARTESCA" || thisInst.realBasedummyId = "R8S35A_ARTESCA_GTA");
+				body: true;
+			}
+		}
+		subsystem InsightSoftwareSubsystem {
+			constraint oneviewManagementruleno2 {
+				message: "";
+				enabled: (thisInst.realBasedummyId = "R8S35A_ARTESCA" || thisInst.realBasedummyId = "R8S35A_ARTESCA_GTA");
+				body: true;
+			}
+		}
+		int iNumHardDriveBays: 16;
+		def nMaxNvmeHardDrives: int = 2;
+	}
+	class DL380G10SDS_ARTESCA extends DL380G10PlusSDS {
+		boolean isGLSC : false; // JCN GLSC
+		configurationEntryPoint;
+		platformName: "DL380G10ARTESCA";
+		string softwarePlatformName: "";
+		productCategories: DL380G10PlusSDSARTESCA;
+		string coreModelId: "";
+		string displayPartNumber: "";
+		string productIdForPLC: "R8U98A";
+		boolean isProductClass: false;
+		boolean isCustomPlatformModel: true;
+		string ADD_TO_CONFIG: "com.hp.ngc.plugins.agents.update.delegate.startingpoint.StartingPointDelegateAgent";
+		string realBasedummyId: "";
+		string uiSpecToUse: "DL380G10SDS_ARTESCA";
+		string[] validRackList: "P9K10A", "P9K08A", "P9K38A", "P9K40A", "P9K42A", "P9K46A", "P9K12A", "P9K16A", "P9K06A", "P9K04A";
+		def getValidRackList (): string[] = callout("GetValidRacks", thisInst, validRackList, virtualRackList);
+		boolean showCostOptimizationView: false;
+		string[] defaultList: "R8U89A", "P26920-B21", "P01366-B21"; //"P14602-B21"
+
+	}
+	product R8S35A_ARTESCA DL380G10SDS_ARTESCA {
+		boolean isGLSC : false; // JCN GLSC
+		string displayPartNumber: "R8S35A";
+		description: "HPE DL380 G10+ for Scality ARTESCA  (R8U89A)";
+		string productIdForPLC: "R8U89A";
+		string realBasedummyId: "R8S35A_ARTESCA";
+		string coreModelId: "R8S35A";
+	}
+	product R8S35A_ARTESCA_GTA DL380G10SDS_ARTESCA {
+		boolean isGLSC : false; // JCN GLSC
+		string displayPartNumber: "R8S35A#GTA";
+		string productIdForPLC: "R8U89A";
+		description: "HPE DL380 G10+ for Scality ARTESCA TAA (R8U89A)";
+		string realBasedummyId: "R8S35A_ARTESCA_GTA";
+		string coreModelId: "R8S35A#GTA";
+	}
+}

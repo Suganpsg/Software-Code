@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<item value="SP_PERT_24906" key="SCMIP_EFFID"/>
+	<item value="true" key="DO_NOT_LOAD_DATA_KEY"/>
+	<item value="2022-03-08" key="SCMIP_TARGETDATE"/>
+	<item value="T" key="SCMIP_ISRELEASED"/>
+	<item value="C:/Users/sengapal/workspace_ocx/configkb_smartkb/NevadaReleaseKB/DataFiles/" key="PATH_KEY"/>
+	<item value="NevadaReleaseKB" key="PROJECT_KEY"/>
+	<item value="SP" key="INITIALID_KEY"/>
+	<item value="C:\NgcKBZipFolder" key="zipFilePathKey"/>
+	<item value="C:/Users/sengapal/workspace_ocx/configkb_smartkb/NevadaReleaseKB/" key="PROJECTPATH_KEY"/>
+	<item value="C:/Users/sengapal/workspace_ocx/configkb_smartkb/NevadaReleaseKB/Model/" key="NGCPATH_KEY"/>
+	<item value="PRODUCTION" key="SCMIP_TARGETRELEASE"/>
+	<list key="Table7">
+		<item value="Product ID*"/>
+		<item value="Effectivity ID*"/>
+		<item value="Product Number"/>
+		<item value="Parent Class"/>
+		<item value="[Description]"/>
+		<item value="[Product Data Sheet URI]"/>
+		<item value="Enable"/>
+		<item value="[ProgramType]"/>
+	</list>
+	<list key="Table8">
+		<item value="Product ID*"/>
+		<item value="Product Number*"/>
+		<item value="Parent Class*"/>
+		<item value="Effectivity ID*"/>
+		<item value="Attribute Name*"/>
+		<item value="AttributeValue"/>
+		<item value="[Measurement]"/>
+		<item value="Start Date"/>
+		<item value="End Date"/>
+	</list>
+	<list key="Table5">
+		<item value="Attribute Name*"/>
+		<item value="Value"/>
+		<item value="[Measurement]"/>
+		<item value="AttributeValue ID*"/>
+	</list>
+	<list key="Table1">
+		<item value="Attribute ID*"/>
+		<item value="Name#"/>
+		<item value="Type"/>
+		<item value="[Description]"/>
+	</list>
+</section>

@@ -1,0 +1,19 @@
+
+public class tester {
+	
+	public static void main(String[] args) {
+		System.out.println("abb".matches("abb?b"));  // Greedy     -> true
+		System.out.println("abb".matches("abb??b")); // Reluctant  -> true
+		System.out.println("77".matches("^([0-9]*)$"));
+		System.out.println("Geeks".matches("^"
+//				+ "(?=([0-9]*))"
+                + "(?=.*[a-z])(?=.*[A-Z])"
+//                + "(?=.*[@#$%^&+=])"
+//                + "(?=\\S+)"
+//                + "\\d"
+                + ".{1,20}"
+                + "$"
+                ));
+	}
+
+}

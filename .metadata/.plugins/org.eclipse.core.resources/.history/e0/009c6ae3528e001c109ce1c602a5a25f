@@ -1,0 +1,349 @@
+package essn.storage.network.nimblestorage.alletra5000.alletra5000solution {
+	import essn.storage.network.nimblestorage.gen6.common.nimblegen6solutioncommon.*;
+	import essn.storage.network.nimblestorage.alletra5000.alletra5000.*;
+	import common.productcategories.*;
+	import common.agentutility.*;
+	import common.globalsupport.*;
+	import common.coremodel.*;
+	import essn.storage.network.nimblestorage.gen6.common.nimblegen6common.*;
+	import essn.storage.network.nimblestorage.nimblestoragecommoncto.*;
+	class Alletra5000Solution extends NimbleGen6SolutionCommon {
+		description: "HPE Alletra 5000";
+		string shortLabel: "HPE Alletra 5000";
+		configurationEntryPoint;
+		platformName: "NIMBLEALLETRA5000";
+		productCategories: NimbleAlletra5000;
+		string softwarePlatformName: "";
+		string displayPartNumber: "HPE Alletra 5000";
+		string[] productIdList: "";
+		
+		boolean isNimbleCloudConnected: false;
+		string nimbleBaseConfigured: "none";
+		string hpnSwitchConfigured_1: "none";
+		string hpnSwitchConfigured_2: "none";
+		string hpnSwitchTypeConfigured_1: "none";
+		string hpnSwitchTypeConfigured_2: "none";
+		string hddCapacityConfigured: "none";
+		string networkingConfigured_1: "none";
+		string networkingConfigured_2: "none";
+		string networkingConfigured_3: "none";
+		string sofwareConfigured: "none";
+		string powerCordConfigured_1: "none";
+		string powerCordConfigured_2: "none";
+		int numberOfPowerCord_1: 0;
+		int numberOfPowerCord_2: 0;
+		string shelfConfigured_1: "none";
+		string shelfBankAConfigured_1: "none";
+		string shelfBankBConfigured_1: "none";
+		string shelfPowerCordConfigured_1_1: "none";
+		string shelfPowerCordConfigured_1_2: "none";
+		int numberOfshelfPowerCordQty_1_1: 0;
+		int numberOfshelfPowerCordQty_1_2: 0;
+		int numberOfshelfPowerCordQty_2_1: 0;
+		int numberOfshelfPowerCordQty_2_2: 0;
+		int numberOfshelfPowerCordQty_3_1: 0;
+		int numberOfshelfPowerCordQty_3_2: 0;
+		int numberOfshelfPowerCordQty_4_1: 0;
+		int numberOfshelfPowerCordQty_4_2: 0;
+		int numberOfshelfPowerCordQty_5_1: 0;
+		int numberOfshelfPowerCordQty_5_2: 0;
+		int numberOfshelfPowerCordQty_6_1: 0;
+		int numberOfshelfPowerCordQty_6_2: 0;
+
+		def defaultParts (): string[] = defaultList;
+//		string[] defaultList: ;
+		def nimbleModelDefaultParts (): string[] = {
+			if(thisInst.selected(Alletra5000BaseArrayChoiceItem).count > 0) then expanderString ("Q8G27B", 1) else "";
+		}
+		subsystem nimbleArraySubsystem {
+			part addDefaultsTrigger: triggerInternalDefaults {
+				string modelDefaultsFunc: "defaultParts";
+			}
+			part postInstallDelegateTrigger: triggerPostInstallDelgateAgent {
+				string agentClass: "com.hp.ngc.plugins.agents.update.delegate.Alletra5000.Alletra5000WizardAgent";
+			}
+			choice alletraConnectivityChoice {
+				choiceType: single_select;
+				optional: true;
+				targetClass: NimbleConnectivityChoiceItem;
+			}
+			choice alletraBaseArrayModelChoice {
+				choiceType: single_select;
+				optional: true;
+				targetClass: Alletra5000BaseArrayChoiceItem;
+			}
+			constraint requiredNimbleBase {
+				message: "Select the HPE Alletra 5000 Base Array";
+				body: thisInst.selected(Alletra5000BaseArrayChoiceItem).count > 0;
+			}
+			choice hpnSwitchChoice1 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: NimbleSwitchChoiceItem;
+			}
+			choice hpnSwitchChoice2 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: NimbleSwitchChoiceItem;
+			}
+			choice hpnSwitchTypeChoice1 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: NimbleSwitchTypeChoiceItem;
+			}
+			choice hpnSwitchTypeChoice2 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: NimbleSwitchTypeChoiceItem;
+			}
+		}
+		subsystem nimbleComponentSubsystem {
+			choice hddCapacityChoice {
+				choiceType: single_select;
+				optional: true;
+				targetClass: HDDCapacity;
+			}
+			choice cacheChoice1 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: CacheBundle;
+			}
+			choice cacheChoice2 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: CacheBundle;
+			}
+			choice networkingChoice1 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: NetworkingAdapters;
+			}
+			choice networkingChoice2 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: NetworkingAdapters;
+			}
+			choice networkingChoice3 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: NetworkingAdapters;
+			}
+			choice softwareChoice {
+				choiceType: single_select;
+				optional: true;
+				targetClass: NimbleSoftware;
+			}
+			constraint NOS_SW_MinMax1 {
+				message: "Required Min 1 HPE Alletra 5000 Storage NOS Software";
+				body: if(! isNotUpgrade) and (thisInst.selected(Alletra5000BaseArrayChoiceItem).count > 0) and (thisInst.selected(NimbleSoftware).count < 1) then false;
+			}
+			choice powerCordChoice1 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: NimbleCords;
+			}
+			choice powerCordChoice2 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: NimbleCords;
+			}
+		}
+		subsystem expansionShelfSubsystem1 {
+			choice expansionShelfChoice1 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: Alletra5KShelf;
+			}
+			choice shelfCacheAChoice1 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: CacheBundle;
+			}
+			choice shelfCacheBChoice1 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: CacheBundle;
+			}
+			choice shelfPowerCordsChoice1_1 {
+				choiceType: multi_select;
+				optional: true;
+				targetClass: NimbleCords;
+			}
+			choice shelfPowerCordsChoice1_2 {
+				choiceType: multi_select;
+				optional: true;
+				targetClass: NimbleCords;
+			}
+		}
+		subsystem expansionShelfSubsystem2 {
+			choice expansionShelfChoice2 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: Alletra5KShelf;
+			}
+			choice shelfCacheAChoice2 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: CacheBundle;
+			}
+			choice shelfCacheBChoice2 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: CacheBundle;
+			}
+			choice shelfPowerCordsChoice2_1 {
+				choiceType: multi_select;
+				optional: true;
+				targetClass: NimbleCords;
+			}
+			choice shelfPowerCordsChoice2_2 {
+				choiceType: multi_select;
+				optional: true;
+				targetClass: NimbleCords;
+			}
+		}
+		subsystem expansionShelfSubsystem3 {
+			choice expansionShelfChoice3 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: Alletra5KShelf;
+			}
+			choice shelfCacheAChoice3 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: CacheBundle;
+			}
+			choice shelfCacheBChoice3 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: CacheBundle;
+			}
+			choice shelfPowerCordsChoice3_1 {
+				choiceType: multi_select;
+				optional: true;
+				targetClass: NimbleCords;
+			}
+			choice shelfPowerCordsChoice3_2 {
+				choiceType: multi_select;
+				optional: true;
+				targetClass: NimbleCords;
+			}
+		}
+		subsystem expansionShelfSubsystem4 {
+			choice expansionShelfChoice4 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: Alletra5KShelf;
+			}
+			choice shelfCacheAChoice4 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: CacheBundle;
+			}
+			choice shelfCacheBChoice4 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: CacheBundle;
+			}
+			choice shelfPowerCordsChoice4_1 {
+				choiceType: multi_select;
+				optional: true;
+				targetClass: NimbleCords;
+			}
+			choice shelfPowerCordsChoice4_2 {
+				choiceType: multi_select;
+				optional: true;
+				targetClass: NimbleCords;
+			}
+		}
+		subsystem expansionShelfSubsystem5 {
+			choice expansionShelfChoice5 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: Alletra5KShelf;
+			}
+			choice shelfCacheAChoice5 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: CacheBundle;
+			}
+			choice shelfCacheBChoice5 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: CacheBundle;
+			}
+			choice shelfPowerCordsChoice5_1 {
+				choiceType: multi_select;
+				optional: true;
+				targetClass: NimbleCords;
+			}
+			choice shelfPowerCordsChoice5_2 {
+				choiceType: multi_select;
+				optional: true;
+				targetClass: NimbleCords;
+			}
+		}
+		subsystem expansionShelfSubsystem6 {
+			choice expansionShelfChoice6 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: Alletra5KShelf;
+			}
+			choice shelfCacheAChoice6 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: CacheBundle;
+			}
+			choice shelfCacheBChoice6 {
+				choiceType: single_select;
+				optional: true;
+				targetClass: CacheBundle;
+			}
+			choice shelfPowerCordsChoice6_1 {
+				choiceType: multi_select;
+				optional: true;
+				targetClass: NimbleCords;
+			}
+			choice shelfPowerCordsChoice6_2 {
+				choiceType: multi_select;
+				optional: true;
+				targetClass: NimbleCords;
+			}
+		}
+		subsystem miscHardwareSubsystem {
+			choice PowerSupplySpareChoice {
+				choiceType: multi_select;
+				optional: true;
+				targetClass: NimblePowerSupply;
+			}
+			choice ControllerSpareKitsChoice {
+				choiceType: multi_select;
+				optional: true;
+				targetClass: SpareMisc;
+			}
+			choice SpareSSDsChoice {
+				choiceType: multi_select;
+				optional: true;
+				targetClass: SpareSSD;
+			}
+			choice SpareHDDsChoice {
+				choiceType: multi_select;
+				optional: true;
+				targetClass: SpareHDD;
+			}
+			choice SpareNetworkingChoice {
+				choiceType: multi_select;
+				optional: true;
+				targetClass: SpareNetworking;
+			}
+			constraint requiredNimbleBase {
+				message: "Select the HPE Alletra 6000 Base Array";
+				body: thisInst.selected(NimbleAllFlashArrayGen6ChoiceItem).count > 0;
+			}
+			constraint powerCordPairInfo {
+				message: "Quantity 1 = two pairs/4 power cords";
+				body: false;
+			}
+		}
+	}	
+}

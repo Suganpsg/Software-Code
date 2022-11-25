@@ -1,0 +1,10 @@
+import java.io.IOException;
+
+public class testValue {
+
+	public static void main(String[] args) throws ClassNotFoundException, IOException {
+		ClassLoader.getSystemResources("");
+		Class.forName("ClassNotFoundException");
+	}
+
+}

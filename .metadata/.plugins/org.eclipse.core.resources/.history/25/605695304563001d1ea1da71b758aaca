@@ -1,0 +1,28 @@
+
+import java.text.DecimalFormat;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+	public class Mpr {
+		 Mpr(){
+		    System.out.println("Print add");
+		    int a = 5;
+		    int b= 5;
+		    System.out.println(a+b);
+		}
+		public static void main(String[] args) {
+//		        System.out.println("print Main");
+//		        Mpr block=new Mpr();
+//		        Map<String, String> a = new ConcurrentHashMap<>();
+//		        a.put(null, "a");
+//		        System.out.println(a);
+//		        Map<String, String> ab = new HashMap<>();
+//		        ab.put(null, "a");
+			String amount = 2,000;
+			DecimalFormat twoPlaces = new DecimalFormat("0.00");
+			System.out.println(twoPlaces.format(amount));
+		        System.out.println(ab);
+		}
+		
+	}

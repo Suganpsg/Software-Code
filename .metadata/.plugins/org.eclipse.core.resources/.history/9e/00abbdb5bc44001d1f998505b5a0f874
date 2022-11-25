@@ -1,0 +1,377 @@
+package com.hp.ngc.plugins.agents.importer;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
+
+import com.hp.ngc.engine.api_impl.KnowledgeBaseImpl;
+import com.hp.ngc.engine.api_impl.SubConfigurationImpl;
+import com.hp.ngc.engine.exceptions.EngineException;
+import com.hp.ngc.engine.ngcDataObject.xmlbean.impl.ConfigDataObjectTypeImpl.ConfigurationImpl.SubconfigurationsImpl;
+import com.hp.ngc.engine.transactions.CreateInstance;
+import com.hp.ngc.engine.transactions.CreateInstanceOfConfig;
+import com.hp.ngc.engine.transactions.EngineUpdateContext;
+import com.hp.ngc.engine.transactions.SelectionResult;
+import com.hp.ngc.engine.transactions.SetInstanceParentChoice;
+import com.hp.ngc.engine.transactions.ConfigurationChange.ReasonForChange;
+import com.hp.ngc.kb.modelInstance.ModelInstance;
+import com.hp.ngc.kb.modelInstance.NgcChoiceInstance;
+import com.hp.ngc.kb.modelInstance.NgcGroupInstance;
+import com.hp.ngc.kb.modelInstance.NgcLocationArrayInstance;
+import com.hp.ngc.kb.modelStore.NgcAttribute;
+import com.hp.ngc.kb.modelStore.NgcClass;
+import com.hp.ngc.kb.modelStore.NgcFunction;
+import com.hp.ngc.kb.modelStore.NgcLocationArray;
+import com.hp.ngc.kb.modelStore.NgcObject;
+import com.hp.ngc.kb.modelStore.NgcAttribute.AttributeType;
+import com.hp.ngc.kb.modelStore.NgcChoice;
+import com.hp.ngc.plugins.agents.update.install.impl.WizardUtility;
+import com.hp.ngc.plugins.builtin.agents.update.DefaultUpdateAgent;
+import com.hp.ngc.util.Log4NGC;
+import com.hp.ngc.util.UtilityConfigMethods;
+
+public class ImportUtility {
+	
+	private static String quantityAtt = "instanceQuantity";
+
+	public static ArrayList<ModelInstance> addConfigurationInstanceToModel(ModelInstance parent, SubConfigurationImpl childSubconfig, int qty, boolean isRacked) throws EngineException {
+		ArrayList<ModelInstance> createdInstances = new ArrayList<ModelInstance>();
+		SubConfigurationImpl subconfig = parent.getSubConfiguration();
+		for(int k=0; k < qty; k++){
+			CreateInstanceOfConfig createCfg = new CreateInstanceOfConfig(childSubconfig, ReasonForChange.REASON_BY_AGENT);
+			subconfig.makeUpdate(createCfg);
+			ModelInstance optInst = createCfg.getCreatedModelInstance();
+			
+			if(isRacked){
+				NgcLocationArrayInstance rackSpace = (NgcLocationArrayInstance) parent.getLocationArray("main_rack_space", "rack_space");
+				WizardUtility.placeOptionInParentModel(subconfig,parent,optInst,rackSpace);
+			} else {
+				WizardUtility.placeOptionInParentModel(subconfig,parent,optInst);
+			}
+			
+			createdInstances.add(optInst);
+		}
+		return createdInstances;
+	}
+	
+	public static ArrayList<ModelInstance> addOptionToInstance(ModelInstance parentModel, ModelInstance parentInstance, String optionId, int qty, boolean considerDescendantsForContainers, boolean suppressDefaults) throws EngineException {
+		SubConfigurationImpl subconfig = parentModel.getSubConfiguration();
+		ArrayList<ModelInstance> createdInstances = new ArrayList<ModelInstance>();
+		boolean optionUsesInstanceQty = false;
+		
+		NgcClass optClass = subconfig.getNgcClass(optionId);
+		if(optClass == null) {
+			Log4NGC.info(WizardUtility.class, " cannot find NgcClass for :" + optionId);
+			return createdInstances;
+		}
+		if(suppressDefaults){
+			ModelInstance cfgPrefs = subconfig.getInstancesOfClass("ConfigPreferences").get(0);
+			cfgPrefs.getAttribute("suppressInternalDefaults").setValue(optionId, true);
+		}
+		NgcFunction useInstanceQuantityFunc = parentModel.getFunctions().get("useInstanceQuantityForProduct");
+		if(useInstanceQuantityFunc != null) {
+			// Fill Parameters
+			List<Object> parametersList = new ArrayList<Object>();
+			parametersList.add(optionId);
+			optionUsesInstanceQty = (boolean) parentModel.evaluateNgcFunction("useInstanceQuantityForProduct", parametersList);
+		}
+	
+		if(optionUsesInstanceQty) {
+			
+
+			CreateInstance createOption = new CreateInstance(optClass,ReasonForChange.REASON_WAS_REQUESTED, null, parentInstance);
+			subconfig.makeUpdate(createOption);
+			ModelInstance optInst = createOption.getCreatedModelInstance();
+			//set quantity to match
+			UtilityConfigMethods.setAttributeSimple(optInst, quantityAtt, qty);
+
+			boolean placed = ImportUtility.placeOptionInParentModelWithTargets(subconfig,parentInstance,optInst, considerDescendantsForContainers);
+			if(placed) {
+				createdInstances.add(optInst);
+			} else {
+				subconfig.deleteInstance(optInst);
+			}
+		} else {
+			for(int k=0; k < qty; k++){
+
+				CreateInstance createOption = new CreateInstance(optClass,ReasonForChange.REASON_WAS_REQUESTED, null, parentInstance);
+				subconfig.makeUpdate(createOption);
+				ModelInstance optInst = createOption.getCreatedModelInstance();
+
+				boolean placed = ImportUtility.placeOptionInParentModelWithTargets(subconfig,parentInstance,optInst, considerDescendantsForContainers);
+				if(placed) {
+					createdInstances.add(optInst);
+				} else {
+					subconfig.deleteInstance(optInst);
+					break;
+				}
+			}
+		}
+		
+		return createdInstances;
+	}
+
+	public static int calculateTotalQuantity(ArrayList<ModelInstance> instances, boolean quotedOnly) throws EngineException {
+		int total = 0;
+		for(ModelInstance inst: instances) {
+			if(quotedOnly) {
+				total += inst.getQuotedQuantity();
+			} else {
+				total += inst.getInstanceQuantity();
+			}
+		}
+		return total;
+	}
+	
+	public static boolean placeOptionInParentModelWithTargets(SubConfigurationImpl subconfig, ModelInstance parent, ModelInstance option, boolean considerDescendantsForContainers) throws EngineException {
+		if(parent == null) parent = subconfig.getPrimaryInstance();
+		ArrayList<ModelInstance> targetParents = null;
+		if(!considerDescendantsForContainers) {
+			targetParents = new ArrayList<ModelInstance>();
+			targetParents.add(parent);
+		}
+		
+		NgcObject swContainer = WizardUtility.getTargetContainerForOption(parent, option);
+		
+		List<NgcObject> containerList = parent.getNGCObjectsWhichCanContainInstancesOfClass(option.getParentClass(), false, targetParents);
+		
+		if(containerList.size() > 1)sortContainers(containerList);
+		
+		if(containerList.size() > 0) {
+			for(int i =0; i < containerList.size(); i++) {
+				NgcObject container = containerList.get(i);
+				if (swContainer != null && container != swContainer) continue;
+				if(container instanceof NgcLocationArrayInstance) {
+					NgcLocationArrayInstance locArray = (NgcLocationArrayInstance) container;
+					//TD Add different logic for racked components, this matches what racking agent does and what ui does to allow an itme to be racked
+					//This is less restrictive and works for more items to allow them to be racked
+					//This is needed for CS700 to allow arista and hpn switches into racks
+					if(container.getName().equals("rack_space")){
+						if (locArray.isCompatibleFiller(option)) {
+							SelectionResult res = new SelectionResult();
+							try {
+								locArray.addFillerInstance(option, -1, -1, false, res );
+								if (res.isSuccess()){
+									break;
+								}
+								Log4NGC.info(ImportUtility.class,"ERROR: failed to install " + option.getName() + " in array " + locArray.getName());
+							} catch(EngineException e) {
+								continue;
+							}
+						}
+						Log4NGC.info(ImportUtility.class,"ERROR: failed to install, not valid filler " + option.getName() + " in array " + locArray.getName());
+					} else {
+						if (locationArrayIsAvailable(locArray,option.getId())) {
+							
+							
+							SelectionResult res = new SelectionResult();
+							try {
+								locArray.addFillerInstance(option, -1, -1, false, res );
+								if (res.isSuccess()){
+									break;
+								}
+								Log4NGC.info(ImportUtility.class,"ERROR: failed to install " + option.getName() + " in array " + locArray.getName());
+							} catch(EngineException e) {
+								Log4NGC.info(ImportUtility.class,"ERROR: failed to install " + option.getName() + " in array " + locArray.getName());
+								e.printStackTrace();
+								continue;
+							}
+						}else if(i == containerList.size() -1) {
+							Log4NGC.info(ImportUtility.class, " cannot place instance in LocArray: " + locArray.getName() + " product " + option.getName());
+						}
+					}
+				}
+
+				if(container instanceof NgcChoiceInstance) {
+					NgcChoiceInstance choice = (NgcChoiceInstance) container;
+					if (choice.containsItem(option.getName()) && !choice.isMaxedOut()) {
+						try {
+							SetInstanceParentChoice change = new SetInstanceParentChoice(option, choice, ReasonForChange.REASON_BY_AGENT);
+							subconfig.makeUpdate(change);
+							break;
+						} catch(EngineException e) {
+							continue;
+						}
+					}
+					if(i == containerList.size() -1) {
+						Log4NGC.info(WizardUtility.class, " cannot place instance in NgcChoice:" + option.getName());
+					}
+				}else if (container instanceof NgcGroupInstance) {
+					NgcGroupInstance group = (NgcGroupInstance) container;
+					if(group != null && group.getSubConfiguration() != null){
+					  if(!group.isMaxedOut()){
+						SubConfigurationImpl parentSubConfig = group.getSubConfiguration();
+						CreateInstanceOfConfig create = new CreateInstanceOfConfig(option.getSubConfiguration(), ReasonForChange.REASON_BY_AGENT);
+						parentSubConfig.makeUpdate(create);
+						ModelInstance cfgGroup = create.getCreatedModelInstance();
+						group.addMember(cfgGroup);
+					 }
+				}
+			}
+
+				if(i == containerList.size() -1) {
+					Log4NGC.info(ImportUtility.class, "Option cannot be placed in a container:" + option.getName());
+					return false;
+				}
+		  }
+
+		} else {
+			Log4NGC.info(ImportUtility.class, " cannot find NgcObject for instance :" + option.getId());
+			return false;
+		}
+		return true;
+	}
+	public static ArrayList<ModelInstance> placeOptionInParentModelWithGroupTargets
+	(SubConfigurationImpl subconfig, ModelInstance parent, String optionId,
+			Integer qty) throws EngineException {
+		if(parent == null) parent = subconfig.getPrimaryInstance();
+		ArrayList<ModelInstance> targetParents = null;
+		ArrayList<ModelInstance> createdInstances = new ArrayList<ModelInstance>();
+		NgcClass optionClass = subconfig.getNgcClass(optionId);
+		List<NgcObject> containerList = parent.getNGCObjectsWhichCanContainInstancesOfClass(optionClass, false, targetParents);
+		
+		if(containerList.size() > 1)sortContainers(containerList);
+		ModelInstance nodeInstance = null;
+		if(containerList.size() > 0) {
+			for(int i =0; i < containerList.size(); i++) {
+				NgcObject container = containerList.get(i);
+				if (container instanceof NgcGroupInstance) {
+					NgcGroupInstance group = (NgcGroupInstance) container;
+					nodeInstance = WizardUtility.createModelInNewSubconfig(optionId, new DefaultUpdateAgent(), true, subconfig,new ArrayList<EngineUpdateContext>(), parent);
+					if(group != null && group.getSubConfiguration() != null){
+						for(int k=0; k < qty; k++){
+							if(!group.isMaxedOut()){
+								SubConfigurationImpl parentSubConfig = group.getSubConfiguration();
+								CreateInstanceOfConfig create = new CreateInstanceOfConfig(nodeInstance.getSubConfiguration(), ReasonForChange.REASON_BY_AGENT);
+								parentSubConfig.makeUpdate(create);
+								ModelInstance cfgGroup = create.getCreatedModelInstance();
+								group.addMember(cfgGroup);
+								createdInstances.add(cfgGroup);
+							}
+						}	
+				}
+			}
+		  }
+		} else {
+			Log4NGC.info(WizardUtility.class, " cannot find NgcObject for instance :" + optionClass.getId());
+			return null;
+		}
+		return createdInstances;
+	}
+
+	public static boolean locationArrayIsAvailable(NgcLocationArrayInstance locArray, String optionId) throws EngineException {
+		if(locArray.isMaxedOut()) return false;
+		if(!locArray.containsFillerProduct(optionId)) return false;
+		
+		if(locArray.getMaxByProduct() != null) {
+			if(locArray.getMaxByProduct().isEmpty())locArray.resetCheckingData(); 
+			if(locArray.getMaxByProduct().containsKey(optionId)
+					&& locArray.getMaxByProduct().get(optionId) == 0) {
+				return false;
+			}
+				
+		}
+		return true;
+	}
+
+	private static void sortContainers(List<NgcObject> containers) {
+		// TODO Auto-generated method stub
+		Collections.sort(containers, new Comparator<NgcObject>() {
+		    @Override
+		    public int compare(NgcObject inst1, NgcObject inst2) {
+		    		//get priority by class index
+		    		int priority1 = getPriority(inst1);
+			    	int priority2 = getPriority(inst2);
+			    	return priority2 - priority1;
+		    }
+
+			private int getPriority(NgcObject obj) {
+				if(obj instanceof NgcLocationArray) {
+					if(obj.getName().startsWith("spare")) return 1;
+					
+					return ((NgcLocationArray) obj).getFillerClasses().size();
+				}
+				if(obj instanceof NgcChoice) {
+					return 1;
+				}
+				return 0;
+			}
+		});
+	}
+
+	public static void addAdHocItemToModel(ModelInstance parentModel, String productNumber, int qty, String desc) throws EngineException {
+		
+		NgcChoiceInstance adHocChoice = parentModel.getAdHocChoice();
+		// setting the strict property of the choice to false will bypass the check
+		// that the instance is in the filler products for the choice
+		adHocChoice.setStrict(false);
+		
+		SubConfigurationImpl subconfig = parentModel.getSubConfiguration();
+		String adHocId = subconfig.getKb().getAdHocItemProduct();
+		CreateInstance createAdHoc = new CreateInstance(subconfig.getNgcClass(adHocId),ReasonForChange.REASON_WAS_REQUESTED, null, parentModel);
+		subconfig.makeUpdate(createAdHoc);
+		ModelInstance adHocInst = createAdHoc.getCreatedModelInstance();
+		adHocInst.setParentChoice(adHocChoice);
+		adHocChoice.associateInstance(adHocInst);
+		
+		String integrationOpt = getOptionCodeForAdHoc(parentModel,productNumber);
+		
+		UtilityConfigMethods.setAttributeSimple(adHocInst, "productNumber", productNumber);
+		UtilityConfigMethods.setAttributeSimple(adHocInst, "quantity", qty);
+		UtilityConfigMethods.setAttributeSimple(adHocInst, "dnqValue", 0);
+		if(integrationOpt.equalsIgnoreCase("BTO")) {
+			UtilityConfigMethods.setAttributeSimple(adHocInst, "option", "");
+			UtilityConfigMethods.setAttributeSimple(adHocInst, "nest", false);
+			UtilityConfigMethods.setAttributeSimple(adHocInst, "multiplyNode", false);
+		} else {
+			UtilityConfigMethods.setAttributeSimple(adHocInst, "option", integrationOpt);
+			UtilityConfigMethods.setAttributeSimple(adHocInst, "nest", true);
+			UtilityConfigMethods.setAttributeSimple(adHocInst, "multiplyNode", true);
+		}
+		
+		UtilityConfigMethods.setAttributeSimple(adHocInst, "sequence", 1);
+	}
+
+	private static String getOptionCodeForAdHoc(ModelInstance parentModel, String productNumber) throws EngineException {
+		
+		KnowledgeBaseImpl kb = parentModel.getKB();
+		String integrationOption = "BTO";
+		
+//		String tempOption = kb.getDataService().getIntegrationOption(productNumber, productNumber);
+//		if (tempOption != null) {
+//			integrationOption = tempOption;
+//		}
+		
+		Set<String> intOptions = kb.getDataService().getNGCDao().getIntegrationOptionsAsStringByProductOnProductFamily(parentModel.evaluatePlatformName(), productNumber);
+		if(intOptions.iterator().hasNext()){
+			integrationOption = intOptions.iterator().next();
+		}
+		
+		return integrationOption;
+	}
+
+	public static boolean isSoftwareModel(NgcClass model) {
+		if(model.isDescendantOf("SoftStandAlone"))return true;
+		if(model.isDescendantOf("BlueDataSW"))return true;
+		return false;
+	}
+
+	public static String getSoftwareModelForProduct(KnowledgeBaseImpl kb, NgcClass itemClass) throws EngineException {
+		String containerId = "soloContainerSoftware";
+		Set<String> platformSet = kb.getBaseProductsSupportingProduct(itemClass.getId());
+		for(String b : platformSet) {
+			NgcClass base = kb.getNgcClass(b);
+			if(base != null) {
+				//Note, we may need to sort these by priority
+				if(isSoftwareModel(base)) {
+					containerId = b;
+				}
+			}
+			
+		};
+		
+		return containerId;
+	}
+}

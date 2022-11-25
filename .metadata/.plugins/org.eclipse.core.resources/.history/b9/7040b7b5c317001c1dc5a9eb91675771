@@ -1,0 +1,430 @@
+package essn.storage.dl345g10plussds.dl345g10plussds {
+	import common.productcategories.*;
+	import common.agentutility.*;
+	import essn.server.common.servercommon.*;
+	import essn.storage.network.hpnetworkingcommon.*;
+	import essn.rack.rackcommon.*;
+	import common.globalsupport.*;
+	import essn.cas.cascommon.*;
+	import essn.common.software.*;
+	import common.coremodel.*;
+	import essn.server.newgenproliant.newgendlservers.newgendl300.dl345g10plus.*;
+	import essn.storage.common.storagecommon.*;
+	import essn.server.proliantservers.common.proliantproductoption.*;
+
+	class DL345G10PlusSDSVeeam extends DL345G10PlusSDS {
+		description: "HPE DL345 Gen10+ 12LFF CTO Svr for SDS";
+		configurationEntryPoint;
+		platformName: "DL345G10PlusSDSVeeam";
+		productCategories: DL345G10PlusSDSVeeam;
+		string softwarePlatformName: "";
+		string coreModelId: "";
+		string displayPartNumber: "R8S36A";
+		string productIdForPLC: "R8U98A";
+		boolean isProductClass: false;
+		string ADD_TO_CONFIG: "com.hp.ngc.plugins.agents.update.delegate.startingpoint.StartingPointDelegateAgent";
+		string realBasedummyId : "";
+		string uiSpecToUse: "DL345G10PlusSDSVeeam";
+		//Cost Optimization
+		string[] defaultList: "";
+		boolean showCostOptimizationView: false;
+		int iNumTransceivers: 12;
+	}
+	product R8U98A_SDS DL345G10PlusSDSVeeam {
+		description: "HPE DL345 Gen10+ 12LFF CTO Svr for SDS";
+		string displayPartNumber: "R8S36A";
+		string productIdForPLC: "R8U98A";
+		string uiSpecToUse: "DL345G10PlusSDSVeeam";
+		string realBasedummyId : "R8U98A_SDS";
+		string coreModelId: "R8S36A";
+		string[] defaultList: "R8U98A","standardDL345G10PRiser","P39736-B21","P38655-B21",
+		"P07642-B21","P07642-B21","P07642-B21","P07642-B21","P07642-B21","P07642-B21","P07642-B21","P07642-B21"
+		,"P08449-B21";
+			
+	}
+	class OEMDL345SDSTrackingSku extends CSTrackingSKU {
+		int sequenceNumber: 10;
+		int childSequenceNumber: 10;
+		int iNumHalfEiaUnits: 1;
+		int iHalfEiaUnitsRequired: 1;
+		boolean ocaCompatible: true;
+		string[] validRackList: "P9K10A","P9K08A","P9K38A","P9K40A","P9K42A","P9K46A","P9K12A","P9K16A","P9K06A","P9K04A";
+		string[] virtualRackList: "rackOnSite42u", "rackOnSite42u1200","ZU715A";
+		def getValidRackList(): string[] = callout("GetValidRacks", thisInst, validRackList, virtualRackList);
+	}
+	class DL345G10PlusSDS extends DL345G10Plus {
+		description: "HPE DL345 Gen10+ 12LFF CTO Svr for SDS";
+		configurationEntryPoint;
+		platformName: "DL345G10PlusSDS";
+		productCategories: DL345G10PlusSDS;
+		string softwarePlatformName: "";
+		string productIdForPLC: "R8S36A";
+		boolean showCostOptimizationView: false;
+		int iNumHardDriveBays: 14;
+		def max_pciSlotsBandingFunction_G10: int = 1;
+		def nMaxBandingHardDrives: int = 12;
+		def nMaxSFFHardDrives: int = 2;
+		int iNumHeatSink: 1;
+		def max_heatSinkBandFunction: int = 2;
+		def max_internalstoragecontrollerCablesFunction: int = 1;
+		def max_ocpSlotsBandingFunction: int = 1;
+		def max_Networking_BandingFunction: int = 4;
+		def max_OCPUpgKitBandingFunction: int = 1;
+		def max_Fibrechannel_BandingFunction: int = 2;
+		int iNumSAP420iControllerCache: 0;
+		int iNumHalfEiaUnits: 4;
+		int iHalfEiaUnitsRequired: 4;
+		int iNumNetworkCable : 2;
+		def max_TransFunction: int = 12;
+		string[] validRackList: "P9K10A","P9K08A","P9K38A","P9K40A","P9K42A","P9K46A","P9K12A","P9K16A","P9K06A","P9K04A";
+		string[] virtualRackList: "rackOnSite42u", "rackOnSite42u1200","ZU715A";
+		string[] defaultList: "R8S33A","standardDL345G10PRiser";
+		
+		def max_pcicardSlots: int = {
+			val StandardRiser = if thisInst.selected(StandardProliantPciRiser).filter(a => split(a.id, "#").get(0) <= "standardDL345G10PRiser").count > 0 then 2 else 0;
+			val SecondaryRiser = if thisInst.selected(ProliantPciRiser).filter(a => split(a.id, "#").get(0) <= "P38639-B21 P38641-B21 P38643-B21").count > 0 then 1 else 0;
+			val totalPcis = StandardRiser + SecondaryRiser;
+			totalPcis;
+			}			
+
+		subsystem NodeSubsystem {
+			part addDefaultsTrigger: triggerInternalDefaults {
+	    		string[] modelDefaults: "defaultList" ;
+	    	}
+	    }
+	    subsystem trackingSubsystem {
+			locationArray trackingSkuChoice {
+				rows: 1;
+				fillerClasses: OEMDL345SDSTrackingSku;
+			}
+		}
+		subsystem processorSubsystem {
+			constraint processor_r1 {
+				message: "This Processor requires the selection of HPE DL345 Gen10 Plus High Perf H/S Kit (P38655-B21).";
+				body: true;
+			}
+			constraint processor_r2 {
+				message: "This Processor requires the selection of  HPE DL345 Gen10 Plus STD H/S Kit (P38656-B21).";
+				body: true;
+			}
+			constraint heatsink_r1 {
+				message: "High Perf Heat Sink Kit (P38655-B21) must be selected if Processor >=180W is in the order.";
+				body: true;
+			}
+			constraint processorAccessoriesNoMix {
+				message: "STD H/S Kit (P38656-B21) must be selected if Processor < 180W is in the order.";
+				body: {
+				val processorCount =  thisInst.selected(ProliantProcessor).filter(x => x.iNumWattage < 180).count;
+				val kitCount =  thisInst.selected(HeatSinkKit).filter(x => x.id ='P38656-B21').count;
+				if processorCount > 0 then kitCount = processorCount;
+				}
+			}
+			constraint processorWattage {
+				message: "High Perf Heat Sink Kit (P38655-B21) must be selected if Processor >= 180W is in the order.";
+				body: {
+				val processorCount =  thisInst.selected(ProliantProcessor).filter(x => x.iNumWattage >= 180).count;
+				val kitCount =  thisInst.selected(HeatSinkKit).filter(x => x.id ='P38655-B21').count;
+				if processorCount > 0 then kitCount = processorCount;
+				}
+			}
+				constraint MinProcessor {
+					message: "Minimum 1 and Maximum 1 quantity of processor is required ";
+					body: restriction (ProliantProcessor = 1);
+				}
+
+		}
+		subsystem memorySubsystem {
+			constraint noMixMemory {
+				message: "No Mix is allowed for memory";
+				body: restriction (ProliantMemoryArray.noMix);
+			}
+			constraint memory_Warning {
+				message: "For more detailed information regarding memory population rules, please refer to <a href='https://h20195.www2.hpe.com/v2/Getdocument.aspx?docname=a00038346enw' target='_blank'>www.hpe.com/docs/memory-population-rules</a>";
+				enabled: (thisInst.realBasedummyId = "R8U98A_SDS");
+				body: false;
+			}
+			constraint MinMemory {
+				message: "Minimum 1 memory is required ";
+				enabled: (thisInst.realBasedummyId != "R8U98A_SDS");
+				body: restriction (ProliantMemoryArray >= 1);
+			}
+			constraint MinMemoryReq1 {
+				message: "Minimum 4 memory is required ";
+				enabled: (thisInst.realBasedummyId = "R8U98A_SDS");
+				body: restriction (ProliantMemoryArray >= 4);
+			}
+			constraint MinMemoryReq2 {
+				message: "If P07640-B21 or P07642-B21 selected the minimum 8 memory is required ";
+				enabled: (thisInst.realBasedummyId = "R8U98A_SDS");
+				body: dependency (ProliantMemoryArray[P07640-B21 || P07642-B21] > 0 , ProliantMemoryArray[P07640-B21 || P07642-B21] >= 8);
+			}
+		}
+		subsystem deviceSubsystem {
+			locationArray hardDriveBays {
+				rows: iNumHardDriveBays;
+				fillerClasses: ProliantHardDrive_HP_LFF,ProliantHardDrive_HP_SFF_SAS;
+			}
+			constraint minSFF {
+				message: "Maximum 2 For SFF drive";
+				enabled: (thisInst.realBasedummyId != "R8U98A_SDS");
+				body : restriction(ProliantHardDrive[subCategory = "SSDRI" || subCategory = "SSDWI"] <= 2);
+			}
+			constraint minLFF {
+				message: "Min 1 For LFF drive";
+				enabled: (thisInst.realBasedummyId != "R8U98A_SDS");
+				body : restriction(ProliantHardDrive[subCategory = 'HDDM72K'] >= 1);
+			}
+			constraint maxLFF {
+				message: "Maximum 12 For LFF drive";
+				body : restriction(ProliantHardDrive[subCategory = 'HDDM72K'] <= 12);
+			}
+			
+			
+			constraint minLFFR8U98A {
+				message: "Min 4 For LFF drive";
+				enabled: (thisInst.realBasedummyId = "R8U98A_SDS");
+				body : restriction(ProliantHardDrive[subCategory = 'HDDM72K'] >= 4);
+			}
+			constraint remarkLFFR8U98A {
+				message: "For maximum bandwidth performance it is recommended that 12 drives be configured.";
+				enabled: (thisInst.realBasedummyId = "R8U98A_SDS");
+				body : if thisInst.selected(ProliantHardDrive_HP_LFF).count < 12 then false else true;
+			}
+			constraint noMixLFFR8U98A {
+				message: "No Mixing For LFF drive";
+				enabled: (thisInst.realBasedummyId = "R8U98A_SDS");
+				body : restriction(ProliantHardDrive_HP_LFF.noMix);
+			}
+			constraint noMixSFFR8U98A {
+				message: "No Mixing For LFF drive";
+				enabled: (thisInst.realBasedummyId = "R8U98A_SDS");
+				body : restriction(ProliantHardDrive_HP_SFF_SAS.noMix);
+			}
+			constraint minSFFR8U98A {
+				message: "Min/Max 2 For SFF drive required";
+				enabled: (thisInst.realBasedummyId = "R8U98A_SDS");
+				body : restriction(ProliantHardDrive_HP_SFF_SAS = 2);
+			}
+			
+			constraint drivesrestriction {
+				message: "SAS Drives require the selection of a SAS controller. See card lists in Controllers section.";
+				body: true;
+			}
+			constraint hardDriveSFF_r1 {
+				message: "SAS Drives require the selection of a SAS controller. See card lists in Controllers section.";
+				body: true;
+			}
+			constraint Upgrade_r1 { 
+				message: "Max=1 of either Smart Storage Battery (P01366-B21) or Smart Hybrid Capacitor (P02377-B21) must be selected if P-Class (P816i-a/ P408e-p/P408i-a/P408i-p)/ SR932/ MR416/ SR416 controllers is in the order.  
+						  The Storage Battery can support up to 6 P-Class/ SR932/ MR416/ SR416 controllers.  
+						  The Smart Hybrid Capacitor can support up to 2 P-Class/ SR932/ MR416/ SR416 controllers if SR932 or SR416 is present in configuration.
+						  The Smart Hybrid Capacitor can support up to 3 P-Class/ MR416 controllers if SR932 or SR416 is NOT present in configuration.";
+				body: true;
+			}
+			constraint Upgrade_r2 {
+				message: "This option P01366-B21/P02377-B21 requires the selection of Megacell convert cable(P38630-B21)";
+				body: true;
+			}
+			constraint Controller_info { 
+				message: "MegaRAID Tools cannot be used to script and configure SmartRAID (formerly known as SmartArray) controllers used on HPE Gen9/10/10 Plus servers.";
+				body: true;
+			}
+			constraint Controller_r3 {
+				message: "This controller requires the selection of either the Smart Storage Battery (P01366-B21) or Smart Hybrid Capacitor (P02377-B21). <br>
+						  The Storage Battery can support up to 6 P-Class/ SR932/ MR416/ SR416 controllers.  <br>
+						  The Smart Hybrid Capacitor can support up to 2 P-Class/ SR932/ MR416/ SR416 controllers if SR932 or SR416 is present in configuration. <br>
+						  The Smart Hybrid Capacitor can support up to 3 P-Class/ MR416 controllers if SR932 or SR416 is NOT present in configuration.";
+				body: true;
+			}
+		}
+		subsystem pciSubsystem {
+			locationArray NetworkCablesLocArray { //for InfiniBand, Ethernet and FibreChannel Cables, fill with appropriate Network cables
+				rows: iNumNetworkCable;
+				fillerClasses: SASHDCable,SASHDSASHDCable;
+			}
+			constraint minStandardRiser {
+				message: "Min 1 standardDL345G10PRiser required";
+				body: restriction (StandardProliantPciRiser[standardDL345G10PRiser] = 1);
+			}
+			constraint maxTransceivers {
+				message: "Max 12 For Transceivers";
+				enabled: (thisInst.realBasedummyId = "R8U98A_SDS");
+				body : restriction(Transceivers <= 12);
+			}
+			constraint riserBuleNote {
+				message: "Without Secondary riser selection the maximum PCIe slots is 2. </br>
+					      With Secondary riser P38639-B21 or P38643-B21 selection maximum PCIe slots is 4 (2x PCIe Gen 4.0 x16 and 2x PCIe Gen 4.0 x8). </br> 
+						  With Secondary Riser P38641-B21 selection maximum PCIe slots is 3 (3x PCIe Gen 4.0 x16)";
+				body: false;
+			}
+			constraint networking_info {
+				message: "Certain Network Adapters require SFPs, Direct Attach Cables or other accessories in order to function. <br>
+						 For additional information, please refer to the Network Adapter  QuickSpecs. <br>
+						 If you do not have these items on-site, please make sure to select them from the Accessories area.";
+				body: true;
+			}
+			
+//			constraint RiserMax1 {
+//				message: "Max of 1 Riser Card";
+//				body: (thisInst.selected(PciCard).filter(x => x.tPciType >= "PCI_E").count) <= max_pcicardSlots;
+//			}
+			constraint risercards_r2 {
+				message: "Max=1, This riser must be selected only if 24NVMe Bundle kit is in the order";
+				body: true;
+			}
+			constraint OCPntwk_r3 {
+					message: "INT I350 1GbE 4p BASE-T OCP3 Adptr option (P08449-B21) to be defaulted for all CTO Servers. However customer is allowed to deselect. <br>
+						   If this option is deselected then another OCP Networking card OR any PCIe Networking card OR OCP Infiniband OR PCIe Pensando DSP Card OR OCP Pensando DSP card MUST be selected.";
+					body: true;
+				}
+			constraint OCP_r1 {
+				message: "Does not consume a PCIe Slot.";
+				body: true;
+			}
+			constraint OCPRequiredOnFibreSelection {
+				message: "If this sku is selected, THEN Min 1x P08449-B21 (Intel T-4) adapter is required.";
+				body: dependency (ProliantStorageControllerFC[subCategory = 'FibreHBA'] > 0 ||
+					NetworkingPci[P21112-B21 || P31246-B21 || P10180-B21] || NetworkAdapterPci[P25960-B21] ,
+					NetworkingPci[P08449-B21] > 0 );
+			}
+			
+			constraint OCP_Adapters_Rule1 {
+				message: "If INT E810 100GbE 2p QSFP28 OCP3 Adptr (P22767-B21) or MLX MCX562A 10/25GbE 2p SFP28 OCP3 Adptr (P10112-B21) is selected then OCP Upg Kit (P39732-B21) must be selected.";
+				body: dependency (NetworkingPci [ P10106-B21 || P10118-B21 || P22767-B21 ] || NetworkAdapterPci [ P10112-B21 || P10115-B21 ], UpgradePlusCableKit [ P39732-B21 ] > 0);
+			}
+			constraint OCP_Adapters_Rule2 {
+				message: "If P39732-B21 (OCP Upg Kit) is selected,Then Min 1x (HPE 10/25GbE 2p SFP28 MCX562A OCP3 Adptr (P10112-B21) or INT E810 100GbE 2p QSFP28 OCP3 Adptr (P22767-B21)) is required.";
+				//enabled: (thisInst.realBasedummyId = "R8U98A_SDS");
+				body: dependency (UpgradePlusCableKit [ P39732-B21 ] > 0, NetworkingPci [ P10106-B21 || P10118-B21 || P22767-B21 ] || NetworkAdapterPci [ P10112-B21 || P10115-B21 ] > 0);
+			}
+			constraint Networking_Adapters_Max1 {
+				message: "Maximum one quantity of P39732-B21 (OCP Upg Kit) can be selected.";
+				body: restriction (UpgradePlusCableKit [ P39732-B21 ] <= 1);
+			}
+			constraint PCIAdapter_Max1 {
+				message: "";
+				body: restriction (NetworkingPci [ P08458-B21 || P10180-B21 || P13188-B21 || P21109-B21 || P21112-B21 || P21933-B21 || P22702-B21 || P24437-B21 || P31246-B21 || P08443-B21 || P08437-B21 || P10094-B21 || P21106-B21 ] <= 4);
+				restriction (NetworkAdapterPci [ P25960-B21 || P28787-B21 || P26262-B21 || P26259-B21 || P26253-B21 ] <= 4);
+			}	
+			
+			constraint PCIAdapter_Max2 {
+				message: "Maximum 4 for PCI Adapter is Allowed";
+				body:
+				{
+					val NetworkPCICount = thisInst.selected(NetworkingPci).filter(x => x.id = 'P08458-B21' || x.id = 'P10180-B21' || x.id = 'P13188-B21' || x.id = 'P21109-B21' || x.id = 'P21112-B21' || x.id = 'P21933-B21' || x.id = 'P22702-B21' || x.id
+					= 'P24437-B21' || x.id = 'P31246-B21' || x.id = 'P08443-B21' || x.id = 'P08437-B21' || x.id = 'P10094-B21' || x.id = 'P21106-B21').count;
+					val NetworkAdaterPCICount = thisInst.selected(NetworkAdapterPci).filter(x => x.id = 'P25960-B21' || x.id = 'P28787-B21' || x.id = 'P26262-B21' || x.id = 'P26259-B21' || x.id = 'P26253-B21').count;
+					if(NetworkPCICount + NetworkAdaterPCICount <= 4) then true else false;
+				}
+			}
+
+//			constraint minPCI_Adapter {
+//				message : "Minimum 1 PCI Adapter is required";
+//				enabled: (thisInst.realBasedummyId != "R8U98A_SDS");
+//				body: restriction (PciCard [ subCategory = 'EthernetPCIe' ] || NetworkingPci [ subCategory = 'EthernetPCIe' ] || NetworkAdapterPci [ subCategory = 'EthernetPCIe' ] >= 1);
+//			}
+			constraint maxPCI_Adapter {
+				message : "Maximum 2 PCI Adapter is allowed";
+				body: restriction (PciCard[subCategory = 'EthernetPCIe'] || NetworkingPci[subCategory = 'EthernetPCIe'] 
+					|| NetworkAdapterPci[subCategory = 'EthernetPCIe'] <= 2);
+			}
+			constraint maxFibre_Adapter {
+				message : "Maximum 2 Fibre is allowed";
+				body: restriction (ProliantStorageControllerFC[subCategory = 'FibreHBA'] <= 2 );
+			}
+		}
+		subsystem securityOptionsSubsystem {
+			constraint restrictMaxPerSku {
+				message: "Max = 1 per sku in this section. ";
+				body: restriction (SecurityHardware[867809-B21] <= 1);
+				restriction (SecurityHardware[875519-B21] <= 1);
+				restriction (SecurityHardware[P13771-B21] <= 1);
+				restriction (SecurityHardware[P14604-B21] <= 1);
+			}
+			constraint requiredSku {
+				message: "If this sku is selected, Then Min =1 867809-B21 (Bezel) required. ";
+				body: dependency (SecurityHardware[875519-B21] > 0, SecurityHardware[867809-B21] > 0);
+			}
+		}
+		subsystem ManagementSoftwareSubsystem {
+			locationArray iLOAdvancedLocArray {
+				rows: 10; 
+				fillerClasses: IntegratedLightsOut;
+			}
+		}
+		subsystem RackingSubsystem {
+			constraint CTOmodels_r4 {
+				message: "If Server is ordered with Rack then Easy Install Rail kit must be selected.<br>
+						  However if server is not selected with rack then Easy Install Rail kit to be defaulted but customer has to be given option to deselect and the server will ship with no rails.";
+				body: true;
+			}
+			constraint rackOptions_r4 {
+				message: "Can be selected only with the  Easy Install Rail kit";
+				body: true;
+			}
+		}
+		
+		subsystem VeeamLTUSubSystem {
+			choice VeeamChoice1 {
+				targetClass: VMPlusUpfront;
+				choiceType: multi_select;
+				optional : true;
+			}
+			choice VeeamChoice2 {
+				targetClass: VMUniversalPerpectual;
+				choiceType: multi_select;
+				optional : true;
+			}
+			choice VeeamChoice3 {
+				targetClass: VMBkUpPlusUpfront;
+				choiceType: multi_select;
+				optional : true;
+			}
+			choice VeeamChoice4 {
+				targetClass: VMBkReplicaUniversalPerpectual;
+				choiceType: multi_select;
+				optional : true;
+			}
+			choice VeeamChoice5 {
+				targetClass: VMMicroSoftOff;
+				choiceType: multi_select;
+				optional : true;
+			}
+			constraint infoRuleVeeam {
+				message: "MANDATORY: The following end user (entity that will own/utilize the licenses) information is REQUIRED to deliver the electronic licenses/services:</br>
+						  1) End User Company Name </br>
+						  2) End User Company Address </br>
+						  3) End User email Address (Note the email address must have an organizational domain (e.g. name@hpe.com) not a public domain (e.g. name@gmail.com))</br>
+						  4) Reseller Name and Address </br>
+						  5) Distributor Name and Address.";
+				enabled: (thisInst.realBasedummyId = "R8U98A_SDS");
+				body: false;
+			}
+			
+			constraint veeamRule7 {
+				message: "Combination of perpetual and subscription licenses is not recommended. VMware / Hyper-V VMs will be covered by perpetual CPU sockets only. Instance licenses cannot be assigned to cover VMware / Hyper-V VMs with such a license combination";
+				enabled: (thisInst.realBasedummyId = "R8U98A_SDS");
+				body: if thisInst.selected(VMBkUpPlusUpfront).count > 0 then false else true;
+			}
+		constraint veeamRule2 {
+				message: "If Veeam Backup for Microsoft Office 365 - Multiyear Subscription Upfront Billing sku is selected, Then Qty must be at least 10.";
+				body:
+				if thisInst.selected(VMMicroSoftOff).filter(x => x.id = "R0G00AAE").count > 0 then thisInst.selected(VMMicroSoftOff).filter(x => x.id = "R0G00AAE").count >= 10;
+				if thisInst.selected(VMMicroSoftOff).filter(x => x.id = "R4B79AAE").count > 0 then thisInst.selected(VMMicroSoftOff).filter(x => x.id = "R4B79AAE").count >= 10;
+				if thisInst.selected(VMMicroSoftOff).filter(x => x.id = "R4B80AAE").count > 0 then thisInst.selected(VMMicroSoftOff).filter(x => x.id = "R4B80AAE").count >= 10;
+				if thisInst.selected(VMMicroSoftOff).filter(x => x.id = "R0G01AAE").count > 0 then thisInst.selected(VMMicroSoftOff).filter(x => x.id = "R0G01AAE").count >= 10;
+				if thisInst.selected(VMMicroSoftOff).filter(x => x.id = "R0G02AAE").count > 0 then thisInst.selected(VMMicroSoftOff).filter(x => x.id = "R0G02AAE").count >= 10;
+				if thisInst.selected(VMMicroSoftOff).filter(x => x.id = "R4B20AAE").count > 0 then thisInst.selected(VMMicroSoftOff).filter(x => x.id = "R4B20AAE").count >= 10;
+				if thisInst.selected(VMMicroSoftOff).filter(x => x.id = "R4B21AAE").count > 0 then thisInst.selected(VMMicroSoftOff).filter(x => x.id = "R4B21AAE").count >= 10;
+				if thisInst.selected(VMMicroSoftOff).filter(x => x.id = "R0G03AAE").count > 0 then thisInst.selected(VMMicroSoftOff).filter(x => x.id = "R0G03AAE").count >= 10; 
+				if thisInst.selected(VMMicroSoftOff).filter(x => x.id = "R0G04AAE").count > 0 then thisInst.selected(VMMicroSoftOff).filter(x => x.id = "R0G04AAE").count >= 10;
+				if thisInst.selected(VMMicroSoftOff).filter(x => x.id = "R0G05AAE").count > 0 then thisInst.selected(VMMicroSoftOff).filter(x => x.id = "R0G05AAE").count >= 10;
+			}
+		constraint veeamRule3 {
+				message: "The 1 month support upgrade is only to align subscription renewal dates. If the order for the 1 month support upgrade is not to align subscription renewal dates, Veeam will reject the order.";
+				body:
+				if thisInst.selected(VMMicroSoftOff).filter(x => x.id = "R0G05AAE").count > 0 then false else true;
+			}
+		}
+	}
+}

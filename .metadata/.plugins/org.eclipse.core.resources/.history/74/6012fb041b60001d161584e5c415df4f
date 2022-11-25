@@ -1,0 +1,29 @@
+package Learn.Array;
+
+public class MissingandRepeatingNo {
+
+	public static void main(String[] args) {
+		int arr[] = { 7, 3, 4, 5, 5, 6, 2 };
+        int n = arr.length;
+        printTwoElements(arr, n);
+
+	}
+	//Sign Changing Algorithm
+	static void printTwoElements(int[] arr, int n) {
+		for(int i = 0 ; i < n ; i ++){
+			int index = Math.abs(arr[i])-1 ;
+			if(arr[index] > 0){
+				arr[index] = -arr[index];
+			}else{
+				 System.out.println("repeating element:" + (index+1) );
+			}
+		}
+		for(int i = 0 ; i < n ; i ++){
+			if(arr[i] > 0){
+				 System.out.println("Missing element:" + (i+1) );
+			}
+		}
+		
+	}
+
+}

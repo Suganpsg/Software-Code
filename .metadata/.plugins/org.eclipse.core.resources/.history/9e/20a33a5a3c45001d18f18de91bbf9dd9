@@ -1,0 +1,742 @@
+package essn.networking.wirelessdevices.arubaseries.aruba6300series {
+	import common.agentutility.*;
+	import common.coremodel.*;
+	import common.localizations.*;
+	import common.productcategories.*;
+	import essn.common.software.*;
+	import essn.storage.network.hpnetworkingcommon.*;
+	import essn.storage.common.storagecommon.*;
+	import essn.networking.wirelessdevices.arubaseries.common.arubaproductoption.*;
+	import essn.networking.wirelessdevices.arubaseries.common.arubaseriescommon.*;
+	import essn.server.proliantservers.common.proliantproductoption.*;
+	import essn.networking.wirelessdevices.arubaseries.arubacentralonprem.*;
+	import essn.networking.wirelessdevices.arubaseries.centralcloudservices.*;
+	class Aruba6300Series extends ArubaSeriesCommon {
+		description: "Aruba 6300 Switch Series";
+		configurationEntryPoint;
+		productCategories: Aruba6300Series, Aruba6300SeriesAce;
+		platformName: "Aruba6300Series";
+		string BTOType: "";
+		string quickSpecMap: "Aruba6300Series";
+		boolean ocaCompatible: true;
+		string shortLabel: "6300 Switch Series";
+		string softwarePlatformName: "6300 Switch Series";
+		string[] validRackList: "P9K08A", "P9K12A", "P9K04A", "P9K06A", "P9K48A", "P9K42A", "P9K18A", "P9K10A", "P9K16A", "P9K46A", "P9K38A", "P9K40A", "P9K50A", "P9K52A", "P9K54A", "P9K58A", "P9K60A";
+		string[] virtualRackList: "ZU715A";
+		int iNumSFPTransceivers: 24;
+		int iNumSFPPlusTransceivers: 24;
+		int iNumSFP28Transceivers: 4;
+		int iNumSFP56Transceivers: 4;
+		int iNumFanTrays;
+		int iNumSpareItemsSlots: 2;
+		int iNumLRMSlots: 99;
+		def isSDFlexCLPrimera (): boolean = thisConfig.getInstancesOfModel("SDFlexCLPrimera").count > 0;
+		def isRackPresent (): boolean = {
+			val myAncestorRacks = ancestors (thisInst, "Rack").filter(x => (x.subTypes * "BTO").count = 0 && x.doNotQuote = 'false' && x.isProductClass);
+			if(myAncestorRacks.count > 0) then true else false;
+		}
+		def defaultPDUPower1Func (): string = {
+			val pduPowermodel = thisInst.id;
+			val baseModelwithPDUPowerCord = "JL762A JL665A JL666A JL667A JL668A";
+			if(pduPowermodel <= baseModelwithPDUPowerCord) then if isRackPresent and (thisConfig.getProperty("region") = "NA" or thisConfig.getProperty("country") = "MX" or thisConfig.getProperty("country") = "TW" or
+			thisConfig.getProperty("country") = "JP") then pduPowermodel + "#B2B" else if isRackPresent and (! (thisConfig.getProperty("region") = "NA" or thisConfig.getProperty("country") = "MX" or thisConfig.getProperty("country") = "TW" or
+			thisConfig.getProperty("country") = "JP")) then pduPowermodel + "#B2C";
+		}
+		def containsMsg: string = {
+			if(thisInst.id <= "JL658A") then " Contains:
+			<p> Aruba 6300M 24-port SFP+ and 4-port SFP56 Switch <br>
+			   Must Select PSU Min1 / Max2 (250W JL085A, 250W JL757A) Mix OK <br>
+               Includes Fantrays Min2 / Max 2 (JL669B) <br>
+               Min=0 / Max= 24 SFP/SFP+ 100M/1/10G Transceivers <br>
+               Min=0 / Max = 4 SFP/SFP+/SFP28/SFP56 1/10/25/50G Transceiver <br>  
+               1U - Height <br>            
+       
+			<p>" else if(thisInst.id <= "JL659A") then " Contains:
+			<p>Aruba 6300M 48-port HPE Smart Rate 1/2.5/5GbE Class 6 PoE and 4-port SFP56 Switch <br>
+			   Must Select PSU Min1 / Max2 (680W JL086A,1050W JL087A, 1600W JL670A, 1050W JL758A) Mix OK <br>
+               Includes Fantrays Min2 / Max 2 (JL669B) <br>
+               Min=0 / Max = 4 SFP/SFP+/SFP28/SFP56 1/10/25/50G Transceiver  <br>
+               1U - Height <br> 
+			<p>" else if(thisInst.id <= "JL660A") then " Contains:
+			<p>Aruba 6300M 24-port HPE Smart Rate 1/2.5/5GbE Class 6 PoE and 4-port SFP56 Switch <br>
+			   Must Select PSU Min1 / Max2 (680W JL086A,1050W JL087A, 1600W JL670A, 1050W JL758A) Mix OK <br>
+               Includes 1 Fan tray (JL669B), with 1 open slot with blank cover<br>
+               Min=0 / Max = 4 SFP/SFP+/SFP28/SFP56 1/10/25/50G Transceiver <br>
+               1U - Height <br> 
+			<p>" else if(thisInst.id <= "JL661A") then " Contains:
+			<p>Aruba 6300M 48-port 1GbE Class 4 PoE and 4-port SFP56 Switch<br>
+			   Must Select PSU Min1 / Max2 (680W JL086A,1050W JL087A, 1600W JL670A, 1050W JL758A) Mix OK <br>
+               Includes 1 Fan tray (JL669B), with 1 open slot with blank cover<br>
+               Min=0 / Max = 4 SFP/SFP+/SFP28/SFP56 1/10/25/50G Transceiver <br>
+               1U - Height <br> 
+			<p>" else if(thisInst.id <= "JL662A") then " Contains:
+			<p>Aruba 6300M 24-port 1GbE Class 4 PoE and 4-port SFP56 Switch<br>
+			   Must Select PSU Min1 / Max2 (680W JL086A,1050W JL087A, 1600W JL670A, 1050W JL758A) Mix OK <br>
+               Includes 1 Fan tray (JL669B), with 1 open slot with blank cover<br>
+               Min=0 / Max = 4 SFP/SFP+/SFP28/SFP56 1/10/25/50G Transceiver <br>
+               1U - Height <br> 
+			<p>" else if(thisInst.id <= "JL663A") then " Contains:
+			<p>Aruba 6300M 48-port 1GbE and 4-port SFP56 Switch<br>
+			   Must Select PSU Min1 / Max2 (250W JL085A, 250W JL757A) Mix OK <br>
+               Includes 1 Fan tray (JL669B), with 1 open slot with blank cover<br>
+               Min=0 / Max = 4 SFP/SFP+/SFP28/SFP56 1/10/25/50G Transceiver<br>
+               1U - Height <br> 
+			<p>" else if(thisInst.id <= "JL664A") then " Contains:
+			<p>Aruba 6300M 24-port 1GbE and 4-port SFP56 Switch<br>
+			   Must Select PSU Min1 / Max2 (250W JL085A, 250W JL757A) Mix OK <br>
+               Includes 1 Fan tray (JL669B), with 1 open slot with blank cover<br>
+               Min=0 / Max = 4 SFP/SFP+/SFP28/SFP56 1/10/25/50G Transceiver<br>
+               1U - Height <br> 
+			<p>" else if(thisInst.id <= "JL762A") then " Contains:
+			<p>Aruba 6300M 48-port 1GbE and 4-port SFP56 Power-to-Port 2 Fan Trays 1 PSU Bundle<br>
+			   Includes 1 Pwr2Prt PSU, can select Min0 / Max1 (250W JL760A) <br>
+               Includes 2 Pwr2Prt Fan trays (JL761A), with no open slots<br>
+               Min=0 / Max = 4 SFP/SFP+/SFP28/SFP56 1/10/25/50G Transceiver<br>
+               1U - Height <br> 
+			<p>" else if(thisInst.id <= "JL665A") then " Contains:
+			<p>Aruba 6300F 48-port 1GbE Class 4 PoE and 4-port SFP56 Switch<br>
+			   Includes Non-Pluggable, Internal PSU behind sheetmetal Chassis Frame <br>
+               Includes Non-Pluggable, Internal Fans behind sheetmetal Chassis Frame<br>
+               Min=0 / Max = 4 SFP/SFP+/SFP28/SFP56 1/10/25/50G Transceiver<br>
+               1U - Height <br> 
+			<p>" else if(thisInst.id <= "JL666A") then " Contains:
+			<p>Aruba 6300F 24-port 1GbE Class 4 PoE and 4-port SFP56 Switch<br>
+			   Includes Non-Pluggable, Internal PSU behind sheetmetal Chassis Frame <br>
+               Includes Non-Pluggable, Internal Fans behind sheetmetal Chassis Frame<br>
+               Min=0 / Max = 4 SFP/SFP+/SFP28/SFP56 1/10/25/50G Transceiver<br>
+               1U - Height <br> 
+			<p>" else if(thisInst.id <= "JL667A") then " Contains:
+			<p>Aruba 6300F 48-port 1GbE and 4-port SFP56 Switch<br>
+			   Includes Non-Pluggable, Internal PSU behind sheetmetal Chassis Frame <br>
+               Includes Non-Pluggable, Internal Fans behind sheetmetal Chassis Frame<br>
+               Min=0 / Max = 4 SFP/SFP+/SFP28/SFP56 1/10/25/50G Transceiver<br>
+               1U - Height <br> 
+			<p>" else if(thisInst.id <= "JL668A") then " Contains:
+			<p>Aruba 6300F 24-port 1GbE and 4-port SFP56 Switch<br>
+			   Includes Non-Pluggable, Internal PSU behind sheetmetal Chassis Frame <br>
+               Includes Non-Pluggable, Internal Fans behind sheetmetal Chassis Frame<br>
+               Min=0 / Max = 4 SFP/SFP+/SFP28/SFP56 1/10/25/50G Transceiver<br>
+               1U - Height <br> 
+			<p>"else if(thisInst.id <= "R8S90A") then " Contains:
+			<p>Aruba 6300M 48p HPE Smart Rate 1G/2.5G/5G CL8 PoE and 2p 50G and 2p 25G Switch<br>
+			   Must Select PSU Min1 / Max2 (680W JL086A,1050W JL087A, 1600W JL670A, 1050W JL758A) Mix OK<br>
+               Includes Fantrays Min2 / Max 2 (JL669B)<br>
+               Min=0 / Max = 2 SFP/SFP+/SFP28 1/10/25 Transceiver<br>
+			   Min=0 / Max = 2 SFP/SFP+/SFP28/SFP56 1/10/25/50G Transceiver <br>
+               1U - Height <br>
+               <p>"else if(thisInst.id <= "R8S89A") then " Contains:
+			<p>Aruba 6300M 24p HPE Smart Rate 1G/2.5G/5G/10G CL6 PoE and 2p 50G and 2p 25G Switch<br>
+			   Must Select PSU Min1 / Max2 (680W JL086A,1050W JL087A, 1600W JL670A, 1050W JL758A) Mix OK<br>
+			   Includes Fantrays Min2 / Max 2 (JL669B)<br>
+               Min=0 / Max = 2 SFP/SFP+/SFP28 1/10/25 Transceiver<br>
+			   Min=0 / Max = 2 SFP/SFP+/SFP28/SFP56 1/10/25/50G Transceiver<br>
+               1U - Height <br>
+               <p>"else if(thisInst.id <= "R8S91A") then " Contains:
+			<p>Aruba 6300M 12p Class8 PoE and 36p Class6 PoE HPE Smart Rate 1G/2.5G/5G and 2p 50G and 2p 25G Switch<br>
+				Must Select PSU Min1 / Max2 (680W JL086A,1050W JL087A, 1600W JL670A, 1050W JL758A) Mix OK<br>
+				Includes Fantrays Min2 / Max 2 (JL669B)<br>
+				Min=0 / Max = 2 SFP/SFP+/SFP28 1/10/25 Transceiver<br>
+				Min=0 / Max = 2 SFP/SFP+/SFP28/SFP56 1/10/25/50G Transceiver<br>
+				1U - Height<br>
+               <p>"else if(thisInst.id <= "R8S92A") then " Contains:
+			<p>Aruba 6300M 24p SFP+ LRM support and 2p 50G and 2p 25G MACSec Switch<br>
+				Must Select PSU Min1 / Max2 (680W JL086A,1050W JL087A, 1600W JL670A, 1050W JL758A) Mix OK<br>
+				Includes Fantrays Min2 / Max 2 (JL669B)<br>
+				Min=0 / Max = 2 SFP/SFP+/SFP28 1/10/25 Transceiver<br>
+				Min=0 / Max = 2 SFP/SFP+/SFP28/SFP56 1/10/25/50G Transceiver<br>
+				1U - Height<br>
+               <p>";
+		}
+		//		def defaultPowerCordFunc (): string = {
+		//			val powerSupply = thisInst.selected(SwitchPowerSupply).filter(q => q.id = "JL670A" || q.id = "JL085A" || q.id = "JL757A" || q.id = "JL758A" || q.id = "JL760A" || q.id = "JL086A" || q.id = "JL087A").get(0).id;
+		//				if thisInst.selected(SwitchPowerSupply).count > 0 and isRackPresent and (thisConfig.getProperty("region") = "NA" or thisConfig.getProperty("country") = "MX" or thisConfig.getProperty("country") = "TW" or thisConfig.getProperty("country") = "JP") then powerSupply + "#B2B"
+		//				else if thisInst.selected(SwitchPowerSupply).count > 0 and isRackPresent and (! (thisConfig.getProperty("region") = "NA" or thisConfig.getProperty("country") = "MX" or thisConfig.getProperty("country") = "TW" or thisConfig.getProperty("country") = "JP")) then powerSupply + "#B2C";
+		//		}
+		def defaultPowerCordFunc (): string = {
+			val numPowerSupplies = thisInst.selected(SwitchPowerSupply).count;
+			val powerSupply = thisInst.selected(SwitchPowerSupply).filter(q => q.id = "JL670A" || q.id = "JL085A" || q.id = "JL757A" || q.id = "JL758A" || q.id = "JL760A" || q.id = "JL086A" || q.id = "JL087A").get(0).id;
+			if numPowerSupplies > 0 and isRackPresent and (thisConfig.getProperty("region") = "NA" or thisConfig.getProperty("country") = "MX" or thisConfig.getProperty("country") = "TW" or thisConfig.getProperty("country") = "JP") then
+			expanderString (powerSupply + "#B2B", numPowerSupplies) else if numPowerSupplies > 0 and isRackPresent and (! (thisConfig.getProperty("region") = "NA" or thisConfig.getProperty("country") = "MX" or thisConfig.getProperty("country") =
+			"TW" or thisConfig.getProperty("country") = "JP")) then expanderString (powerSupply + "#B2C", numPowerSupplies);
+		}
+		def defaultDummypowerCordOption (): string[] = {
+			if thisInst.selected(SwitchPowerSupply).filter(q => q.id = "JL760A").count > 0 then expanderString ("JL760AdummyCord", 1) + expanderString ("JL671A_72A_dummyCord", 1);
+		}
+		def PowerSupplyDefault (): string[] = {
+			if((ancestors (thisInst, "RackModel").count != 0) && ! isSDFlexCLPrimera ()) then expanderString ("J9583B", 1) else "";
+		}
+		/**  Donot Delete! Feature will come back!
+		 	def LRMDefault (): string[] = {
+			val transCount = thisInst.selected(SFPPlusTransceivers).filter(x => x.id = "J9152D").count;
+			val expander = (transCount + 1) / 2; 
+			if(thisInst.id = "JL658A" || thisInst.id = "JL659A" || thisInst.id = "R8S90A" || thisInst.id = "JL668A" ||
+				thisInst.id = "JL660A" || thisInst.id = "R8S89A" || thisInst.id = "JL661A" || thisInst.id = "JL662A" ||
+				thisInst.id = "JL663A" || thisInst.id = "JL664A" || thisInst.id = "JL762A" || thisInst.id = "JL665A" || 
+				thisInst.id = "JL666A" || thisInst.id = "JL667A" 
+			) then expanderString ("JL831A", expander) else "";
+		}**/
+		boolean overrideLocalizationOption: true;
+		def overrideLocalizationOptionAgentFunc (): string = {
+			if thisInst.selected(PDUPowerCord).count > 0 || thisInst.selected(SwitchPSCord).count > 0 then "DEL" else "";
+		}
+		string[] inheritSupportedOnDataFrom: "AceSupportPlatform", "locsForServer";
+		string localizationType: "LOCL";
+		subsystem systemLocalizationSubsystem {
+			choice systemLocalizationChoice {
+				choiceType: single_select;
+				optional: true;
+				targetClass: SystemLocalizationClass;
+			}
+			constraint ezcipcsRequireSysLoc {
+				message: "ACE requires System Localization";
+				body: dependency (targetEnv ("ezc", "ipcs"), SystemLocalizationClass);
+			}
+			constraint systemLocRestrictsBaseProdLoc {
+				message: "Model Localization must match System Localization.";
+				body: restriction (Aruba6300Series.loc = SystemLocalizationClass.loc);
+			}
+		}
+		string[] castToList;
+		boolean addDefaultSysLoc: true;
+		def defaultSystemLocFunction (): string[] = {
+			val locProduct: string = if(addDefaultSysLoc) then getDefaultLocalization (thisInst, "systemLocalizationSubsystem.systemLocalizationChoice") else "";
+			castToList + locProduct;
+		}
+		def defaultLocalizationsFunction (): string[] = {
+			val sysLoc: string[] = defaultSystemLocFunction ();
+			sysLoc;
+		}
+		def getDefaultLocalization (instance: RootProductClass, choiceId: string): string = callout("GetDefaultLocalization", instance, choiceId);
+		string countryUsedForLocDefaults: "";
+		subsystem modelLocDefaults {
+			part triggerLocalizationRestoreDefaults ConfigAgentTrigger {
+				string agentClass: "InternalLocOverrideDefaultsAgent";
+				part[] agentTiming: postRestore;
+				string modelDefaultsFunc: "defaultLocalizationsFunction";
+			}
+			part triggerLocalizationUpdateDefaults ConfigAgentTrigger {
+				string agentClass: "InternalLocOverrideDefaultsAgent";
+				part[] agentTiming: finishUpdate;
+				string modelDefaultsFunc: "defaultLocalizationsFunction";
+				int priority: 10;
+			}
+		}
+		def defaultpowersupplyJL085A (): string[] = {
+			if(thisInst.id = "JL658A" || thisInst.id = "JL663A" || thisInst.id = "JL664A" || thisInst.id = "R8S92A") then expanderString ("JL085A", 1) else "";
+		}
+		def defaultpowersupplyJL086A (): string[] = {
+			if(thisInst.id = "R8S90A" || thisInst.id = "R8S89A" || thisInst.id = "R8S91A"  || thisInst.id = "JL659A" || thisInst.id = "JL660A" || thisInst.id = "JL661A" || thisInst.id = "JL662A") then expanderString ("JL086A", 1) else "";
+		}
+		subsystem conflictResolution {
+			part conflictRes_Localization ConflictResolver {
+				string[] targetConflictingClasses: "LocalizationClass", "Aruba6300Series";
+				string agentName: "com.hp.ngc.plugins.agents.update.delegate.LocalizedChoiceAgent";
+			}
+		}
+		subsystem TransceiversSubsystem {
+			locationArray SFPTransceiversLocArray {
+				rows: iNumSFPTransceivers;
+				fillerClasses: SFPTransceivers;
+				def staticProductMax (x: Transceivers) = if(x.id < "J9054D J4858D J4859D J4860D J8177D JL745A JL746A JL747A") then -1 else 0;
+			}
+			locationArray SFPPlusTransceiversLocArray {	 
+				rows: iNumSFPPlusTransceivers;
+				fillerClasses: SFPTransceivers;
+				def staticProductMax (x: Transceivers) = if(x.id < "JL563B JL563A J9150D J9151E J9153D J9281D J9283D JL748A JL749A") then -1 else 0;
+			}
+			choice SFPLRMTransceiversLocArray {	 
+				choiceType: multi_select;
+				targetClass: SFPPlusTransceivers;
+				def staticProductMax (x: Transceivers) = if(x.id < "J9152D") then -1 else 0;
+			}
+			locationArray SFP28TransceiversLocArray {
+				rows: iNumSFP28Transceivers;
+				fillerClasses: SFPTransceivers;
+				def staticProductMax (x: Transceivers) = if(x.id < "JL484A JL485A JL486A JL487A JL488A JL489A") then -1 else 0;
+			}
+			locationArray SFP56TransceiversLocArray {
+				rows: iNumSFP56Transceivers;
+				fillerClasses: SFPTransceivers;
+				def staticProductMax (x: Transceivers) = if(x.id < "R0M48A R0M46A R0M47A") then -1 else 0;
+			}
+			/* Donot Delete! Feature will come Back!
+			constraint LRMSupport {
+				message: "Min 0 // max 2 (J9152D) per adapter of JL831A is allowed.";
+				body: {
+				val LRMcount = thisInst.selected(LRMAdapter).filter(x => x.id = "JL831A").count;
+				if !(thisInst.id = "R8S91A" || thisInst.id = "R8S92A") and thisInst.selected(SFPPlusTransceivers).filter(x => x.id = "J9152D").count > 0 then
+				thisInst.selected(SFPPlusTransceivers).filter(x => x.id = "J9152D").count <= LRMcount * 2  else true;
+				}
+			}
+			constraint LRMSupport_R8S91A_R8S92A {
+				message: "Min 0 // max 2 (J9152D) for R8S91A and R8S92A base model";
+				body: {
+				val LRMcount = thisInst.selected(LRMAdapter).filter(x => x.id = "JL831A").count;
+				if (thisInst.id = "R8S91A" || thisInst.id = "R8S92A") then thisInst.selected(SFPPlusTransceivers).filter(x => x.id = "J9152D").count <=  2  else true;
+				}
+			}
+			constraint LRMSupportability {
+				message: "The following Transceiver is compatible with the LRM Adapter:
+							J9152D - Aruba 10G SFP+ LC LRM 220m MMF XCVR";
+				body: 
+				dependency (Aruba6300Series[R8S91A || R8S92A] = 0 and LRMAdapter[JL831A] = 0 , SFPPlusTransceivers [J9152D] = 0);
+			} */
+			constraint LRMSupportability {
+				message: "Compatible on LRM supported ports for R8S91A and R8S92A";
+				body: 
+				dependency (Aruba6300Series[R8S91A || R8S92A] = 0 , SFPPlusTransceivers [J9152D] = 0);
+			}
+			ifEffective KS_PERT_24898{
+				constraint max_qty_transceiver_supported_by_JL658A { //JL563A
+				message: "Max qty of SFP/SFP+/100M is 24, SFP28/SFP56 is 4";
+				body: dependency (Aruba6300Series [ JL658A ] > 0, SFPTransceivers [ J4858D || J4859D || J4860D || J8177D || JL745A || JL746A || JL747A || JL563B || J9150D || J9151E || J9153D || J9281D || J9283D || J9054D ] <= 24);
+				dependency (Aruba6300Series [ JL658A ] > 0, SFPTransceivers [ JL484A || JL485A || JL486A || JL487A || JL488A || JL489A || R0M46A || R0M47A ] <= 4);
+			}
+			constraint max_qty_transceiver_supported_by_R8S90A {
+				message: "Min=0 / Max = 2 SFP/SFP+/SFP28 1/10/25 Transceiver
+				Min=0 / Max = 2 SFP/SFP+/SFP28/SFP56 1/10/25/50G Transceiver";
+				body: dependency (Aruba6300Series [ R8S90A || R8S89A || R8S91A || R8S92A ] > 0, 
+				SFPTransceivers [ J4858D || J4859D || J4860D || J8177D || JL745A || JL746A || JL747A || 
+				JL563B || J9150D || J9151E || J9153D || JL748A || JL749A  || J9281D || J9283D || 
+				JL484A || JL485A || JL486A || JL487A || JL488A || JL489A ] <= 2 );
+				dependency (Aruba6300Series [ R8S90A || R8S89A || R8S91A || R8S92A ] > 0, 
+				SFPTransceivers [ R0M48A || R0M46A || R0M47A ] <= 2);
+			}
+			}
+			otherwise{
+			constraint max_qty_transceiver_supported_by_JL658A {
+				message: "Max qty of SFP/SFP+/100M is 24, SFP28/SFP56 is 4";
+				body: dependency (Aruba6300Series [ JL658A ] > 0, SFPTransceivers [ J4858D || J4859D || J4860D || J8177D || JL563A || J9150D || J9151E || J9153D || J9281D || J9283D || J9054D ] <= 24);
+				dependency (Aruba6300Series [ JL658A ] > 0, SFPTransceivers [ JL484A || JL485A || JL486A || JL487A || JL488A || JL489A || R0M46A || R0M47A ] <= 4);
+			}			
+			}			
+			constraint max_qty_transceiver_supported_by_allmodels {
+				message: "Max qty of SFP/SFP+/100M SFP28/SFP56 is 4";
+				body: dependency (Aruba6300Series [ ~ JL658A ], SFPTransceivers [ J9054D ] = 0);
+				dependency (Aruba6300Series [ ~ JL658A ], SFPTransceivers <= 4);
+			}
+			constraint TransceiversBlueNote {
+				message: "A maximum qty of 12 XCVRs (JL563A) can be installed into ports 1-12 within the JL479A Switch.";
+				body: false;
+			}	
+		}
+		subsystem powerSupplySubsystem {
+			locationArray powerCordLocArray {
+				rows: 0;
+				fillerClasses: SwitchPSCord;
+			}
+			constraint powerCord_cannotmix {
+				message: "Power Cord cannot be mixed.";
+				body: true;
+			}
+		}
+		subsystem Power_Supplies_Subsystem {
+			locationArray PowerSupply_Array {
+				rows: iNumSpareItemsSlots;
+				fillerClasses: FanModule, SwitchPowerSupply, SwitchEnclOptMountKit;	//ConsoleCable,
+			}
+			locationArray PSlocalizationLocArray {
+				rows: 0;
+				fillerClasses: PDUPowerCord;
+			}
+
+			//			locationArray powerCordLocArray {
+			//				rows: 0;
+			//				fillerClasses: SwitchPSCord;
+			//			}
+			part psTriggerFunc: triggerConsequentialSelection {
+				string consequentialSelectionFunc: "defaultpowersupplyJL085A";
+			}
+			part ps1TriggerFunc: triggerConsequentialSelection {
+				string consequentialSelectionFunc: "defaultpowersupplyJL086A";
+			}
+			part setdummypowerCord: triggerConsequentialSelection {
+				string consequentialSelectionFunc: "defaultDummypowerCordOption";, int priority: 10;
+			}
+			part addPowerCordTrigger: triggerConsequentialSelection {
+				string consequentialSelectionFunc: "defaultPowerCordFunc";, int priority: 1000;
+			}
+			constraint AccesoriesBlueNote1 {
+				message: "If you want the Locking Power Cord (J9955A) L6-20P, then you must order this power cord through the Accessories tab";
+				body: false;
+			}
+			constraint JL785AInfoMessage {
+				message: "It is recommended that the JL758A 1050W PSU NOT be mixed with the JL670A 1600W PSU.";
+				body: if thisInst.selected(SwitchPowerSupply).filter(q => q.id = "JL758A").count > 0 then thisInst.selected(SwitchPowerSupply).filter(q => q.id = "JL670A").count < 1;
+			}
+			constraint minPowerSuppliesNeeded {
+				message: "Minimum of 1 Internal Power Supplies are needed.";
+				enabled:
+				{
+					! isSDFlexCLPrimera ();
+				}
+				body: restriction ((SwitchPowerSupply >= 1 or Aruba6300Series [ JL665A || JL666A || JL667A || JL668A ] >= 1));
+			}
+			constraint matchPSCordCount {
+				message: "The number of Power Cord options for the switch must match number of Power Supplies ordered";
+				body: if(! thisInst.id >= "JL762A") then selected(SwitchPSCord).count = 0 or selected(SwitchPowerSupply).count = selected(SwitchPSCord).count else true;
+			}
+			//PM 25-jan-21 ALM-139333
+			constraint matchPSCordCountforJL762A {
+				message: "The number of Power Cord options for the switch must match number of Power Supplies ordered";
+				body: if(thisInst.id >= "JL762A") then selected(SwitchPSCord).count = 0 or selected(SwitchPowerSupply).count = selected(SwitchPSCord).count + 1 else true;
+			}
+			constraint SwitchPSCord_B2E_B2B_ValidRegions {
+				message: "#B2E or B2B is Offered only in NA, Mexico, Taiwan and Japan.";
+				body:
+				! (thisInst.selected(SwitchPSCord).get(0).id > B2E or thisInst.selected(SwitchPSCord).get(0).id > B2B) and ! (thisInst.selected(PDUPowerCord).get(0).id > B2E or thisInst.selected(PDUPowerCord).get(0).id > B2B) // JT
+				or thisConfig.getProperty("region") = "NA" // north America
+				or thisConfig.getProperty("country") = "MX" or thisConfig.getProperty("country") = "TW" or thisConfig.getProperty("country") = "JP";
+			}
+			constraint B2CRegionFilter {
+				message: "B2C option not available in NA/MEX/TW/JP";
+				body: not (thisConfig.getProperty("region") = "NA" or thisConfig.getProperty("country") = "MX" or thisConfig.getProperty("country") = "TW" or thisConfig.getProperty("country") = "JP") or
+				split(thisInst.selected(PDUPowerCord).get(0).id, "#").get(1) != "B2C" and (for(selected(SwitchPSCord)) pscord => split(pscord.id, "#").get(1) != "B2C");
+			}
+			constraint excludepowerSupply {
+				message: "JL085A Power Supply is supported only with JL658A, JL663A, JL664A Switches  </br> 
+						 JL086A, JL087A and JL670A Power Supplies are supported only with JL659A, JL660A, JL661A, JL662A Switches ";
+				body: dependency (Aruba6300Series [R8S90A || R8S89A || R8S91A || JL659A || JL660A || JL661A || JL662A ], SwitchPowerSupply [ JL085A || JL757A ] = 0);
+				dependency (Aruba6300Series [R8S90A || R8S89A || R8S91A || R8S92A || JL659A || JL660A || JL661A || JL662A ], SwitchPowerSupply [JL760A] = 0);
+				dependency (Aruba6300Series [ R8S90A || R8S89A || R8S91A || JL659A || JL660A || JL661A || JL662A ], SwitchPSCord [ JL085A#AC3 || JL085A#B2B || JL085A#B2C || JL085A#B2E || JL760A#AC3 || JL757A#AC3 || JL757A#B2B ||
+				JL757A#B2C || JL757A#B2E ] = 0);
+				dependency (Aruba6300Series [ R8S90A || R8S89A || R8S91A || R8S92A || JL659A || JL660A || JL661A || JL662A ], SwitchPSCord [  JL760A#AC3 || JL760A#B2B || JL760A#B2C || JL760A#B2E ] = 0);
+				dependency (Aruba6300Series [ JL658A || JL663A || JL664A || R8S92A], SwitchPowerSupply [ JL086A || JL087A || JL670A || JL760A || JL758A ] = 0);
+				dependency (Aruba6300Series [ JL658A || JL663A || JL664A || R8S92A], SwitchPSCord [ JL086A#AC3 || JL086A#B2B || JL086A#B2C || JL086A#B2E || JL087A#AC3 || JL087A#B2B || JL087A#B2C || JL087A#B2E || JL758A#AC3 || JL758A#B2B || JL758A#B2C ||
+				JL758A#B2E || JL670A#AC3 || JL670A#B2B || JL670A#B2C || JL670A#B2E || JL760A#AC3 || JL760A#B2B || JL760A#B2C || JL760A#B2E ] = 0);
+				dependency (Aruba6300Series [ JL762A ], SwitchPowerSupply [ JL085A || JL086A || JL087A || JL670A || JL758A || JL757A ] = 0);
+				dependency (Aruba6300Series [ JL762A ], SwitchPSCord [ JL085A#AC3 || JL085A#B2B || JL085A#B2C || JL085A#B2E || JL086A#AC3 || JL086A#B2B || JL086A#B2C || JL086A#B2E || JL087A#AC3 || JL087A#B2B || JL087A#B2C || JL087A#B2E || JL758A#AC3
+				|| JL758A#B2B || JL758A#B2C || JL758A#B2E || JL670A#AC3 || JL670A#B2B || JL670A#B2C || JL670A#B2E ] = 0);
+			}
+			constraint powderCordSupport {
+				message: "Power supply and power option should be same";
+				body: dependency (SwitchPowerSupply [ JL670A ] = 0, SwitchPSCord [ JL670A#B2B || JL670A#B2C || JL670A#B2E || JL670A#AC3 ] = 0);
+				dependency (SwitchPowerSupply [ JL085A ] = 0, SwitchPSCord [ JL085A#B2B || JL085A#B2C || JL085A#B2E || JL085A#AC3 ] = 0);
+				dependency (SwitchPowerSupply [ JL760A ] = 0, SwitchPSCord [ JL760A#B2B || JL760A#B2C || JL760A#B2E || JL760A#AC3 ] = 0);
+				dependency (SwitchPowerSupply [ JL086A ] = 0, SwitchPSCord [ JL086A#B2B || JL086A#B2C || JL086A#B2E || JL086A#AC3 ] = 0);
+				dependency (SwitchPowerSupply [ JL087A ] = 0, SwitchPSCord [ JL087A#B2B || JL087A#B2C || JL087A#B2E || JL087A#AC3 ] = 0);
+				dependency (SwitchPowerSupply [ JL670A ] = 1, SwitchPSCord [ JL670A#B2B || JL670A#B2C || JL670A#B2E || JL670A#AC3 ] <= 1);
+				dependency (SwitchPowerSupply [ JL085A ] = 1, SwitchPSCord [ JL085A#B2B || JL085A#B2C || JL085A#B2E || JL085A#AC3 ] <= 1);
+				dependency (SwitchPowerSupply [ JL760A ] = 1, SwitchPSCord [ JL760A#B2B || JL760A#B2C || JL760A#B2E || JL760A#AC3 ] <= 1);
+				dependency (SwitchPowerSupply [ JL086A ] = 1, SwitchPSCord [ JL086A#B2B || JL086A#B2C || JL086A#B2E || JL086A#AC3 ] <= 1);
+				dependency (SwitchPowerSupply [ JL087A ] = 1, SwitchPSCord [ JL087A#B2B || JL087A#B2C || JL087A#B2E || JL087A#AC3 ] <= 1);
+				dependency (SwitchPowerSupply [ JL670A ] = 2, SwitchPSCord [ JL670A#B2B || JL670A#B2C || JL670A#B2E || JL670A#AC3 ] <= 2);
+				dependency (SwitchPowerSupply [ JL085A ] = 2, SwitchPSCord [ JL085A#B2B || JL085A#B2C || JL085A#B2E || JL085A#AC3 ] <= 2);
+				dependency (SwitchPowerSupply [ JL760A ] = 2, SwitchPSCord [ JL760A#B2B || JL760A#B2C || JL760A#B2E || JL760A#AC3 ] <= 2);
+				dependency (SwitchPowerSupply [ JL086A ] = 2, SwitchPSCord [ JL086A#B2B || JL086A#B2C || JL086A#B2E || JL086A#AC3 ] <= 2);
+				dependency (SwitchPowerSupply [ JL087A ] = 2, SwitchPSCord [ JL087A#B2B || JL087A#B2C || JL087A#B2E || JL087A#AC3 ] <= 2);
+			}
+			constraint PowerSupply_Rule2 {
+				message: "The Following Switches are compatible with this PSU:
+                          JL658A - Aruba 6300M 24-port SFP+ and 4-port SFP56 Switch
+                          JL663A - Aruba 6300M 48-port 1GbE and 4-port SFP56 Switch
+                          JL664A - Aruba 6300M 24-port 1GbE and 4-port SFP56 Switch";
+				body: dependency (Aruba6300Series [ JL658A || JL663A || JL664A || R8S92A], SwitchPowerSupply [ ~ (JL085A || JL757A) ] = 0);
+			}
+			constraint PowerSupply_Rule3 {
+				message: "The Following Switches are compatible with this PSU:
+                          JL659A - Aruba 6300M 48-port HPE Smart Rate 1/2.5/5GbE Class 6 PoE and 4-port SFP56 Switch
+                          JL660A - Aruba 6300M 24-port HPE Smart Rate 1/2.5/5GbE Class 6 PoE and 4-port SFP56 Switch
+                          JL661A - Aruba 6300M 48-port 1GbE Class 4 PoE and 4-port SFP56 Switch
+                          JL662A - Aruba 6300M 24-port 1GbE Class 4 PoE and 4-port SFP56 Switch
+						  R8S90A - Aruba 6300M 48p HPE Smart Rate 1G/2.5G/5G CL8 PoE and 2p 50G and 2p 25G Switch
+						  R8S89A - Aruba 6300M 24p HPE Smart Rate 1G/2.5G/5G/10G CL6 PoE and 2p 50G and 2p 25G Switch
+						  R8S91A - Aruba 6300M 12p Class8 PoE and 36p Class6 PoE HPE Smart Rate 1G/2.5G/5G and 2p 50G and 2p 25G Switch
+						  R8S92A - Aruba 6300M 24p SFP+ LRM support and 2p 50G and 2p 25G MACSec Switch";
+				body: dependency (Aruba6300Series [ JL659A || JL660A || JL661A || JL662A || R8S90A || R8S89A || R8S91A ], SwitchPowerSupply [ ~ (JL670A || JL086A || JL087A || JL758A) ] = 0);
+			}
+			constraint PowerSupply_RuleNotSupported {
+				message: "Not compatible for 6300F Switch Series";
+				body: dependency (Aruba6300Series [ JL665A || JL666A || JL667A || JL668A ] > 0, SwitchPowerSupply = 0);
+			}
+		}
+		subsystem powerSubsystem {
+			constraint powerSupplyNoMix {
+				message: "";
+				body: true;
+			}
+		}
+		subsystem SwitchOptionSubsystem {
+			part addPDUPowerTrigger1: triggerConsequentialSelectionNoRestore {
+				string consequentialSelectionFunc: "defaultPDUPower1Func";
+			}
+			locationArray RackMountKitLocArray {
+				rows: 2;
+				fillerClasses: SwitchEnclOptRackMountKit;
+			}
+
+			//PM 6-dec-20 PERT-21320
+			//			locationArray airDuctKitsLocArray {
+			//					rows: 1;
+			//					fillerClasses: SwitchEnclOptRackMountKit;
+			//				}
+			locationArray SpareItemsLocArray {
+				rows: 99;
+				fillerClasses: ConsoleCable;
+			}
+			locationArray FantrayLocArray {
+				rows: 2;
+				fillerClasses: ConsoleCable, SwitchFanTray;
+			}
+			locationArray LRMAdapterLocArray {
+				rows: iNumLRMSlots;
+				fillerClasses: LRMAdapter;
+			}
+			locationArray LRMAdapterSparesLocArray {
+				rows: iNumLRMSlots;
+				fillerClasses: LRMAdapterSpares;
+			}
+			locationArray localizationLocArray {
+				rows: 1;
+				fillerClasses: PDUPowerCord;
+			}
+			part setPowerSupplyDefault: triggerConsequentialSelection {
+				string consequentialSelectionFunc: "PowerSupplyDefault";
+			}
+			/**   Donot Delete! Feature will come back!
+			part setLRMDefault: triggerConsequentialSelection {
+				string consequentialSelectionFunc: "LRMDefault";
+			}
+			constraint LRMAdapterRule1 {
+				message: "This LRM Bundle can support up to 2 LRM XCVRs (J9152D)";
+				body: if thisInst.selected(LRMAdapter).filter(x => x.id = "JL831A").count > 0 then false else true;
+			}
+			constraint LRMSparesDisplayNote {
+				message: "This is a spare part for use with the JL831A";
+				body: false;
+			}
+			constraint LRMAdapterRule2 {
+				message: "JL831A includes Adapter, 2 DAC Cable and 1 Mounting Bracket which consumes 1U height in the Rack.";
+				body: if thisInst.selected(LRMAdapter).filter(x => x.id = "JL831A").count > 0 then false else true;
+			}
+			constraint LRMAdapterRule3 {
+				message: "Spans full width of 19 inch rack";
+				body: if thisInst.selected(LRMAdapter).filter(x => x.id = "JL833A").count > 0 then false else true;
+			}
+			constraint LRMAdapterRule4 {
+				message: "Available in North America Only";
+				body: dependency (!region ("NA"), LRMAdapter [JL835A] = 0);	
+			}
+			* */
+			constraint RackmpuntKitRequired {
+				message: "If the switch will be factory racked into an HPE Universal Rack, then (Min 1) of the 4 Post Rack Mount kit is required and should nest to Rack.";
+				body: if(ancestors (thisInst, "RackModel").count > 0 && ! isSDFlexCLPrimera ()) then thisInst.selected(SwitchEnclOptRackMountKit).filter(x => x.id >= "J9583A" || x.id >= "J9583B").count > 0;
+			}
+//			constraint PowerSupplyRequired {
+//				message: "Selection of Aruba 6300M 48G Pwr2Prt 2F 1PS Bdl (JL762A) requires additional power supply to be configured, Aruba X371 12VDC 250W Pwr2Prt PS (JL760A).";
+//				body: if(ancestors (thisInst, "RackModel").count > 0 && ! isSDFlexCLPrimera () && (thisInst.id = "JL762A")) then thisInst.selected(SwitchPowerSupply).filter(x => x.id >= "JL760A").count > 1;
+//			}
+			constraint airDuctBlueNote {
+				message: "For optimal performance, it is recommended that the user select the Duct Kit for Power to Port Switch Bundles";
+				body: false;
+			}
+			constraint airDuctSupport {
+				message: "JL716A should only be configurable for JL762A.";
+				body: dependency (! Aruba6300Series [ JL762A ] > 0, SwitchEnclOptRackMountKit [ JL716A ] = 0);
+			}
+			constraint airDuct_RackMountKitRequired {
+				message: "If this Air Duct Kit is selected then the following 4 Post Rack Mount kit must be selected:
+                              J9583B - Aruba X414 1U Universal 4-post Rack Mount Kit";
+				body:
+				if thisInst.selected(SwitchEnclOptRackMountKit).filter(x => x.id >= "JL716A").count > 0 then thisInst.selected(SwitchEnclOptRackMountKit).filter(x => x.id >= "J9583B").count = 1;
+			}
+			constraint FanTrayNotSupportedFor6300F {
+				message: "Not compatible for 6300F Switch Series";
+				body: dependency (Aruba6300Series [ JL665A || JL666A || JL667A || JL668A ] > 0, SwitchFanTray = 0);
+			}
+			constraint FanTrayNotSupportedForR8SSeries {
+				message: "Not compatible for R8S90A, R8S89A, R8S91A, R8S92A Switch Series";
+				body: dependency (Aruba6300Series [ R8S90A || R8S89A || R8S91A || R8S92A ] > 0, SwitchFanTray = 0);
+			}
+			ifEffective SP_PERT_25139 {
+				constraint FanTrayDisNote3 {
+					message: "This switch includes 1 Fan Tray. 2nd Fan Tray optional";
+					body:
+					if thisInst.id >= "JL660A" || thisInst.id >= "JL661A" || 
+					thisInst.id >= "JL662A" || thisInst.id >= "JL663A" || thisInst.id >= "JL664A" 
+					then false else true;
+				}
+				constraint FanTrayDisNote1 {
+					message: "This switch includes 2 Fan Trays. No additional Fan Trays necessary";
+					body: dependency (Aruba6300Series [ JL658A || JL659A || JL762A || R8S89A || R8S90A || R8S91A || R8S92A] > 0, false);
+				}	
+			} otherwise {
+				constraint FanTrayDisNote3 {
+					message: "This switch includes 1 Fan Tray. 2nd Fan Tray optional";
+					body:
+					if(thisInst.id >= "R8S89A" || thisInst.id >= "R8S91A" || thisInst.id >= "R8S92A"
+					|| thisInst.id >= "JL660A" || thisInst.id >= "JL661A" || thisInst.id >= "JL662A" || thisInst.id >= "JL663A" || thisInst.id >= "JL664A") then false else true;
+				}
+				constraint FanTrayDisNote1 {
+					message: "This switch includes 2 Fan Trays. No additional Fan Trays necessary";
+					body: dependency (Aruba6300Series [ JL658A || JL659A || JL762A ] > 0, false);
+				}
+			}
+			constraint SwitchLocalizationPcordFor6300F {
+				message: "Switch Localization Power Cord Compatibility";
+				body: dependency (Aruba6300Series [ JL665A ] > 0, PDUPowerCord [ (JL666A#AC3 or JL667A#AC3 or JL668A#AC3 or JL762A#AC3) ] = 0);
+				dependency (Aruba6300Series [ JL666A ] > 0, PDUPowerCord [ (JL665A#AC3 or JL667A#AC3 or JL668A#AC3 or JL762A#AC3) ] = 0);
+				dependency (Aruba6300Series [ JL667A ] > 0, PDUPowerCord [ (JL666A#AC3 or JL665A#AC3 or JL668A#AC3 or JL762A#AC3) ] = 0);
+				dependency (Aruba6300Series [ JL668A ] > 0, PDUPowerCord [ (JL666A#AC3 or JL667A#AC3 or JL665A#AC3 or JL762A#AC3) ] = 0);
+				dependency (Aruba6300Series [ R8S90A || R8S89A || R8S91A || R8S92A || JL658A || JL659A || JL660A || JL661A || JL662A || JL663A || JL664A ] > 0, PDUPowerCord = 0);
+			}
+			constraint SwitchLocalizationCondition {
+				message: "Switch Localization Power Cord Compatibility";
+				body: dependency (Aruba6300Series [ JL762A ] > 0, PDUPowerCord [ ~ (JL762A#B2B or JL762A#B2C or JL762A#B2E or JL762A#AC3) ] = 0);
+				dependency (Aruba6300Series [ JL665A ] > 0, PDUPowerCord [ ~ (JL665A#B2B or JL665A#B2C or JL665A#B2E or JL665A#AC3) ] = 0);
+				dependency (Aruba6300Series [ JL666A ] > 0, PDUPowerCord [ ~ (JL666A#B2B or JL666A#B2C or JL666A#B2E or JL666A#AC3) ] = 0);
+				dependency (Aruba6300Series [ JL667A ] > 0, PDUPowerCord [ ~ (JL667A#B2B or JL667A#B2C or JL667A#B2E or JL667A#AC3) ] = 0);
+				dependency (Aruba6300Series [ JL668A ] > 0, PDUPowerCord [ ~ (JL668A#B2B or JL668A#B2C or JL668A#B2E or JL668A#AC3) ] = 0);
+				dependency (Aruba6300Series [ R8S90A || R8S89A || R8S91A || R8S92A || JL658A || JL659A || JL660A || JL661A || JL662A || JL663A || JL664A ] > 0, PDUPowerCord = 0);
+			}
+			constraint SwitchPDUrule {
+				message: "PDU cable products can be selected Swith along with #AC3 option";
+				body: dependency (Aruba6300Series [ JL667A ] && PDUPowerCord [ JL667A#AC3 ] = 0, SpecialIndiaPowerCord [ JL671A || JL672A ] = 0);
+				dependency (Aruba6300Series [ JL665A ] && PDUPowerCord [ JL665A#AC3 ] = 0, SpecialIndiaPowerCord [ JL671A || JL672A ] = 0);
+				dependency (Aruba6300Series [ JL666A ] && PDUPowerCord [ JL666A#AC3 ] = 0, SpecialIndiaPowerCord [ JL671A || JL672A ] = 0);
+				dependency (Aruba6300Series [ JL668A ] && PDUPowerCord [ JL668A#AC3 ] = 0, SpecialIndiaPowerCord [ JL671A || JL672A ] = 0);
+				dependency (Aruba6300Series [ JL762A ] && PDUPowerCord [ JL762A#AC3 ] = 0, SpecialIndiaPowerCord [ JL671A || JL672A ] = 0);
+			}
+			//SwitchPSCord [ (JL085A#B2B || JL085A#B2C || JL085A#B2E || JL085A#AC3 || JL087A#B2B || JL087A#B2C || JL087A#B2E || JL087A#AC3) ]
+			constraint powerSupplyIndiaPowerCord {
+				message: "JL671A and JL672A Power cords only valid when the #AC3 option is selected for the supported Power Supply";
+				body: dependency (Aruba6300Series [ JL658A || JL663A || JL664A ] > 0 && SwitchPSCord [ (JL085A#AC3) ] = 0, SpecialIndiaPowerCord [ JL671A || JL672A ] = 0);
+				dependency (Aruba6300Series [ JL659A || JL660A || JL661A || JL662A || R8S90A || R8S89A || R8S91A || R8S92A] > 0 && SwitchPSCord [ (JL670A#AC3 || JL086A#AC3 || JL087A#AC3 || JL758A#AC3) ] = 0, SpecialIndiaPowerCord [ JL671A || JL672A ] = 0);
+			}
+		}
+
+		//VM added for this PERT ID:21389
+		subsystem IndiaPduSubsystem {
+			locationArray IndiaPduLocArray {
+				rows: 1;
+				fillerClasses: SpecialIndiaPowerCord;
+			}
+			constraint IndiaPDUformation {
+				message: "This PDU cable is for Solutions shipping to India";
+				body: if((thisInst.selected(PowerCord).count) > 0) then false;
+			}
+			constraint Notsupported {
+				message: "Not Supported with these models JL762A,JL665A,JL666A";
+				body: dependency (Aruba6300Series [ JL762A || JL665A || JL666A ] > 0, SpecialIndiaPowerCord [ JL671A ] = 0);
+				dependency (Aruba6300Series [ JL668A || JL667A ] > 0, SpecialIndiaPowerCord [ JL672A ] = 0);
+			}
+		}
+
+		//VM added for this PERT ID:21389
+		subsystem PSUOptionsSubsystem {
+			locationArray psuoptionsLocArray {
+				rows: 1;
+				fillerClasses: PowerCord;
+			}
+
+			//			constraint noMixHighVolt {
+			//				message: "Selected Powersupply must match with Powercord";
+			//				body: dependency (SwitchPowerSupply [ JL670A || JL085A || JL760A || JL086A || JL087A ], SpecialIndiaPowerCord [  (JL671A) ] = 0);
+			//				dependency (SwitchPowerSupply [ JL670A || JL085A || JL760A || JL086A || JL087A ], SpecialIndiaPowerCord [  (JL672A) ] = 0);
+			//				
+			//			}
+			constraint PSUformation {
+				message: "This PDU cable is for Solutions shipping to India";
+				body: if((thisInst.selected(PowerCord).count) > 0) then false;
+			}
+		}
+		subsystem HPNSoftwareSubsystem {
+			choice HPNSoftwareChoice {
+				optional: true;
+				choiceType: multi_select;
+				targetClass: SINGLENODE;
+			}
+			//SK 09-Nov-2020 Added for PERT[20144]
+			choice APSoftwareChoice {
+				optional: true;
+				choiceType: multi_select;
+				targetClass: ArubaCentralOnprem;
+			}
+			//SK 09-Nov-2020 Added for PERT[20144]
+			choice CentralDataColServiceChoice {
+				optional: true;
+				choiceType: multi_select;
+				targetClass: CentralDataColService;
+			}
+			choice cloudServicesAccessPointFChoice {
+				optional: true;
+				choiceType: multi_select;
+				targetClass: CentralCloudServices;
+			}
+			choice ArubaFabricComposerChoice {
+				optional: true;
+				choiceType: multi_select;
+				targetClass: ArubaFabricComposer;
+			}
+			choice ArubafedrampChoice {
+				optional: true;
+				choiceType: multi_select;
+				targetClass: Arubafedramp;
+			}
+		}
+	}
+	
+	product JL658A Aruba6300Series {
+		boolean overrideIntegrationOption: false;
+	}
+	product JL659A Aruba6300Series {
+		boolean overrideIntegrationOption: false;
+	}
+	product JL660A Aruba6300Series {
+		boolean overrideIntegrationOption: false;
+	}
+	product JL661A Aruba6300Series {
+		boolean overrideIntegrationOption: false;
+	}
+	product JL662A Aruba6300Series {
+		boolean overrideIntegrationOption: false;
+	}
+	product JL663A Aruba6300Series {
+		boolean overrideIntegrationOption: false;
+	}
+	product JL664A Aruba6300Series {
+		boolean overrideIntegrationOption: false;
+	}
+	product JL665A Aruba6300Series {
+		boolean overrideIntegrationOption: false;
+	}
+	product JL666A Aruba6300Series {
+		boolean overrideIntegrationOption: false;
+	}
+	product JL667A Aruba6300Series {
+		boolean overrideIntegrationOption: false;
+	}
+	product JL668A Aruba6300Series {
+		boolean overrideIntegrationOption: false;
+	}
+	product JL762A Aruba6300Series {
+		boolean overrideIntegrationOption: false;
+	}
+	product R8S90A Aruba6300Series{
+		int iNumSFPTransceivers: 2;
+		int iNumSFPPlusTransceivers: 2;
+		int iNumSFP28Transceivers: 2;
+		int iNumSFP56Transceivers: 2;
+		boolean overrideIntegrationOption: false;
+	}
+	product R8S89A Aruba6300Series{
+		int iNumSFPTransceivers: 2;
+		int iNumSFPPlusTransceivers: 2;
+		int iNumSFP28Transceivers: 2;
+		int iNumSFP56Transceivers: 2;
+		boolean overrideIntegrationOption: false;
+	}
+	product R8S91A Aruba6300Series{
+		int iNumSFPTransceivers: 2;
+		int iNumSFPPlusTransceivers: 2;
+		int iNumSFP28Transceivers: 2;
+		int iNumSFP56Transceivers: 2;
+	}
+	product R8S92A Aruba6300Series{
+		int iNumSFPTransceivers: 2;
+		int iNumSFPPlusTransceivers: 2;
+		int iNumSFP28Transceivers: 2;
+		int iNumSFP56Transceivers: 2;
+	}
+	
+} //End of package

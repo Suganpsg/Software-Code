@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Delete 3 resources" deleteContents="false" description="Delete 3 resources" element1="/NevadaReleaseKB/WebContent/resources/tools/oca/common/widgets/r2/alletra_5000_wizard/css" element2="/NevadaReleaseKB/WebContent/resources/tools/oca/common/widgets/r2/alletra_5000_wizard/html" element3="/NevadaReleaseKB/WebContent/resources/tools/oca/common/widgets/r2/alletra_5000_wizard/js" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="3" stamp="1643027541343"/>
+</session>
